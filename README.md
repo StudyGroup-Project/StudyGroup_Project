@@ -29,12 +29,12 @@ FOCUS를 통해서 오프라인 스터디 그룹을 각 필요에 의한 스터�
 ## 팀원 소개
 | 이름 | 역할 | 담당 분야 | GitHub |
 |------|------|-----------|--------|
-| <img src="https://avatars.githubusercontent.com/u/176521856?v=4" width="80" height="80" /> <br/> **이시형** | BE | AWS, Announcement, Comment, Resource | [sevencomma](https://github.com/sevencomma) |
-| <img src="https://avatars.githubusercontent.com/u/175857703?v=4" width="80" height="80" /> <br/> **이현철** | BE | User, ChatMessage, DB | [wnwngud](https://github.com/wnwngud) |
+| <img src="https://avatars.githubusercontent.com/u/176521856?v=4" width="80" height="80" /> <br/> **이시형** | BE | AWS, Announcement, Comment, Resource | [SHNAME](https://github.com/SHNAME) |
+| <img src="https://avatars.githubusercontent.com/u/175857703?v=4" width="80" height="80" /> <br/> **이현철** | BE | User, ChatMessage, DB | [sevencomma](https://github.com/sevencomma) |
 | <img src="https://avatars.githubusercontent.com/u/174807332?v=4" width="80" height="80" /> <br/> **강보성** | BE | Study, Bookmark, Application, AWS EC2 | [kang-bs](https://github.com/kang-bs) |
 | <img src="https://avatars.githubusercontent.com/u/121509420?v=4" width="80" height="80" /> <br/> **장세헌** | BE | Assignment, Notification, Submission, Feedback | [jangseheon](https://github.com/jangseheon) |
-| <img src="https://avatars.githubusercontent.com/u/131713109?v=4" width="80" height="80" /> <br/> **서주형** | FE | Frontend 개발 | [gyunii](https://github.com/gyunii) |
-| <img src="https://avatars.githubusercontent.com/u/143116287?v=4" width="80" height="80" /> <br/> **권정균** | FE | Frontend 개발 | [SHNAME](https://github.com/SHNAME) |
+| <img src="https://avatars.githubusercontent.com/u/131713109?v=4" width="80" height="80" /> <br/> **서주형** | FE | Frontend 개발 | [wnwngud](https://github.com/wnwngud) |
+| <img src="https://avatars.githubusercontent.com/u/143116287?v=4" width="80" height="80" /> <br/> **권정균** | FE | Frontend 개발 | [gyunii](https://github.com/gyunii) |
 
 > 팀원들 GitHub: 각 팀원 Github링크 삽입
 
@@ -134,7 +134,7 @@ FOCUS를 통해서 오프라인 스터디 그룹을 각 필요에 의한 스터�
 | 분야 | 기술 |
 |------|----------------------|
 | **Frontend** | React , Figma|
-| **Backend** | Spring Boot, Spring Security |
+| **Backend** | Java, Spring Boot, Spring Security |
 | **Database** | MySQL 8.0.43 |
 | **Infra** | AWS EC2 |
 | **Version Control** | GitHub |
