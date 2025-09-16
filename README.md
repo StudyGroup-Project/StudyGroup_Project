@@ -64,11 +64,6 @@ FOCUS를 통해서 오프라인 스터디 그룹을 각 필요에 의한 스터�
 - ** 과제 피드백 (Feedback) : ** 과제 평가, 평가 목록을 구현했습니다.
 - ** 알림(Notification): ** 알림 제목 list, 세부 데이터 가져오기 등 알림 시스템을 구현했습니다.
   
----
-
-## ERD
-<img width="4510" height="2832" alt="Copy of test" src="https://github.com/user-attachments/assets/849c35b0-9d1b-4bcb-b658-a268ceebdcdc" />
-
 
 ---
 
