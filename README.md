@@ -12,7 +12,7 @@ FOCUS를 통해서 오프라인 스터디 그룹을 각 필요에 의한 스터�
 
 - **관심별 스터디 그룹 모집**
 관심있는 스터디 그룹을 손쉽게 찾아서 지원할 수 있다.
-<img width="1646" height="998" alt="스터디 1" src="https://github.com/user-attachments/assets/d55da950-d59e-44aa-a1fd-778cbb1c767e" />
+<img width="945" height="998" alt="스터디 1" src="https://github.com/user-attachments/assets/8a094bf7-a6e3-4c06-84bb-830885cbe608" />
 
 
 - **과제를 통한 평가 및 피드백**
