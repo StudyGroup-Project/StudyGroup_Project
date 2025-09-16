@@ -37,7 +37,12 @@ FOCUS를 통해서 오프라인 스터디 그룹을 각 필요에 의한 스터�
 | 권정균 | FE | Frontend 개발 | 
 
 > 팀원들 GitHub: 각 팀원 Github링크 삽입
-
+> https://github.com/kang-bs
+> https://github.com/gyunii
+> https://github.com/sevencomma
+> https://github.com/jangseheon
+> https://github.com/wnwngud
+> https://github.com/SHNAME
 ---
 
 ## 역할 분담
@@ -49,7 +54,6 @@ FOCUS를 통해서 오프라인 스터디 그룹을 각 필요에 의한 스터�
 
 ### 이현철
 - ** 유저(User): ** ouath 로그인, 일반 로그인, 회원가입 구현 JWT를 이용하여 보안을 더 강화했습니다.
-- ** 알림(Notification): ** 알림 제목 list, 세부 데이터 가져오기 등 알림 시스템을 구현했습니다.
 - ** 채팅방(ChatMessage): ** 채팅방 시스템을 구현했습니다.
 - ** DB : ** 엔티티 작성 
 
@@ -63,7 +67,7 @@ FOCUS를 통해서 오프라인 스터디 그룹을 각 필요에 의한 스터�
 - ** 과제 (Assignment) : ** 과제 제목 List, 상세 내용, 생성, 수정, 삭제, 제출 시스템 구현했습니다.
 - ** 과제 제출물 (Submission) : ** 제출물 list, 상세보기 시스템을 구현했습니다.
 - ** 과제 피드백 (Feedback) : ** 과제 평가, 평가 목록을 구현했습니다.
-
+- ** 알림(Notification): ** 알림 제목 list, 세부 데이터 가져오기 등 알림 시스템을 구현했습니다.
 ---
 
 ## ERD
