@@ -1,1 +1,40 @@
-spring.application.name=focus
+
+spring:
+  jackson:
+    default-property-inclusion: non_null
+
+
+  servlet:
+    multipart:
+      max-file-size: 20MB #단일 파일의 최대 크기
+      max-request-size: 100MB # 전체 요청에 대한 최대 크기(사진과 문서만 업로드하도록 결정)
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3307/${DB_NAME}?autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+
+  cloud:
+    aws:
+      s3:
+        bucket: ${S3_BUCKET_NAME}
+      credentials:
+        access-key: ${AWS_ACCESS_KEY_ID}
+        secret-key: ${AWS_SECRET_ACCESS_KEY}
+      region:
+        static: ap-northeast-2
+
+
+
+  jpa:
+    hibernate:
+      # 테스트 실행 시마다 테이블을 새로 만들고 끝나면 삭제 (테스트 독립성 보장)
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+
+
+
