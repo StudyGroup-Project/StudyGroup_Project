@@ -1,4 +1,4 @@
-package com.study.focus.cofig;
+package com.study.focus.common.cofig;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;
