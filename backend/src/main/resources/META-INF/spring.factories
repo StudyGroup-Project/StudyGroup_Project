@@ -1,1 +1,1 @@
-org.springframework.boot.env.EnvironmentPostProcessor=com.study.focus.common.cofig.DotenvEnvironmentPostProcessor
+org.springframework.boot.env.EnvironmentPostProcessor=com.study.focus.common.config.DotenvEnvironmentPostProcessor
