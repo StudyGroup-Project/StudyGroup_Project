@@ -45,17 +45,25 @@ public class AnnouncementIntegrationTest {
     private Study study1;
     private Study study2;
     private User user1;
+    private  User user2;
 
     //임시 데이터 삽입
     @BeforeEach
     void setUp() {
+
         user1 = userRepository.save(User.builder().trustScore(30L).lastLoginAt(LocalDateTime.now()).build());
+        user2 = userRepository.save(User.builder().trustScore(100L).lastLoginAt(LocalDateTime.now()).build());
         study1 = studyRepository.save(Study.builder().maxMemberCount(30).recruitStatus(RecruitStatus.OPEN).build());
         study2 = studyRepository.save(Study.builder().maxMemberCount(30).recruitStatus(RecruitStatus.OPEN).build());
+
+
         StudyMember studyMember1 = studyMemberRepository.save(StudyMember.builder().user(user1).study(study1).exitedAt(LocalDateTime.now().plusMonths(1)).
                 role(StudyRole.MEMBER).status(StudyMemberStatus.JOINED).build());
         StudyMember studyMember2 = studyMemberRepository.save(StudyMember.builder().user(user1).study(study2).exitedAt(LocalDateTime.now().plusMonths(1)).
                 role(StudyRole.MEMBER).status(StudyMemberStatus.JOINED).build());
+        StudyMember studyMember3 = studyMemberRepository.save(StudyMember.builder().user(user2).study(study2).exitedAt(LocalDateTime.now().plusMonths(1)).
+                role(StudyRole.MEMBER).status(StudyMemberStatus.JOINED).build());
+
 
         announcementRepository.save(Announcement.builder().study(study1).author(studyMember1).title("TestTitle1").build());
         announcementRepository.save(Announcement.builder().study(study1).author(studyMember1).title("TestTitle2").build());
@@ -84,8 +92,8 @@ public class AnnouncementIntegrationTest {
     @Test
     @DisplayName("실패: 스터디 멤버가 아닐 경우 IllegalArgumentException이 발생")
     void getAnnouncements_Fail_NotStudyMember() throws Exception {
-        mockMvc.perform(get("/api/studies/" + 11111L + "/announcements")
-                        .with(user(new CustomUserDetails(user1.getId()))))
+        mockMvc.perform(get("/api/studies/" + study1.getId() + "/announcements")
+                        .with(user(new CustomUserDetails(user2.getId()))))
                 .andExpect(status().isBadRequest());
     }
 
