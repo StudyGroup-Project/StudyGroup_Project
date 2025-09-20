@@ -1,14 +1,34 @@
 package com.study.focus.announcement.controller;
 
+
+import com.study.focus.account.dto.CustomUserDetails;
+import com.study.focus.announcement.dto.GetAnnouncementsResponse;
+import com.study.focus.announcement.service.AnnouncementService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/api/studies/{studyId}/announcements")
+@Slf4j
+@RequestMapping("api/studies/{studyId}/announcements")
+@RequiredArgsConstructor
 public class AnnouncementController {
 
-    // 공지 목록 가져오기
+    private final AnnouncementService announcementService;
+
+    //스터디 공지 목록 가져오기
     @GetMapping
-    public void getAnnouncements(@PathVariable Long studyId) {}
+    public ResponseEntity<List<GetAnnouncementsResponse>> getAnnouncements
+    (@PathVariable Long studyId, @AuthenticationPrincipal CustomUserDetails user)
+    {
+        log.info("Fetching announcements for studyId: {}", studyId);
+        Long userId = user.getUserId();
+        return ResponseEntity.ok(announcementService.findAllSummaries(studyId,userId));
+    }
 
     // 공지 생성하기
     @PostMapping
