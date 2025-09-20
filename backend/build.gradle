@@ -43,6 +43,8 @@ dependencies {
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	implementation 'io.github.cdimascio:java-dotenv:5.2.2'
 	runtimeOnly 'com.h2database:h2'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	testImplementation 'org.springframework.security:spring-security-test'
 }
 
 tasks.named('test') {
