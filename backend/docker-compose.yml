@@ -18,6 +18,8 @@ services:
       - db       # db 컨테이너가 먼저 실행되도록 설정
       - localstack # localstack 컨테이너가 먼저 실행되도록 설정
     restart: always
+    volumes:
+      - ./.env:/app/.env
 
   db:
     image: mysql:8.0
