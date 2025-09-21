@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/StudyGroup_Project.iml" filepath="$PROJECT_DIR$/.idea/StudyGroup_Project.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/focus.iml" filepath="$PROJECT_DIR$/.idea/modules/focus.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/focus.main.iml" filepath="$PROJECT_DIR$/.idea/modules/focus.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/focus.test.iml" filepath="$PROJECT_DIR$/.idea/modules/focus.test.iml" />
     </modules>
   </component>
