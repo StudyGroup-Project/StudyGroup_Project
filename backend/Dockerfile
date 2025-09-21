@@ -3,9 +3,6 @@ FROM openjdk:17-jdk-slim
 # 2. 컨테이너 내 작업 디렉토리 설정
 WORKDIR /app
 
-# .env 파일을 컨테이너의 /app 폴더로 복사
-COPY .env /app/.env
-
 # 3. Gradle로 빌드된 JAR 파일을 컨테이너 내부로 복사
 # build/libs/ 경로에 있는 .jar 파일을 app.jar 라는 이름으로 복사합니다.
 COPY build/libs/*.jar app.jar
