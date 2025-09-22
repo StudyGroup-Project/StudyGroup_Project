@@ -5,9 +5,14 @@ import com.study.focus.account.dto.CustomUserDetails;
 import com.study.focus.account.repository.UserRepository;
 import com.study.focus.announcement.domain.Announcement;
 import com.study.focus.announcement.repository.AnnouncementRepository;
+import com.study.focus.announcement.service.AnnouncementService;
+import com.study.focus.common.domain.File;
+import com.study.focus.common.exception.BusinessException;
+import com.study.focus.common.repository.FileRepository;
 import com.study.focus.study.domain.*;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,19 +20,26 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@Transactional
+
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 public class AnnouncementIntegrationTest {
 
     @Autowired
@@ -41,11 +53,17 @@ public class AnnouncementIntegrationTest {
     @Autowired
     private AnnouncementRepository announcementRepository;
 
+    @Autowired
+    private FileRepository fileRepository;
+    
+    @Autowired
+    private AnnouncementService announcementService;
 
     private Study study1;
     private Study study2;
     private User user1;
     private  User user2;
+
 
     //임시 데이터 삽입
     @BeforeEach
@@ -97,7 +115,6 @@ public class AnnouncementIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
-
     @Test
     @DisplayName("성공: 빈 멤버 리스트 반환")
     void getAnnouncements_success_IsEmptyList() throws Exception {
@@ -108,5 +125,79 @@ public class AnnouncementIntegrationTest {
                 .andExpect(jsonPath("$.length()").value(0));
 
     }
+
+    @Test
+    @DisplayName("성공: 공지사항 생성 - 첨부 파일 포함 ")
+    void createAnnouncement_withFile_success() throws Exception {
+        //given
+        MockMultipartFile file = new MockMultipartFile(
+                "testFile","hello.txt","text/plain","Test".getBytes());
+        String title = "testTile";
+        String content = "testContent";
+
+        mockMvc.perform(multipart("/api/studies/" +study2.getId()+"/announcements")
+                .file(file)
+                .param("title",title)
+                .param("content",content)
+                .with(user(new CustomUserDetails(user1.getId())))
+                        .with(csrf()))
+                .andExpect(status().isOk());
+        List<Announcement> announcements = announcementRepository.findAllByStudyId(study2.getId());
+        Assertions.assertThat(announcements.size()).isEqualTo(1);
+        Announcement lastAnnouncement = announcements.get(0);
+        Assertions.assertThat(lastAnnouncement.getTitle()).isEqualTo(title);
+
+    }
+
+    @Test
+    @DisplayName("성공: 공지사항 생성 - 첨부 파일 제외 ")
+    void createAnnouncement_withoutFile_success() throws Exception {
+        //given
+        String title = "testTile";
+        String content = "testContent";
+
+
+        mockMvc.perform(multipart("/api/studies/" +study2.getId()+"/announcements")
+                        .param("title",title)
+                        .param("content",content)
+                        .with(user(new CustomUserDetails(user1.getId())))
+                        .with(csrf()))
+                .andExpect(status().isOk());
+        List<Announcement> announcements = announcementRepository.findAllByStudyId(study2.getId());
+        Assertions.assertThat(announcements.size()).isEqualTo(1);
+        Announcement lastAnnouncement = announcements.get(0);
+        Assertions.assertThat(lastAnnouncement.getTitle()).isEqualTo(title);
+        List<File> files = fileRepository.findAll();
+        Assertions.assertThat(files.size()).isEqualTo(0);
+    }
+
+
+
+
+    @Test
+    @DisplayName("실패: 공지사항 생성 - 지원하지 않는 파일 타입 ")
+    void createAnnouncement_fail_invalidFileType() throws Exception {
+        //given
+        MockMultipartFile file = new MockMultipartFile(
+                "files",
+                "test.exe",
+                "application/octet-stream",
+                "test".getBytes()
+        );
+        String title = "testTile";
+        String content = "testContent";
+
+        long initialCount = announcementRepository.count();
+        Assertions.assertThat(initialCount).isEqualTo(2L);
+        mockMvc.perform(multipart("/api/studies/" +study2.getId()+"/announcements")
+                        .file(file)
+                        .param("title",title)
+                        .param("content",content)
+                        .with(user(new CustomUserDetails(user1.getId())))
+                        .with(csrf()))
+                        .andExpect(status().isBadRequest());
+        Assertions.assertThat(announcementRepository.count()).isEqualTo(initialCount);
+    }
+
 }
 

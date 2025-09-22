@@ -42,8 +42,9 @@ public class AnnouncementService {
 
 
 
-    @Transactional
+
     // 공지 생성하기(공지 데이터는 컨트롤러부분에서 유효성 검증을 하기 때문에 검증 x)
+    @Transactional
     public void createAnnouncement(Long studyId, Long userId, String title, String content, List<MultipartFile> files)
     {
         StudyMember userStudyMember = validation(studyId, userId);

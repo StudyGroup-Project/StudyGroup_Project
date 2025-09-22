@@ -29,7 +29,7 @@ spring:
   jpa:
     hibernate:
       # 테스트 실행 시마다 테이블을 새로 만들고 끝나면 삭제 (테스트 독립성 보장)
-      ddl-auto: create-drop
+      ddl-auto: create
     properties:
       hibernate:
         format_sql: true
