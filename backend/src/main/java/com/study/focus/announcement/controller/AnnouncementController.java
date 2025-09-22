@@ -6,9 +6,11 @@ import com.study.focus.announcement.dto.GetAnnouncementsResponse;
 import com.study.focus.announcement.service.AnnouncementService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -30,9 +32,18 @@ public class AnnouncementController {
         return ResponseEntity.ok(announcementService.findAllSummaries(studyId,userId));
     }
 
-    // 공지 생성하기
-    @PostMapping
-    public void createAnnouncement(@PathVariable Long studyId) {}
+    // 공지 생성하기(multiPartFrom 형식만 허용)
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> createAnnouncement
+    (@PathVariable Long studyId , @AuthenticationPrincipal CustomUserDetails user,
+     @RequestParam(name = "title") String title, @RequestParam(name = "content") String content,
+     @RequestPart(name = "files",required = false) List<MultipartFile> files)
+    {
+        log.info("creating announcements for studyId: {}", studyId);
+        Long userId = user.getUserId();
+        announcementService.createAnnouncement(studyId,userId,title,content,files);
+        return ResponseEntity.ok().build();
+    }
 
     // 공지 상세 데이터 가져오기
     @GetMapping("/{announcementId}")

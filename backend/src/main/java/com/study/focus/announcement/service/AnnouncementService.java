@@ -3,14 +3,22 @@ package com.study.focus.announcement.service;
 import com.study.focus.announcement.domain.Announcement;
 import com.study.focus.announcement.dto.GetAnnouncementsResponse;
 import com.study.focus.announcement.repository.AnnouncementRepository;
+import com.study.focus.common.domain.File;
+import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
+import com.study.focus.common.repository.FileRepository;
+import com.study.focus.common.util.S3Uploader;
+import com.study.focus.study.domain.Study;
+import com.study.focus.study.domain.StudyMember;
 import com.study.focus.study.repository.StudyMemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 
 @Service
@@ -19,6 +27,8 @@ import java.util.List;
 public class AnnouncementService {
     private final AnnouncementRepository announcementRepo;
     private  final StudyMemberRepository studyMemberRepository;
+    private  final FileRepository fileRepository;
+    private  final S3Uploader s3Uploader;
 
     //ID를 통해 StudyId에 userId가 포함되는지 확인하여 그룹 내 유효성 검증
     public List<GetAnnouncementsResponse> findAllSummaries(Long studyId, Long userId)
@@ -32,9 +42,30 @@ public class AnnouncementService {
 
 
 
-    // 공지 생성하기
-    public void createAnnouncement(Long studyId) {
-        // TODO: 공지 생성
+    @Transactional
+    // 공지 생성하기(공지 데이터는 컨트롤러부분에서 유효성 검증을 하기 때문에 검증 x)
+    public void createAnnouncement(Long studyId, Long userId, String title, String content, List<MultipartFile> files)
+    {
+        StudyMember userStudyMember = validation(studyId, userId);
+        Study study = userStudyMember.getStudy();
+        Announcement announcement = Announcement.builder().
+                study(study).author(userStudyMember).title(title)
+                .description(content).build();
+
+        announcementRepo.save(announcement);
+        //파일이 있는 경우
+        if(files !=null && !files.isEmpty()){
+            List<FileDetailDto> list = files.stream().map(s3Uploader::makeMetaData).toList();
+           //파일 데이터 db 저장
+           IntStream.range(0,list.size())
+                   .forEach(index ->fileRepository.save(
+                           File.ofAnnouncement(announcement,list.get(index))
+                   ));
+           //파일 데이터 s3에 업로드
+            List<String> keys = list.stream().map(FileDetailDto::getKey).toList();
+            s3Uploader.uploadFiles(keys,files);
+        }
+
     }
 
     // 공지 상세 데이터 가져오기
@@ -53,12 +84,11 @@ public class AnnouncementService {
     }
 
     //인터셉터 및 Aop 반영 시 수정 필요
-    private void validation(Long studyId, Long userId) {
+    private StudyMember validation(Long studyId, Long userId) {
         if(studyId == null || userId == null) {throw new BusinessException(CommonErrorCode.INVALID_REQUEST);}
-        boolean isStudyMember = studyMemberRepository.existsByStudyIdAndUserId(studyId, userId);
-        if(!isStudyMember){
-
-            throw  new BusinessException(CommonErrorCode.INVALID_REQUEST);
-        }
+        return studyMemberRepository.findByStudyIdAndUserId(studyId, userId).
+                orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
     }
+
+
 }
