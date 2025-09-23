@@ -16,6 +16,7 @@ import com.study.focus.study.domain.StudyMember;
 import com.study.focus.study.domain.StudyRole;
 import com.study.focus.study.repository.StudyMemberRepository;
 import io.awspring.cloud.s3.S3Template;
+import org.hibernate.mapping.Any;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -161,9 +162,9 @@ class AnnouncementUnitTest {
         ReflectionTestUtils.setField(s3uploader, "requestMaxByte", maxByte);
         ReflectionTestUtils.setField(s3uploader, "maxSizeByte", maxByte);
         ReflectionTestUtils.setField(s3uploader, "bucket", bucketName);
-
+        Announcement announcement= Announcement.builder().id(1L).title("title").study(mockStudy).author(mockStudyMember).build();
+        given(announcementRepo.save(any(Announcement.class))).willReturn(announcement);
         given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(mockStudyMember));
-
         doReturn(mockFileDetail).when(s3uploader).makeMetaData(any(MultipartFile.class));
 
         // when (실제 메서드 호출)
@@ -184,6 +185,8 @@ class AnnouncementUnitTest {
 
         Study mockStudy = Study.builder().build();
         StudyMember mockStudyMember = StudyMember.builder().study(mockStudy).role(StudyRole.LEADER).build();
+        Announcement announcement= Announcement.builder().id(1L).title("title").study(mockStudy).author(mockStudyMember).build();
+        given(announcementRepo.save(any(Announcement.class))).willReturn(announcement);
         given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(mockStudyMember));
 
         // when

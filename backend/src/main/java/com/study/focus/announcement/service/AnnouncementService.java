@@ -45,7 +45,7 @@ public class AnnouncementService {
 
     // 공지 생성하기(공지 데이터는 컨트롤러부분에서 유효성 검증을 하기 때문에 검증 x)
     @Transactional
-    public void createAnnouncement(Long studyId, Long userId, String title, String content, List<MultipartFile> files)
+    public Long createAnnouncement(Long studyId, Long userId, String title, String content, List<MultipartFile> files)
     {
         StudyMember userStudyMember = validation(studyId, userId);
         isLeader(userStudyMember);
@@ -55,7 +55,7 @@ public class AnnouncementService {
                 study(study).author(userStudyMember).title(title)
                 .description(content).build();
 
-        announcementRepo.save(announcement);
+        Announcement saveAnnouncements = announcementRepo.save(announcement);
         //파일이 있는 경우
         if(files !=null && !files.isEmpty()){
             List<FileDetailDto> list = files.stream().map(s3Uploader::makeMetaData).toList();
@@ -68,7 +68,7 @@ public class AnnouncementService {
             List<String> keys = list.stream().map(FileDetailDto::getKey).toList();
             s3Uploader.uploadFiles(keys,files);
         }
-
+        return saveAnnouncements.getId();
     }
 
     private static void isLeader(StudyMember userStudyMember) {
