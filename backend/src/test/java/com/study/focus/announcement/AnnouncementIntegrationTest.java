@@ -76,11 +76,11 @@ public class AnnouncementIntegrationTest {
 
 
         StudyMember studyMember1 = studyMemberRepository.save(StudyMember.builder().user(user1).study(study1).exitedAt(LocalDateTime.now().plusMonths(1)).
-                role(StudyRole.MEMBER).status(StudyMemberStatus.JOINED).build());
+                role(StudyRole.LEADER).status(StudyMemberStatus.JOINED).build());
         StudyMember studyMember2 = studyMemberRepository.save(StudyMember.builder().user(user1).study(study2).exitedAt(LocalDateTime.now().plusMonths(1)).
                 role(StudyRole.MEMBER).status(StudyMemberStatus.JOINED).build());
         StudyMember studyMember3 = studyMemberRepository.save(StudyMember.builder().user(user2).study(study2).exitedAt(LocalDateTime.now().plusMonths(1)).
-                role(StudyRole.MEMBER).status(StudyMemberStatus.JOINED).build());
+                role(StudyRole.LEADER).status(StudyMemberStatus.JOINED).build());
 
 
         announcementRepository.save(Announcement.builder().study(study1).author(studyMember1).title("TestTitle1").build());
@@ -135,18 +135,18 @@ public class AnnouncementIntegrationTest {
         String title = "testTile";
         String content = "testContent";
 
-        mockMvc.perform(multipart("/api/studies/" +study2.getId()+"/announcements")
+        //when and then
+        List<Announcement> beforeSaveList = announcementRepository.findAllByStudyId(study1.getId());
+        mockMvc.perform(multipart("/api/studies/" +study1.getId()+"/announcements")
                 .file(file)
                 .param("title",title)
                 .param("content",content)
                 .with(user(new CustomUserDetails(user1.getId())))
                         .with(csrf()))
                 .andExpect(status().isOk());
-        List<Announcement> announcements = announcementRepository.findAllByStudyId(study2.getId());
-        Assertions.assertThat(announcements.size()).isEqualTo(1);
-        Announcement lastAnnouncement = announcements.get(0);
-        Assertions.assertThat(lastAnnouncement.getTitle()).isEqualTo(title);
 
+        List<Announcement> afterSaveList = announcementRepository.findAllByStudyId(study1.getId());
+        Assertions.assertThat(beforeSaveList.size() +1).isEqualTo(afterSaveList.size());
     }
 
     @Test
@@ -155,19 +155,18 @@ public class AnnouncementIntegrationTest {
         //given
         String title = "testTile";
         String content = "testContent";
+        List<Announcement> beforeSaveList = announcementRepository.findAllByStudyId(study1.getId());
+        List<File> files = fileRepository.findAll();
 
-
-        mockMvc.perform(multipart("/api/studies/" +study2.getId()+"/announcements")
+        //when and then
+        mockMvc.perform(multipart("/api/studies/" +study1.getId()+"/announcements")
                         .param("title",title)
                         .param("content",content)
                         .with(user(new CustomUserDetails(user1.getId())))
                         .with(csrf()))
                 .andExpect(status().isOk());
-        List<Announcement> announcements = announcementRepository.findAllByStudyId(study2.getId());
-        Assertions.assertThat(announcements.size()).isEqualTo(1);
-        Announcement lastAnnouncement = announcements.get(0);
-        Assertions.assertThat(lastAnnouncement.getTitle()).isEqualTo(title);
-        List<File> files = fileRepository.findAll();
+        List<Announcement> afterSaveList = announcementRepository.findAllByStudyId(study1.getId());
+        Assertions.assertThat(beforeSaveList.size() + 1).isEqualTo(afterSaveList.size());
         Assertions.assertThat(files.size()).isEqualTo(0);
     }
 
@@ -188,15 +187,31 @@ public class AnnouncementIntegrationTest {
         String content = "testContent";
 
         long initialCount = announcementRepository.count();
-        Assertions.assertThat(initialCount).isEqualTo(2L);
-        mockMvc.perform(multipart("/api/studies/" +study2.getId()+"/announcements")
+        mockMvc.perform(multipart("/api/studies/" +study1.getId()+"/announcements")
                         .file(file)
                         .param("title",title)
                         .param("content",content)
                         .with(user(new CustomUserDetails(user1.getId())))
                         .with(csrf()))
                         .andExpect(status().isBadRequest());
+        //rollback
         Assertions.assertThat(announcementRepository.count()).isEqualTo(initialCount);
+    }
+
+    @Test
+    @DisplayName("실패: 공지사항 생성 - 방장이 아닌 경우")
+    void createAnnouncement_fail_isNotLeader() throws Exception {
+        //given
+        String title = "testTile";
+        String content = "testContent";
+
+        //when and then
+        mockMvc.perform(multipart("/api/studies/" +study2.getId()+"/announcements")
+                        .param("title",title)
+                        .param("content",content)
+                        .with(user(new CustomUserDetails(user1.getId())))
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
     }
 
 }

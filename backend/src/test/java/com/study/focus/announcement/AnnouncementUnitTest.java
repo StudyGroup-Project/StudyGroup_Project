@@ -13,6 +13,7 @@ import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.util.S3Uploader;
 import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
+import com.study.focus.study.domain.StudyRole;
 import com.study.focus.study.repository.StudyMemberRepository;
 import io.awspring.cloud.s3.S3Template;
 import org.junit.jupiter.api.Assertions;
@@ -150,7 +151,7 @@ class AnnouncementUnitTest {
                 new MockMultipartFile("files","test.jpg","image/jpg","test1".getBytes())
         );
         Study mockStudy = Study.builder().build();
-        StudyMember mockStudyMember = StudyMember.builder().study(mockStudy).build();
+        StudyMember mockStudyMember = StudyMember.builder().study(mockStudy).role(StudyRole.LEADER).build();
         FileDetailDto mockFileDetail = new FileDetailDto("test.jpg", "testKey", "image/jpg", 10L);
 
         DataSize maxByte = DataSize.ofMegabytes(100);
@@ -182,7 +183,7 @@ class AnnouncementUnitTest {
         Long userId = 1L;
 
         Study mockStudy = Study.builder().build();
-        StudyMember mockStudyMember = StudyMember.builder().study(mockStudy).build();
+        StudyMember mockStudyMember = StudyMember.builder().study(mockStudy).role(StudyRole.LEADER).build();
         given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(mockStudyMember));
 
         // when
@@ -203,7 +204,7 @@ class AnnouncementUnitTest {
                 new MockMultipartFile("files", "test.exe", "application/octet-stream", "test".getBytes())
         );
         Study mockStudy = Study.builder().build();
-        StudyMember mockStudyMember = StudyMember.builder().study(mockStudy).build();
+        StudyMember mockStudyMember = StudyMember.builder().study(mockStudy).role(StudyRole.LEADER).build();
 
         given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(mockStudyMember));
 
@@ -213,8 +214,28 @@ class AnnouncementUnitTest {
 
         BusinessException ex = assertThrows(BusinessException.class, () -> announcementService.createAnnouncement(studyId, userId, "title", "content", invalidFiles));
 
-        org.assertj.core.api.Assertions.assertThat(ex.getErrorCode()).isEqualTo(UserErrorCode.INVALID_FILE_TYPE);
+        assertThat(ex.getErrorCode()).isEqualTo(UserErrorCode.INVALID_FILE_TYPE);
         then(announcementRepo).should(times(1)).save(any(Announcement.class));
+        then(fileRepository).should(times(0)).save(any(File.class));
+
+    }
+
+    @Test
+    @DisplayName("공지사항 생성 실패 - 방장이 아닌 경우  ")
+    void createAnnouncement_fail_isNotLeader()
+    {
+        Long studyId = 1L;
+        Long userId = 1L;
+
+        Study mockStudy = Study.builder().build();
+        StudyMember mockStudyMember = StudyMember.builder().study(mockStudy).role(StudyRole.MEMBER).build();
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(mockStudyMember));
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> announcementService.createAnnouncement(studyId, userId, "title", "content", null));
+
+        assertThat(ex.getErrorCode()).isEqualTo(UserErrorCode.URL_FORBIDDEN);
+        then(announcementRepo).should(times(0)).save(any(Announcement.class));
         then(fileRepository).should(times(0)).save(any(File.class));
 
     }

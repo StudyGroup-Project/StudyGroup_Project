@@ -7,10 +7,12 @@ import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
+import com.study.focus.common.exception.UserErrorCode;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.util.S3Uploader;
 import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
+import com.study.focus.study.domain.StudyRole;
 import com.study.focus.study.repository.StudyMemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -41,13 +43,13 @@ public class AnnouncementService {
     }
 
 
-
-
     // 공지 생성하기(공지 데이터는 컨트롤러부분에서 유효성 검증을 하기 때문에 검증 x)
     @Transactional
     public void createAnnouncement(Long studyId, Long userId, String title, String content, List<MultipartFile> files)
     {
         StudyMember userStudyMember = validation(studyId, userId);
+        isLeader(userStudyMember);
+
         Study study = userStudyMember.getStudy();
         Announcement announcement = Announcement.builder().
                 study(study).author(userStudyMember).title(title)
@@ -67,6 +69,13 @@ public class AnnouncementService {
             s3Uploader.uploadFiles(keys,files);
         }
 
+    }
+
+    private static void isLeader(StudyMember userStudyMember) {
+        if(!userStudyMember.getRole().equals(StudyRole.LEADER))
+        {
+            throw new BusinessException(UserErrorCode.URL_FORBIDDEN);
+        }
     }
 
     // 공지 상세 데이터 가져오기

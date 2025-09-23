@@ -15,7 +15,8 @@ public enum UserErrorCode implements ErrorCode {
     FILE_TOO_LARGE(HttpStatus.BAD_REQUEST,"파일의 허용 용량을 초과했습니다"),
     FILE_UPLOAD_FAIL(HttpStatus.INTERNAL_SERVER_ERROR,"파일 업로드에 실패했습니다"),
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST,"잘못된 파일 타입을 요청했습니다."),
-    FILE_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR,"현재 파일과 관련하여 서버에 문제가 있습니다.");
+    FILE_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR,"현재 파일과 관련하여 서버에 문제가 있습니다."),
+    URL_FORBIDDEN(HttpStatus.FORBIDDEN,"사용자는 해당 기능을 사용할 수 없습니다.");
 
 
 

@@ -32,7 +32,7 @@ public class AnnouncementController {
         return ResponseEntity.ok(announcementService.findAllSummaries(studyId,userId));
     }
 
-    // 공지 생성하기(multiPartFrom 형식만 허용)
+    // 공지 생성하기(multiPartFrom 형식만 허용) 방장만 허용
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> createAnnouncement
     (@PathVariable Long studyId , @AuthenticationPrincipal CustomUserDetails user,
