@@ -157,13 +157,14 @@ public class S3Uploader
         try{
             s3Template.deleteObject(bucket,key);
         }catch (S3Exception  e){
-            log.error("s3 파일 삭제에 실패했습니다. key: {}, Error: {}",key ,e.getMessage());
+            log.error("s3_File_Delete Fail. key: {}, Error: {}",key ,e.getMessage());
             throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR,e);
         }
     }
 
     private void validateKey(String key) {
         if(!StringUtils.hasText(key)){
+            log.error("File key Not found : {}", key);
             throw  new BusinessException(UserErrorCode.FILE_NOT_FOUND);
         }
     }
