@@ -66,8 +66,7 @@ class AnnouncementUnitTest {
     User testUser = User.builder().trustScore(30L).lastLoginAt(LocalDateTime.now()).build();
     Study testStudy = Study.builder().maxMemberCount(30).build();
     StudyMember teststudyMember = StudyMember.builder().user(testUser).study(testStudy).build();
-    Announcement testAnnouncement = Announcement.builder().study(testStudy).author(teststudyMember)
-            .title("test").description("test").build();
+
 
     @Test
     @DisplayName("성공: 스터디 멤버가 공지사항 목록을 성공적으로 조회")
@@ -240,6 +239,27 @@ class AnnouncementUnitTest {
         assertThat(ex.getErrorCode()).isEqualTo(UserErrorCode.URL_FORBIDDEN);
         then(announcementRepo).should(times(0)).save(any(Announcement.class));
         then(fileRepository).should(times(0)).save(any(File.class));
+
+    }
+
+    @Test
+    @DisplayName("공지사항 삭제 성공 - 방장 권한 존재, 파일/댓글 포함")
+    void deleteAnnouncement_success(){
+        //given
+        Long studyId = 1L;
+        Long userId = 1L;
+        Long announcementId = 1L;
+
+        Study study = Study.builder().build();
+        StudyMember leader = StudyMember.builder().role(StudyRole.LEADER).user(testUser).build();
+        Announcement.builder()
+                .id(announcementId)
+                .study(study)
+                .author(leader)
+                .title("title")
+                .description("desc")
+                .build();
+
 
     }
 

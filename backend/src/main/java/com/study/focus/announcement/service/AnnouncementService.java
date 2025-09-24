@@ -1,8 +1,10 @@
 package com.study.focus.announcement.service;
 
 import com.study.focus.announcement.domain.Announcement;
+import com.study.focus.announcement.domain.Comment;
 import com.study.focus.announcement.dto.GetAnnouncementsResponse;
 import com.study.focus.announcement.repository.AnnouncementRepository;
+import com.study.focus.announcement.repository.CommentRepository;
 import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.exception.BusinessException;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 
@@ -27,16 +30,17 @@ import java.util.stream.IntStream;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class AnnouncementService {
-    private final AnnouncementRepository announcementRepo;
+    private final AnnouncementRepository announcementRepository;
     private  final StudyMemberRepository studyMemberRepository;
     private  final FileRepository fileRepository;
     private  final S3Uploader s3Uploader;
+    private  final CommentRepository commentRepository;
 
     //ID를 통해 StudyId에 userId가 포함되는지 확인하여 그룹 내 유효성 검증
     public List<GetAnnouncementsResponse> findAllSummaries(Long studyId, Long userId)
     {
-        validation(studyId, userId);
-        List<Announcement> resultList = announcementRepo.findAllByStudyId(studyId);
+        memebrValidation(studyId, userId);
+        List<Announcement> resultList = announcementRepository.findAllByStudyId(studyId);
         return  resultList.stream().map(a -> {
             return new GetAnnouncementsResponse(a.getId(), a.getTitle(), a.getCreatedAt());
         }).toList();
@@ -47,7 +51,7 @@ public class AnnouncementService {
     @Transactional
     public Long createAnnouncement(Long studyId, Long userId, String title, String content, List<MultipartFile> files)
     {
-        StudyMember userStudyMember = validation(studyId, userId);
+        StudyMember userStudyMember = memebrValidation(studyId, userId);
         isLeader(userStudyMember);
 
         Study study = userStudyMember.getStudy();
@@ -55,7 +59,7 @@ public class AnnouncementService {
                 study(study).author(userStudyMember).title(title)
                 .description(content).build();
 
-        Announcement saveAnnouncements = announcementRepo.save(announcement);
+        Announcement saveAnnouncements = announcementRepository.save(announcement);
         //파일이 있는 경우
         if(files !=null && !files.isEmpty()){
             List<FileDetailDto> list = files.stream().map(s3Uploader::makeMetaData).toList();
@@ -71,12 +75,47 @@ public class AnnouncementService {
         return saveAnnouncements.getId();
     }
 
+    // 공지 삭제하기
+    // 공지가 없는 경우, 방장이 아닌 경우
+    public void deleteAnnouncement(Long studyId, Long userId, Long announcementId) {
+        //검증
+        Announcement findAnnouncement = validationAnnouncement(studyId, userId, announcementId);
+        isLeader(findAnnouncement.getAuthor());
+
+        //파일 삭제
+        List<File> findAnnouncementFiles = fileRepository.findAllByAnnouncement_Id(announcementId);
+        findAnnouncementFiles.forEach(File::deleteAnnouncementFile);
+
+        //댓글 삭제
+        List<Comment> findAnnouncementComments = commentRepository.findAllByAnnouncement_Id(announcementId);
+        commentRepository.deleteAll(findAnnouncementComments);
+
+        //공지 삭제
+        announcementRepository.delete(findAnnouncement);
+    }
+
+    private  Announcement validationAnnouncement(Long studyId, Long userId, Long announcementId)
+    {
+        if(studyId == null || userId ==null || announcementId ==null)
+        {
+            throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
+        }
+        Optional<Announcement> announcement = announcementRepository.findByIdAndStudy_IdAndAuthor_Id(studyId, userId, announcementId);
+        return announcement.orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+    }
+
+
+
+
+
     private static void isLeader(StudyMember userStudyMember) {
         if(!userStudyMember.getRole().equals(StudyRole.LEADER))
         {
             throw new BusinessException(UserErrorCode.URL_FORBIDDEN);
         }
     }
+
+
 
     // 공지 상세 데이터 가져오기
     public void getAnnouncementDetail(Long studyId, Long announcementId) {
@@ -88,13 +127,10 @@ public class AnnouncementService {
         // TODO: 공지 수정
     }
 
-    // 공지 삭제하기
-    public void deleteAnnouncement(Long studyId, Long announcementId) {
-        // TODO: 공지 삭제
-    }
+
 
     //인터셉터 및 Aop 반영 시 수정 필요
-    private StudyMember validation(Long studyId, Long userId) {
+    private StudyMember memebrValidation(Long studyId, Long userId) {
         if(studyId == null || userId == null) {throw new BusinessException(CommonErrorCode.INVALID_REQUEST);}
         return studyMemberRepository.findByStudyIdAndUserId(studyId, userId).
                 orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));

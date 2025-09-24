@@ -42,30 +42,42 @@ public class AnnouncementController {
      @RequestParam(name = "title") String title, @RequestParam(name = "content") String content,
      @RequestPart(name = "files",required = false) List<MultipartFile> files)
     {
-        log.info("creating announcements for studyId: {}", studyId);
+        log.info("creating announcement for studyId: {}", studyId);
         Long userId = user.getUserId();
         Long savedAnnouncementId = announcementService.createAnnouncement(studyId, userId, title, content, files);
+
         URI location = URI.create(String.format("/api/studies/%d/announcements/%d",studyId,savedAnnouncementId));
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(location);
-        //303 리디렉션
         return new ResponseEntity<>(headers, HttpStatus.SEE_OTHER);
-
     }
 
     // 공지 삭제하기
+    //리디렉션 고려,
     @DeleteMapping("/{announcementId}")
-    public void deleteAnnouncement(@PathVariable Long studyId, @PathVariable Long announcementId) {
+    public ResponseEntity<Void> deleteAnnouncement(@PathVariable Long studyId, @PathVariable Long announcementId ,
+                                   @AuthenticationPrincipal CustomUserDetails user) {
+        log.info("Delete announcement for studyId: {} , for announcementId: {}", studyId,announcementId);
+        Long userId = user.getUserId();
+        announcementService.deleteAnnouncement(studyId,userId,announcementId);
 
-
+        URI location = URI.create(String.format("/api/studies/%d/announcements",studyId));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(location);
+        return new ResponseEntity<>(headers, HttpStatus.SEE_OTHER);
     }
-    // 공지 상세 데이터 가져오기
-    @GetMapping("/{announcementId}")
-    public void getAnnouncementDetail(@PathVariable Long studyId, @PathVariable Long announcementId) {}
 
     // 공지 수정하기
     @PutMapping("/{announcementId}")
-    public void updateAnnouncement(@PathVariable Long studyId, @PathVariable Long announcementId) {}
+    public void updateAnnouncement(@PathVariable Long studyId, @PathVariable Long announcementId) {
+
+
+    }
+
+
+    // 공지 상세 데이터 가져오기
+    @GetMapping("/{announcementId}")
+    public void getAnnouncementDetail(@PathVariable Long studyId, @PathVariable Long announcementId) {}
 
 
 
