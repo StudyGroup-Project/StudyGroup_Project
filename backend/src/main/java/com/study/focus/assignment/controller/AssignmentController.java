@@ -40,7 +40,7 @@ public class AssignmentController {
         return ResponseEntity.created(location).build();
     }
 
-    
+
     // 과제 상세 내용 가져오기
     @GetMapping("/{assignmentId}")
     public void getAssignmentDetail(@PathVariable Long studyId, @PathVariable Long assignmentId) {}
