@@ -53,7 +53,6 @@ public class AnnouncementController {
     }
 
     // 공지 삭제하기
-    //리디렉션 고려,
     @DeleteMapping("/{announcementId}")
     public ResponseEntity<Void> deleteAnnouncement(@PathVariable Long studyId, @PathVariable Long announcementId ,
                                    @AuthenticationPrincipal CustomUserDetails user) {
