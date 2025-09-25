@@ -20,6 +20,5 @@ public class Study extends BaseCreatedEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Builder.Default
     private RecruitStatus recruitStatus = RecruitStatus.OPEN;
 }

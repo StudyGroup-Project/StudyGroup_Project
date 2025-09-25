@@ -50,7 +50,6 @@ public class AnnouncementController {
         headers.setLocation(location);
         //303 리디렉션
         return new ResponseEntity<>(headers, HttpStatus.SEE_OTHER);
-
     }
 
     // 공지 삭제하기

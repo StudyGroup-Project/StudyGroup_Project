@@ -33,9 +33,15 @@ public class Assignment extends BaseTimeEntity {
     @Lob
     private String description;
 
-    @Column(nullable = false)
+    @Column(name = "start_at", nullable = false)
     private LocalDateTime startAt;
 
-    @Column(nullable = false)
+    @Column(name = "due_at", nullable = false)
     private LocalDateTime dueAt;
+
+    @Column(name = "created_id", nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 }

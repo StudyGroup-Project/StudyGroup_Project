@@ -29,7 +29,6 @@ public class Application extends BaseCreatedEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Builder.Default
     private ApplicationStatus status = SUBMITTED;
 
     @Lob
