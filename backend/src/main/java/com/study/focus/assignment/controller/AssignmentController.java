@@ -9,6 +9,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -34,8 +35,9 @@ public class AssignmentController {
                                                  @RequestPart(name = "files",required = false) List<MultipartFile> files)
     {
         Long creator = user.getUserId();
-        assignmentService.createAssignment(studyId,creator,dto,files);
-        return ResponseEntity.ok().build();
+        Long createAssginmnetId = assignmentService.createAssignment(studyId,creator,dto,files);
+        URI location = URI.create("/api/studies/" + studyId + "/assignments/" + createAssginmnetId);
+        return ResponseEntity.created(location).build();
     }
 
     // 과제 상세 내용 가져오기

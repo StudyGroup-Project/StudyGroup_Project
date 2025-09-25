@@ -50,7 +50,7 @@ public class AssignmentService {
 
     // 과제 생성하기
     @Transactional
-    public void createAssignment(Long studyId, Long creatorId, AssignmentCreateRequestDTO dto, List<MultipartFile> files) {
+    public Long createAssignment(Long studyId, Long creatorId, AssignmentCreateRequestDTO dto, List<MultipartFile> files) {
         // TODO: 과제 생성
         Study study = studyRepository.findById(studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
         StudyMember creator = studyMemberRepository.findByStudyIdAndUserId(studyId, creatorId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
@@ -62,7 +62,7 @@ public class AssignmentService {
         Assignment assignment = Assignment.builder().createdAt(now).creator(creator).startAt(dto.getStartAt())
                 .dueAt(dto.getDueAt()).study(study).updatedAt(now).title(dto.getTitle()).description(dto.getDescription()).build();
 
-        assignmentRepository.save(assignment);
+        Assignment saveAssignment = assignmentRepository.save(assignment);
 
         if(files != null && !files.isEmpty()){
             List<FileDetailDto> list = files.stream().map(s3Uploader::makeMetaData).toList();
@@ -73,6 +73,8 @@ public class AssignmentService {
             List<String> keys = list.stream().map(FileDetailDto::getKey).toList();
             s3Uploader.uploadFiles(keys,files);
         }
+
+        return saveAssignment.getId();
     }
 
     // 과제 상세 내용 가져오기
