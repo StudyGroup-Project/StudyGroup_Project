@@ -38,6 +38,7 @@ public class StudyMember extends BaseCreatedEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Builder.Default
     private StudyMemberStatus status =  JOINED;
 
     @Column(nullable = true)
