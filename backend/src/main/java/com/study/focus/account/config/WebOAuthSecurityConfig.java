@@ -39,19 +39,6 @@ public class WebOAuthSecurityConfig {
     }
 
     @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:8080") // 프론트 주소
-                        .allowedMethods("GET","POST","PUT","DELETE")
-                        .allowCredentials(true);
-            }
-        };
-    }
-
-    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            OAuth2SuccessHandler oAuth2SuccessHandler) throws Exception {
         return http
