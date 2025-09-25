@@ -81,10 +81,8 @@ public class AccountService {
     }
 
     // 아이디 중복 확인
-    public void checkId(String loginId) {
-        if (systemCredentialRepository.existsByLoginId(loginId)) {
-            throw new IllegalArgumentException("이미 존재하는 아이디입니다.");
-        }
+    public boolean checkId(String loginId) {
+        return !systemCredentialRepository.existsByLoginId(loginId);
     }
 
     // 일반 로그인

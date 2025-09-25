@@ -45,9 +45,9 @@ public class AuthController {
 
     // 아이디 중복 확인
     @GetMapping("/check-id")
-    public ResponseEntity<Void> checkId(@RequestParam String loginId) {
-        accountService.checkId(loginId);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<IdCheckResponse> checkId(@RequestParam String loginId) {
+        boolean available = accountService.checkId(loginId);
+        return ResponseEntity.ok(new IdCheckResponse(available));
     }
 
     // 일반 로그인
