@@ -45,11 +45,7 @@ public class AnnouncementController {
         log.info("creating announcements for studyId: {}", studyId);
         Long userId = user.getUserId();
         Long savedAnnouncementId = announcementService.createAnnouncement(studyId, userId, title, content, files);
-        URI location = URI.create(String.format("/api/studies/%d/announcements/%d",studyId,savedAnnouncementId));
-        HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(location);
-        //303 리디렉션
-        return new ResponseEntity<>(headers, HttpStatus.SEE_OTHER);
+        return new ResponseEntity<>( HttpStatus.CREATED);
 
     }
 

@@ -143,7 +143,7 @@ public class AnnouncementIntegrationTest {
                 .param("content",content)
                 .with(user(new CustomUserDetails(user1.getId())))
                         .with(csrf()))
-                .andExpect(status().isSeeOther());
+                .andExpect(status().isCreated());
 
         List<Announcement> afterSaveList = announcementRepository.findAllByStudyId(study1.getId());
         Assertions.assertThat(beforeSaveList.size() +1).isEqualTo(afterSaveList.size());
@@ -164,7 +164,7 @@ public class AnnouncementIntegrationTest {
                         .param("content",content)
                         .with(user(new CustomUserDetails(user1.getId())))
                         .with(csrf()))
-                .andExpect(status().isSeeOther());
+                .andExpect(status().isCreated());
         List<Announcement> afterSaveList = announcementRepository.findAllByStudyId(study1.getId());
         Assertions.assertThat(beforeSaveList.size() + 1).isEqualTo(afterSaveList.size());
         Assertions.assertThat(files.size()).isEqualTo(0);
