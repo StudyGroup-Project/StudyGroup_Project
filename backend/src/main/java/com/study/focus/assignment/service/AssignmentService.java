@@ -1,9 +1,47 @@
 package com.study.focus.assignment.service;
 
+import com.study.focus.assignment.domain.Assignment;
+import com.study.focus.assignment.dto.AssignmentCreateRequestDTO;
+import com.study.focus.assignment.repository.AssignmentRepository;
+import com.study.focus.common.domain.File;
+import com.study.focus.common.dto.FileDetailDto;
+import com.study.focus.common.exception.BusinessException;
+import com.study.focus.common.exception.CommonErrorCode;
+import com.study.focus.common.exception.UserErrorCode;
+import com.study.focus.common.repository.FileRepository;
+import com.study.focus.common.util.S3Uploader;
+import com.study.focus.study.domain.Study;
+import com.study.focus.study.domain.StudyMember;
+import com.study.focus.study.domain.StudyRole;
+import com.study.focus.study.repository.StudyMemberRepository;
+import com.study.focus.study.repository.StudyRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.IntStream;
+
+import static java.time.LocalDateTime.now;
 
 @Service
 public class AssignmentService {
+
+    private final AssignmentRepository assignmentRepository;
+    private final StudyRepository studyRepository;
+    private final StudyMemberRepository studyMemberRepository;
+    private final FileRepository fileRepository;
+    private final S3Uploader s3Uploader;
+
+    public AssignmentService(AssignmentRepository assignmentRepository, StudyRepository studyRepository, StudyMemberRepository studyMemberRepository, FileRepository fileRepository, S3Uploader s3Uploader) {
+        this.assignmentRepository = assignmentRepository;
+        this.studyRepository = studyRepository;
+        this.studyMemberRepository = studyMemberRepository;
+        this.fileRepository = fileRepository;
+        this.s3Uploader = s3Uploader;
+    }
+
 
     // 과제 목록 가져오기
     public void getAssignments(Long studyId) {
@@ -11,8 +49,30 @@ public class AssignmentService {
     }
 
     // 과제 생성하기
-    public void createAssignment(Long studyId) {
+    @Transactional
+    public void createAssignment(Long studyId, Long creatorId, AssignmentCreateRequestDTO dto, List<MultipartFile> files) {
         // TODO: 과제 생성
+        Study study = studyRepository.findById(studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
+        StudyMember creator = studyMemberRepository.findByStudyIdAndUserId(studyId, creatorId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+        if(!creator.getRole().equals(StudyRole.LEADER)) throw new BusinessException(UserErrorCode.URL_FORBIDDEN);
+        if(!dto.getDueAt().isAfter(dto.getStartAt())) throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        Assignment assignment = Assignment.builder().createdAt(now).creator(creator).startAt(dto.getStartAt())
+                .dueAt(dto.getDueAt()).study(study).updatedAt(now).title(dto.getTitle()).description(dto.getDescription()).build();
+
+        assignmentRepository.save(assignment);
+
+        if(files != null && !files.isEmpty()){
+            List<FileDetailDto> list = files.stream().map(s3Uploader::makeMetaData).toList();
+            IntStream.range(0,list.size())
+                    .forEach(index ->fileRepository.save(
+                            File.ofAssignment(assignment,list.get(index))
+                    ));
+            List<String> keys = list.stream().map(FileDetailDto::getKey).toList();
+            s3Uploader.uploadFiles(keys,files);
+        }
     }
 
     // 과제 상세 내용 가져오기
