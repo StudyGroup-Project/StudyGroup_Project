@@ -25,7 +25,7 @@ public class JwtFactory {
 
     @Builder
     public JwtFactory(String subject, Date issuedAt, Date expiration,
-                      Map<String ,Object> claims) {
+                      Map<String, Object> claims) {
         this.subject = (subject != null) ? subject : this.subject;
         this.issuedAt = (issuedAt != null) ? issuedAt : this.issuedAt;
         this.expiration = (expiration != null) ? expiration : this.expiration;

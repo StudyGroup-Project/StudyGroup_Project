@@ -40,7 +40,6 @@ public class RefreshTokenService {
     }
 
     public void deleteByUserId(Long userId) {
-        User user = User.builder().id(userId).build();
-        refreshTokenRepository.deleteByUser(user);
+        refreshTokenRepository.deleteByUserId(userId);
     }
 }

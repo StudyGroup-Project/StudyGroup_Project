@@ -32,9 +32,6 @@ public class OAuth2UserCustomService extends DefaultOAuth2UserService {
         String registrationId = userRequest.getClientRegistration().getRegistrationId(); // google, kakao, naver
         Provider provider = Provider.valueOf(registrationId.toUpperCase());
 
-        System.out.println("registrationId = " + registrationId);
-        System.out.println("provider = " + provider);
-
         // providerId 추출 (각 provider별로 다름)
         String providerUserId = extractProviderId(provider, oAuth2User.getAttributes());
 
