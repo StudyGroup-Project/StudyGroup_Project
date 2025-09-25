@@ -20,7 +20,7 @@ import org.hibernate.annotations.Check;
      (CASE WHEN announcement_id IS NOT NULL THEN 1 ELSE 0 END) +
      (CASE WHEN assignment_id   IS NOT NULL THEN 1 ELSE 0 END) +
      (CASE WHEN submission_id   IS NOT NULL THEN 1 ELSE 0 END)
-   ) = 1
+   ) <= 1
    """
 )
 @Getter

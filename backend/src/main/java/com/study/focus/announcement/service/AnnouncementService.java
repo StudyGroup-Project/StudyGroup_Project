@@ -39,7 +39,7 @@ public class AnnouncementService {
     //ID를 통해 StudyId에 userId가 포함되는지 확인하여 그룹 내 유효성 검증
     public List<GetAnnouncementsResponse> findAllSummaries(Long studyId, Long userId)
     {
-        memebrValidation(studyId, userId);
+        memberValidation(studyId, userId);
         List<Announcement> resultList = announcementRepository.findAllByStudyId(studyId);
         return  resultList.stream().map(a -> {
             return new GetAnnouncementsResponse(a.getId(), a.getTitle(), a.getCreatedAt());
@@ -51,7 +51,7 @@ public class AnnouncementService {
     @Transactional
     public Long createAnnouncement(Long studyId, Long userId, String title, String content, List<MultipartFile> files)
     {
-        StudyMember userStudyMember = memebrValidation(studyId, userId);
+        StudyMember userStudyMember = memberValidation(studyId, userId);
         isLeader(userStudyMember);
 
         Study study = userStudyMember.getStudy();
@@ -79,12 +79,17 @@ public class AnnouncementService {
     // 공지가 없는 경우, 방장이 아닌 경우
     public void deleteAnnouncement(Long studyId, Long userId, Long announcementId) {
         //검증
-        Announcement findAnnouncement = validationAnnouncement(studyId, userId, announcementId);
-        isLeader(findAnnouncement.getAuthor());
+        StudyMember userStudyMember = memberValidation(studyId, userId);
+        isLeader(userStudyMember);
+        Announcement findAnnouncement = validationAnnouncement(announcementId, studyId, userStudyMember.getId());
+
 
         //파일 삭제
         List<File> findAnnouncementFiles = fileRepository.findAllByAnnouncement_Id(announcementId);
         findAnnouncementFiles.forEach(File::deleteAnnouncementFile);
+        //null 반영
+        fileRepository.saveAll(findAnnouncementFiles);
+        fileRepository.flush();
 
         //댓글 삭제
         List<Comment> findAnnouncementComments = commentRepository.findAllByAnnouncement_Id(announcementId);
@@ -94,13 +99,13 @@ public class AnnouncementService {
         announcementRepository.delete(findAnnouncement);
     }
 
-    private  Announcement validationAnnouncement(Long studyId, Long userId, Long announcementId)
+    private  Announcement validationAnnouncement(Long announcementId, Long studyId, Long authorId)
     {
-        if(studyId == null || userId ==null || announcementId ==null)
+        if(studyId == null || authorId ==null || announcementId ==null)
         {
             throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
         }
-        Optional<Announcement> announcement = announcementRepository.findByIdAndStudy_IdAndAuthor_Id(studyId, userId, announcementId);
+        Optional<Announcement> announcement = announcementRepository.findByIdAndStudy_IdAndAuthor_Id(announcementId, studyId,authorId);
         return announcement.orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
     }
 
@@ -130,7 +135,7 @@ public class AnnouncementService {
 
 
     //인터셉터 및 Aop 반영 시 수정 필요
-    private StudyMember memebrValidation(Long studyId, Long userId) {
+    private StudyMember memberValidation(Long studyId, Long userId) {
         if(studyId == null || userId == null) {throw new BusinessException(CommonErrorCode.INVALID_REQUEST);}
         return studyMemberRepository.findByStudyIdAndUserId(studyId, userId).
                 orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
