@@ -76,7 +76,7 @@ public class AnnouncementService {
     }
 
     // 공지 삭제하기
-    // 공지가 없는 경우, 방장이 아닌 경우
+    @Transactional
     public void deleteAnnouncement(Long studyId, Long userId, Long announcementId) {
         //검증
         StudyMember userStudyMember = memberValidation(studyId, userId);

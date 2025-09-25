@@ -56,11 +56,7 @@ public class AnnouncementController {
         log.info("Delete announcement for studyId: {} , for announcementId: {}", studyId,announcementId);
         Long userId = user.getUserId();
         announcementService.deleteAnnouncement(studyId,userId,announcementId);
-
-        URI location = URI.create(String.format("/api/studies/%d/announcements",studyId));
-        HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(location);
-        return new ResponseEntity<>(headers, HttpStatus.SEE_OTHER);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     // 공지 수정하기

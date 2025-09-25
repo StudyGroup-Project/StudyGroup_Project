@@ -91,6 +91,7 @@ public class AnnouncementIntegrationTest {
 
     @AfterEach
     void after() {
+        fileRepository.deleteAll();
         announcementRepository.deleteAll();
         studyMemberRepository.deleteAll();
         studyRepository.deleteAll();
@@ -233,7 +234,40 @@ public class AnnouncementIntegrationTest {
 
         mockMvc.perform(delete("/api/studies/"+ study1.getId()+"/announcements/" +announcementId)
                 .with(user(new CustomUserDetails(user1.getId())))
-                .with(csrf())).andExpect(status().isSeeOther());
+                .with(csrf())).andExpect(status().isOk());
+
+    }
+
+    @Test
+    @DisplayName("실패: 공지사항 삭제 - 방장이 아닌 경우 ")
+    void deleteAnnouncement_Fail_isNotLeader() throws Exception {
+        long initialCount = announcementRepository.count();
+        mockMvc.perform(delete("/api/studies/"+ study2.getId()+"/announcements/" +2L)
+                .with(user(new CustomUserDetails(user1.getId())))
+                .with(csrf())).andExpect(status().isForbidden());
+        Assertions.assertThat(announcementRepository.count()).isEqualTo(initialCount);
+    }
+
+    @Test
+    @DisplayName("실패: 공지사항 삭제 - 스터디 멤버가 아닌 경우 ")
+    void deleteAnnouncement_Fail_isNotStudyMember() throws Exception {
+        long initialCount = announcementRepository.count();
+        mockMvc.perform(delete("/api/studies/"+ study1.getId()+"/announcements/" +2L)
+                .with(user(new CustomUserDetails(user2.getId())))
+                .with(csrf())).andExpect(status().isBadRequest());
+        Assertions.assertThat(announcementRepository.count()).isEqualTo(initialCount);
+
+    }
+
+    @Test
+    @DisplayName("실패: 공지사항 삭제 - 존재하지 않는 공지인 경우")
+    void deleteAnnouncement_Fail_announcementNotFound()throws Exception{
+        long NotExistAnnouncementId = 99999L;
+        long initialCount = announcementRepository.count();
+        mockMvc.perform(delete("/api/studies/"+ study1.getId()+"/announcements/" +NotExistAnnouncementId)
+                .with(user(new CustomUserDetails(user1.getId())))
+                .with(csrf())).andExpect(status().isBadRequest());
+        Assertions.assertThat(announcementRepository.count()).isEqualTo(initialCount);
 
     }
 

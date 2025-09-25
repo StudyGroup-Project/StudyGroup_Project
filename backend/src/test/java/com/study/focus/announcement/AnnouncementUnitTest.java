@@ -253,7 +253,7 @@ class AnnouncementUnitTest {
         Long announcementId = 1L;
 
         Study study = Study.builder().build();
-        StudyMember leader = StudyMember.builder().role(StudyRole.LEADER).user(testUser).build();
+        StudyMember leader = StudyMember.builder().role(StudyRole.LEADER).user(testUser).study(study).id(1L).build();
         Announcement announcement = Announcement.builder()
                 .id(announcementId)
                 .study(study)
@@ -265,6 +265,8 @@ class AnnouncementUnitTest {
                 new FileDetailDto("t","t","t",1L)));
         List<Comment> mockComments = List.of(Comment.builder().commenter(teststudyMember).content("test").build());
 
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId,userId)).willReturn(Optional.of(leader));
+        given(announcementRepo.findByIdAndStudy_IdAndAuthor_Id(announcementId,studyId,userId)).willReturn(Optional.of(announcement));
         given(announcementRepo.findByIdAndStudy_IdAndAuthor_Id(studyId,userId,announcementId)).willReturn(Optional.of(announcement));
         given(fileRepository.findAllByAnnouncement_Id(announcementId)).willReturn(mockFiles);
         given(commentRepository.findAllByAnnouncement_Id(announcementId)).willReturn(mockComments);
@@ -285,7 +287,6 @@ class AnnouncementUnitTest {
         Long studyId = 1L;
         Long userId = 1L;
         Long announcementId = 1L;
-
         Study study = Study.builder().build();
         StudyMember leader = StudyMember.builder().role(StudyRole.MEMBER).user(testUser).build();
         Announcement announcement = Announcement.builder()
@@ -295,8 +296,7 @@ class AnnouncementUnitTest {
                 .title("title")
                 .description("desc")
                 .build();
-
-        given(announcementRepo.findByIdAndStudy_IdAndAuthor_Id(studyId,userId,announcementId)).willReturn(Optional.of(announcement));
+       // given(announcementRepo.findByIdAndStudy_IdAndAuthor_Id(announcementId,studyId,announcementId)).willReturn(Optional.of(announcement));
 
         //then
         assertThatThrownBy(() ->announcementService.deleteAnnouncement(studyId,userId,announcementId))
@@ -323,8 +323,6 @@ class AnnouncementUnitTest {
                 .title("title")
                 .description("desc")
                 .build();
-        given(announcementRepo.findByIdAndStudy_IdAndAuthor_Id(studyId,userId,announcementId)).willReturn(Optional.empty());
-
         //when & then
         assertThatThrownBy(()-> announcementService.deleteAnnouncement(studyId,userId,announcementId))
                 .isInstanceOf(BusinessException.class);
