@@ -3,6 +3,8 @@ package com.study.focus.assignment.controller;
 import com.study.focus.account.dto.CustomUserDetails;
 import com.study.focus.assignment.dto.AssignmentCreateRequestDTO;
 import com.study.focus.assignment.service.AssignmentService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,14 +16,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/studies/{studyId}/assignments")
+@RequiredArgsConstructor
 public class AssignmentController {
 
     private final AssignmentService assignmentService;
-
-    public AssignmentController(AssignmentService assignmentService) {
-        this.assignmentService = assignmentService;
-    }
-
 
     // 과제 목록 가져오기
     @GetMapping
