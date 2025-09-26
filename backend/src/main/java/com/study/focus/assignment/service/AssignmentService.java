@@ -15,6 +15,7 @@ import com.study.focus.study.domain.StudyMember;
 import com.study.focus.study.domain.StudyRole;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,6 +27,7 @@ import java.util.stream.IntStream;
 import static java.time.LocalDateTime.now;
 
 @Service
+@RequiredArgsConstructor
 public class AssignmentService {
 
     private final AssignmentRepository assignmentRepository;
@@ -33,14 +35,6 @@ public class AssignmentService {
     private final StudyMemberRepository studyMemberRepository;
     private final FileRepository fileRepository;
     private final S3Uploader s3Uploader;
-
-    public AssignmentService(AssignmentRepository assignmentRepository, StudyRepository studyRepository, StudyMemberRepository studyMemberRepository, FileRepository fileRepository, S3Uploader s3Uploader) {
-        this.assignmentRepository = assignmentRepository;
-        this.studyRepository = studyRepository;
-        this.studyMemberRepository = studyMemberRepository;
-        this.fileRepository = fileRepository;
-        this.s3Uploader = s3Uploader;
-    }
 
     // 과제 목록 가져오기
     public void getAssignments(Long studyId) {
@@ -56,10 +50,14 @@ public class AssignmentService {
         if(!creator.getRole().equals(StudyRole.LEADER)) throw new BusinessException(UserErrorCode.URL_FORBIDDEN);
         if(!dto.getDueAt().isAfter(dto.getStartAt())) throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
         
-        LocalDateTime now = LocalDateTime.now();
-
-        Assignment assignment = Assignment.builder().createdAt(now).creator(creator).startAt(dto.getStartAt())
-                .dueAt(dto.getDueAt()).study(study).updatedAt(now).title(dto.getTitle()).description(dto.getDescription()).build();
+        Assignment assignment = Assignment.builder()
+                .creator(creator)
+                .startAt(dto.getStartAt())
+                .dueAt(dto.getDueAt())
+                .study(study)
+                .title(dto.getTitle())
+                .description(dto.getDescription())
+                .build();
 
         Assignment saveAssignment = assignmentRepository.save(assignment);
 
