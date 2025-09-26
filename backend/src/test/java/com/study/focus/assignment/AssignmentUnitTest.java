@@ -98,8 +98,6 @@ class AssignmentUnitTest {
                             .description(a.getDescription())
                             .startAt(a.getStartAt())
                             .dueAt(a.getDueAt())
-                            .createdAt(a.getCreatedAt())
-                            .updatedAt(a.getUpdatedAt())
                             .build();
                 });
 
@@ -232,7 +230,6 @@ class AssignmentUnitTest {
                             .study(a.getStudy()).creator(a.getCreator())
                             .title(a.getTitle()).description(a.getDescription())
                             .startAt(a.getStartAt()).dueAt(a.getDueAt())
-                            .createdAt(a.getCreatedAt()).updatedAt(a.getUpdatedAt())
                             .build();
                 });
 
