@@ -25,7 +25,9 @@ public class AssignmentController {
 
     // 과제 목록 가져오기
     @GetMapping
-    public void getAssignments(@PathVariable Long studyId) {}
+    public void getAssignments(@PathVariable Long studyId) {
+
+    }
 
     // 과제 생성하기
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -38,7 +40,6 @@ public class AssignmentController {
         URI location = URI.create("/api/studies/" + studyId + "/assignments/" + createAssginmnetId);
         return ResponseEntity.created(location).build();
     }
-
 
     // 과제 상세 내용 가져오기
     @GetMapping("/{assignmentId}")
