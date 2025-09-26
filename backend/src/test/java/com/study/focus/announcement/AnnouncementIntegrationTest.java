@@ -7,6 +7,7 @@ import com.study.focus.announcement.domain.Announcement;
 import com.study.focus.announcement.repository.AnnouncementRepository;
 import com.study.focus.announcement.service.AnnouncementService;
 import com.study.focus.common.domain.File;
+import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.study.domain.*;
@@ -27,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -89,6 +91,7 @@ public class AnnouncementIntegrationTest {
 
     @AfterEach
     void after() {
+        fileRepository.deleteAll();
         announcementRepository.deleteAll();
         studyMemberRepository.deleteAll();
         studyRepository.deleteAll();
@@ -170,9 +173,6 @@ public class AnnouncementIntegrationTest {
         Assertions.assertThat(files.size()).isEqualTo(0);
     }
 
-
-
-
     @Test
     @DisplayName("실패: 공지사항 생성 - 지원하지 않는 파일 타입 ")
     void createAnnouncement_fail_invalidFileType() throws Exception {
@@ -212,7 +212,65 @@ public class AnnouncementIntegrationTest {
                         .with(user(new CustomUserDetails(user1.getId())))
                         .with(csrf()))
                 .andExpect(status().isForbidden());
+
     }
+
+    @Test
+    @DisplayName("성공: 공지사항 삭제 / 방장 권한이 있고 파일과 댓글도 있는 경우 ")
+    void deleteAnnouncement_success() throws Exception {
+        StudyMember leadMember = studyMemberRepository.findByStudyIdAndUserId(study1.getId(), user1.getId()).orElse(null);
+        Announcement announcement = announcementRepository.save(Announcement.builder()
+                .author(leadMember)
+                .study(study1)
+                .title("title")
+                .description("cotent")
+                .build());
+
+        Long announcementId = announcement.getId();
+        fileRepository.save(
+                File.ofAnnouncement(announcement,
+                        new FileDetailDto("o.txt","key","txt",10L))
+        );
+
+        mockMvc.perform(delete("/api/studies/"+ study1.getId()+"/announcements/" +announcementId)
+                .with(user(new CustomUserDetails(user1.getId())))
+                .with(csrf())).andExpect(status().isOk());
+
+    }
+
+    @Test
+    @DisplayName("실패: 공지사항 삭제 - 방장이 아닌 경우 ")
+    void deleteAnnouncement_Fail_isNotLeader() throws Exception {
+        long initialCount = announcementRepository.count();
+        mockMvc.perform(delete("/api/studies/"+ study2.getId()+"/announcements/" +2L)
+                .with(user(new CustomUserDetails(user1.getId())))
+                .with(csrf())).andExpect(status().isForbidden());
+        Assertions.assertThat(announcementRepository.count()).isEqualTo(initialCount);
+    }
+
+    @Test
+    @DisplayName("실패: 공지사항 삭제 - 스터디 멤버가 아닌 경우 ")
+    void deleteAnnouncement_Fail_isNotStudyMember() throws Exception {
+        long initialCount = announcementRepository.count();
+        mockMvc.perform(delete("/api/studies/"+ study1.getId()+"/announcements/" +2L)
+                .with(user(new CustomUserDetails(user2.getId())))
+                .with(csrf())).andExpect(status().isBadRequest());
+        Assertions.assertThat(announcementRepository.count()).isEqualTo(initialCount);
+
+    }
+
+    @Test
+    @DisplayName("실패: 공지사항 삭제 - 존재하지 않는 공지인 경우")
+    void deleteAnnouncement_Fail_announcementNotFound()throws Exception{
+        long NotExistAnnouncementId = 99999L;
+        long initialCount = announcementRepository.count();
+        mockMvc.perform(delete("/api/studies/"+ study1.getId()+"/announcements/" +NotExistAnnouncementId)
+                .with(user(new CustomUserDetails(user1.getId())))
+                .with(csrf())).andExpect(status().isBadRequest());
+        Assertions.assertThat(announcementRepository.count()).isEqualTo(initialCount);
+
+    }
+
 
 }
 

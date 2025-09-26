@@ -42,7 +42,7 @@ public class AnnouncementController {
      @RequestParam(name = "title") String title, @RequestParam(name = "content") String content,
      @RequestPart(name = "files",required = false) List<MultipartFile> files)
     {
-        log.info("creating announcements for studyId: {}", studyId);
+        log.info("creating announcement for studyId: {}", studyId);
         Long userId = user.getUserId();
         Long savedAnnouncementId = announcementService.createAnnouncement(studyId, userId, title, content, files);
         return new ResponseEntity<>( HttpStatus.CREATED);
@@ -50,17 +50,25 @@ public class AnnouncementController {
 
     // 공지 삭제하기
     @DeleteMapping("/{announcementId}")
-    public void deleteAnnouncement(@PathVariable Long studyId, @PathVariable Long announcementId) {
-
-
+    public ResponseEntity<Void> deleteAnnouncement(@PathVariable Long studyId, @PathVariable Long announcementId ,
+                                   @AuthenticationPrincipal CustomUserDetails user) {
+        log.info("Delete announcement for studyId: {} , for announcementId: {}", studyId,announcementId);
+        Long userId = user.getUserId();
+        announcementService.deleteAnnouncement(studyId,userId,announcementId);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
-    // 공지 상세 데이터 가져오기
-    @GetMapping("/{announcementId}")
-    public void getAnnouncementDetail(@PathVariable Long studyId, @PathVariable Long announcementId) {}
 
     // 공지 수정하기
     @PutMapping("/{announcementId}")
-    public void updateAnnouncement(@PathVariable Long studyId, @PathVariable Long announcementId) {}
+    public void updateAnnouncement(@PathVariable Long studyId, @PathVariable Long announcementId) {
+
+
+    }
+
+
+    // 공지 상세 데이터 가져오기
+    @GetMapping("/{announcementId}")
+    public void getAnnouncementDetail(@PathVariable Long studyId, @PathVariable Long announcementId) {}
 
 
 

@@ -2,8 +2,10 @@ package com.study.focus.announcement;
 
 import com.study.focus.account.domain.User;
 import com.study.focus.announcement.domain.Announcement;
+import com.study.focus.announcement.domain.Comment;
 import com.study.focus.announcement.dto.GetAnnouncementsResponse;
 import com.study.focus.announcement.repository.AnnouncementRepository;
+import com.study.focus.announcement.repository.CommentRepository;
 import com.study.focus.announcement.service.AnnouncementService;
 import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
@@ -15,9 +17,6 @@ import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
 import com.study.focus.study.domain.StudyRole;
 import com.study.focus.study.repository.StudyMemberRepository;
-import io.awspring.cloud.s3.S3Template;
-import org.hibernate.mapping.Any;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,6 +55,9 @@ class AnnouncementUnitTest {
     @InjectMocks
     private AnnouncementService announcementService;
 
+    @Mock
+    private CommentRepository commentRepository;
+
 
     @Mock
     private S3Uploader s3uploader;
@@ -66,8 +68,7 @@ class AnnouncementUnitTest {
     User testUser = User.builder().trustScore(30L).lastLoginAt(LocalDateTime.now()).build();
     Study testStudy = Study.builder().maxMemberCount(30).build();
     StudyMember teststudyMember = StudyMember.builder().user(testUser).study(testStudy).build();
-    Announcement testAnnouncement = Announcement.builder().study(testStudy).author(teststudyMember)
-            .title("test").description("test").build();
+
 
     @Test
     @DisplayName("성공: 스터디 멤버가 공지사항 목록을 성공적으로 조회")
@@ -242,5 +243,93 @@ class AnnouncementUnitTest {
         then(fileRepository).should(times(0)).save(any(File.class));
 
     }
+
+    @Test
+    @DisplayName("공지사항 삭제 성공 - 방장 권한 존재, 파일/댓글 포함")
+    void deleteAnnouncement_success(){
+        //given
+        Long studyId = 1L;
+        Long userId = 1L;
+        Long announcementId = 1L;
+
+        Study study = Study.builder().build();
+        StudyMember leader = StudyMember.builder().role(StudyRole.LEADER).user(testUser).study(study).id(1L).build();
+        Announcement announcement = Announcement.builder()
+                .id(announcementId)
+                .study(study)
+                .author(leader)
+                .title("title")
+                .description("desc")
+                .build();
+        List<File> mockFiles = List.of(File.ofAnnouncement(announcement,
+                new FileDetailDto("t","t","t",1L)));
+        List<Comment> mockComments = List.of(Comment.builder().commenter(teststudyMember).content("test").build());
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId,userId)).willReturn(Optional.of(leader));
+        given(announcementRepo.findByIdAndStudy_IdAndAuthor_Id(announcementId,studyId,userId)).willReturn(Optional.of(announcement));
+        given(announcementRepo.findByIdAndStudy_IdAndAuthor_Id(studyId,userId,announcementId)).willReturn(Optional.of(announcement));
+        given(fileRepository.findAllByAnnouncement_Id(announcementId)).willReturn(mockFiles);
+        given(commentRepository.findAllByAnnouncement_Id(announcementId)).willReturn(mockComments);
+
+        //then
+        announcementService.deleteAnnouncement(studyId,userId,announcementId);
+
+        then(fileRepository).should(times(1)).findAllByAnnouncement_Id(announcementId);
+        then(commentRepository).should(times(1)).findAllByAnnouncement_Id(announcementId);
+        then(commentRepository).should(times(1)).deleteAll(mockComments);
+        then(announcementRepo).should(times(1)).delete(announcement);
+    }
+
+    @Test
+    @DisplayName("공지사항 삭제 실패 - 방장이 아닌 경우")
+    void deleteAnnouncement_Fail_isNotLeader(){
+        //given
+        Long studyId = 1L;
+        Long userId = 1L;
+        Long announcementId = 1L;
+        Study study = Study.builder().build();
+        StudyMember leader = StudyMember.builder().role(StudyRole.MEMBER).user(testUser).build();
+        Announcement announcement = Announcement.builder()
+                .id(announcementId)
+                .study(study)
+                .author(leader)
+                .title("title")
+                .description("desc")
+                .build();
+       // given(announcementRepo.findByIdAndStudy_IdAndAuthor_Id(announcementId,studyId,announcementId)).willReturn(Optional.of(announcement));
+
+        //then
+        assertThatThrownBy(() ->announcementService.deleteAnnouncement(studyId,userId,announcementId))
+                .isInstanceOf(BusinessException.class);
+
+        then(commentRepository).should(never()).deleteAll(anyList());
+        then(announcementRepo).should(never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("공지사항 삭제(존재하지 않는 공지)")
+    void deleteAnnouncement_Fail_not_Found(){
+        //given
+        Long studyId = 1L;
+        Long userId = 1L;
+        Long announcementId = 1L;
+
+        Study study = Study.builder().build();
+        StudyMember leader = StudyMember.builder().role(StudyRole.LEADER).user(testUser).build();
+        Announcement announcement = Announcement.builder()
+                .id(announcementId)
+                .study(study)
+                .author(leader)
+                .title("title")
+                .description("desc")
+                .build();
+        //when & then
+        assertThatThrownBy(()-> announcementService.deleteAnnouncement(studyId,userId,announcementId))
+                .isInstanceOf(BusinessException.class);
+        then(commentRepository).should(never()).deleteAll(anyList());
+        then(announcementRepo).should(never()).delete(any());
+
+    }
+
 
 }
