@@ -19,8 +19,17 @@ public class User extends BaseCreatedEntity {
     private Long id;
 
     @Column(nullable = false)
-    private long trustScore;
+    @Builder.Default
+    private long trustScore = 0;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Builder.Default
+    private LoginType loginType = LoginType.SYSTEM;
+
     private LocalDateTime lastLoginAt;
+
+    public void updateLastLoginAt() {
+        this.lastLoginAt = LocalDateTime.now();
+    }
 }
