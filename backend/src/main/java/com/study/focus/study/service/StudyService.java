@@ -1,13 +1,67 @@
 package com.study.focus.study.service;
 
+import com.study.focus.account.domain.User;
+import com.study.focus.account.repository.UserRepository;
+import com.study.focus.common.domain.Address;
+import com.study.focus.common.exception.BusinessException;
+import com.study.focus.common.exception.UserErrorCode;
+import com.study.focus.study.domain.*;
+import com.study.focus.study.dto.CreateStudyRequest;
+import com.study.focus.study.repository.StudyMemberRepository;
+import com.study.focus.study.repository.StudyProfileRepository;
+import com.study.focus.study.repository.StudyRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
+@Transactional
 public class StudyService {
+    private final StudyRepository studyRepository;
+    private final StudyProfileRepository studyProfileRepository;
+    private final StudyMemberRepository studyMemberRepository;
+    private final UserRepository userRepository;
 
-    // 그룹 생성
-    public void createStudy() {
-        // TODO: 스터디 생성
+    // 스터디 그룹 생성
+    public Long createStudy(Long userId, CreateStudyRequest createStudyRequest ) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(UserErrorCode.URL_FORBIDDEN));
+        // 스터디 생성
+        Study study = Study.builder()
+                .maxMemberCount(createStudyRequest.getMaxMemberCount())
+                .recruitStatus(RecruitStatus.OPEN)
+                .build();
+        Study saveStudy = studyRepository.save(study);
+
+        //스터디 프로필 생성
+        Address address = Address.builder()
+                .province(createStudyRequest.getProvince())
+                .district(createStudyRequest.getDistrict())
+                .build();
+
+        StudyProfile studyProfile = StudyProfile.builder()
+                .study(saveStudy)
+                .title(createStudyRequest.getTitle())
+                .bio(createStudyRequest.getBio())
+                .description(createStudyRequest.getDescription())
+                .address(address)
+                .category(createStudyRequest.getCategory())
+                .build();
+        studyProfileRepository.save(studyProfile);
+
+
+        StudyMember leader = StudyMember.builder()
+                .study(saveStudy)
+                .user(user)
+                .role(StudyRole.LEADER)
+                .status(StudyMemberStatus.JOINED)
+                .build();
+        studyMemberRepository.save(leader);
+
+        // 스터디의 ID 반환
+        return saveStudy.getId();
     }
 
     // 그룹 프로필 정보 가져오기

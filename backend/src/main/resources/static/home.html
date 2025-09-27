@@ -28,7 +28,7 @@
 			color: white;
 			cursor: pointer;
 			font-size: 14px;
-			margin-top: 20px;
+			margin: 10px;
 		}
 	</style>
 </head>
@@ -44,27 +44,28 @@
 	<p id="userId"></p>
 </div>
 
+<button id="create-study-btn">스터디 생성하기</button>
+<button id="save-token-btn">토큰 저장하기</button> <!-- ✅ 추가 -->
 <button id="logout-btn">로그아웃</button>
 
 <script>
 	// ✅ 쿼리스트링에서 AccessToken 추출 (OAuth SuccessHandler가 붙여준 값)
 	const params = new URLSearchParams(window.location.search);
 	let accessToken = params.get("token");
-	
-	// ✅ 토큰 갱신 (refresh_token은 서버가 쿠키로 관리하므로 credentials: include 필요)
+
+	// ✅ 토큰 갱신
 	async function refreshAccessToken() {
 		try {
 			const response = await fetch("/api/auth/token", {
 				method: "POST",
-				credentials: "include" // <- 쿠키 포함
+				credentials: "include"
 			});
-			
+
 			if (response.ok) {
 				const data = await response.json();
 				accessToken = data.accessToken;
 				document.getElementById("accessToken").textContent = accessToken;
-				
-				// userId 다시 표시
+
 				const payload = JSON.parse(atob(accessToken.split(".")[1]));
 				document.getElementById("userId").textContent = payload.sub;
 			} else {
@@ -74,7 +75,7 @@
 			alert("토큰 요청 오류: " + err);
 		}
 	}
-	
+
 	// ✅ 초기화
 	async function initPage() {
 		if (accessToken) {
@@ -86,20 +87,35 @@
 				document.getElementById("userId").textContent = "파싱 실패";
 			}
 		} else {
-			// URL에 accessToken 없으면 새로 발급받기
 			await refreshAccessToken();
 		}
 	}
 	initPage();
-	
+
+	// ✅ 스터디 생성 페이지 이동
+	document.getElementById("create-study-btn").addEventListener("click", function() {
+		window.location.href = "studyTest.html";
+	});
+
+	// ✅ 토큰 저장 버튼
+	document.getElementById("save-token-btn").addEventListener("click", function() {
+		if (accessToken) {
+			localStorage.setItem('accessToken', accessToken);
+			alert("AccessToken이 로컬스토리지에 저장되었습니다!");
+		} else {
+			alert("저장할 AccessToken이 없습니다.");
+		}
+	});
+
 	// ✅ 로그아웃
 	document.getElementById("logout-btn").addEventListener("click", async function() {
 		try {
+			localStorage.removeItem('accessToken');
 			const response = await fetch("/api/auth/logout", {
 				method: "POST",
-				credentials: "include" // 쿠키 포함
+				credentials: "include"
 			});
-			
+
 			if (response.ok) {
 				alert("로그아웃 성공!");
 				window.location.href = "/login.html";
