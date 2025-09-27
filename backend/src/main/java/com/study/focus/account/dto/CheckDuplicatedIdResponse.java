@@ -5,6 +5,6 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class IdCheckResponse {
+public class CheckDuplicatedIdResponse {
     private boolean available;
 }

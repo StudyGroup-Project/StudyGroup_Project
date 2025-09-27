@@ -23,19 +23,6 @@ public class AuthController {
 
     // OAuth 로그인 -> OAuth2SuccessHandler 확인
 
-    // ✅ 프론트 연동용 OAuth 로그인 콜백 (JSON 응답)
-    @PostMapping("/oauth/callback")
-    public ResponseEntity<LoginResponse> oauthCallback(
-            @RequestParam("provider") String provider,
-            @RequestParam("providerUserId") String providerUserId) {
-
-        Provider enumProvider = Provider.valueOf(provider.toUpperCase());
-
-        LoginResponse loginResponse = accountService.oauthLogin(enumProvider, providerUserId);
-
-        return ResponseEntity.ok(loginResponse);
-    }
-
     // 회원가입
     @PostMapping("/register")
     public ResponseEntity<Void> register(@RequestBody RegisterRequest request) {
@@ -45,9 +32,9 @@ public class AuthController {
 
     // 아이디 중복 확인
     @GetMapping("/check-id")
-    public ResponseEntity<IdCheckResponse> checkId(@RequestParam String loginId) {
+    public ResponseEntity<CheckDuplicatedIdResponse> checkId(@RequestParam String loginId) {
         boolean available = accountService.checkId(loginId);
-        return ResponseEntity.ok(new IdCheckResponse(available));
+        return ResponseEntity.ok(new CheckDuplicatedIdResponse(available));
     }
 
     // 일반 로그인
