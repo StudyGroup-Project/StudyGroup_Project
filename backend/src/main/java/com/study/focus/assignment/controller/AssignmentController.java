@@ -2,7 +2,9 @@ package com.study.focus.assignment.controller;
 
 import com.study.focus.account.dto.CustomUserDetails;
 import com.study.focus.assignment.dto.CreateAssignmentRequest;
+import com.study.focus.assignment.dto.GetAssignmentsResponse;
 import com.study.focus.assignment.service.AssignmentService;
+import com.study.focus.study.domain.StudyMember;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/studies/{studyId}/assignments")
@@ -20,8 +23,11 @@ public class AssignmentController {
 
     // 과제 목록 가져오기
     @GetMapping
-    public void getAssignments(@PathVariable Long studyId) {
-
+    public ResponseEntity<List<GetAssignmentsResponse>> getAssignments(@PathVariable Long studyId,
+                                                                       @AuthenticationPrincipal CustomUserDetails user)
+    {
+        Long userId = user.getUserId();
+        return ResponseEntity.ok(assignmentService.getAssignments(studyId,userId));
     }
 
     // 과제 생성하기

@@ -2,6 +2,7 @@ package com.study.focus.assignment.service;
 
 import com.study.focus.assignment.domain.Assignment;
 import com.study.focus.assignment.dto.CreateAssignmentRequest;
+import com.study.focus.assignment.dto.GetAssignmentsResponse;
 import com.study.focus.assignment.repository.AssignmentRepository;
 import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
@@ -34,9 +35,16 @@ public class AssignmentService {
     private final FileRepository fileRepository;
     private final S3Uploader s3Uploader;
 
-    // 과제 목록 가져오기
-    public void getAssignments(Long studyId) {
+    // 과제 목록 가져오기(생성 순 내림차순 정렬)
+    @Transactional
+    public List<GetAssignmentsResponse> getAssignments(Long studyId, Long userId) {
         // TODO: 과제 목록 조회
+
+        studyMemberRepository.findByStudyIdAndUserId(studyId, userId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+
+        List<Assignment> assignments = assignmentRepository.findAllByStudyIdOrderByCreatedAtDesc(studyId);
+
+        return assignments.stream().map(assignment -> new GetAssignmentsResponse(assignment.getId(),assignment.getTitle() )).toList();
     }
 
     // 과제 생성하기
