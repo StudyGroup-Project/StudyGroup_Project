@@ -1,7 +1,8 @@
 package com.study.focus.assignment;
 
 import com.study.focus.assignment.domain.Assignment;
-import com.study.focus.assignment.dto.AssignmentCreateRequestDTO;
+import com.study.focus.assignment.dto.CreateAssignmentRequest;
+import com.study.focus.assignment.dto.GetAssignmentsResponse;
 import com.study.focus.assignment.repository.AssignmentRepository;
 import com.study.focus.assignment.service.AssignmentService;
 import com.study.focus.common.domain.File;
@@ -29,6 +30,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
@@ -48,8 +50,8 @@ class AssignmentUnitTest {
     @InjectMocks
     private AssignmentService assignmentService;
 
-    private AssignmentCreateRequestDTO dto(LocalDateTime start, LocalDateTime due, String title, String desc, List<MultipartFile> files) {
-        AssignmentCreateRequestDTO dto = new AssignmentCreateRequestDTO();
+    private CreateAssignmentRequest dto(LocalDateTime start, LocalDateTime due, String title, String desc, List<MultipartFile> files) {
+        CreateAssignmentRequest dto = new CreateAssignmentRequest();
         ReflectionTestUtils.setField(dto, "title", title);
         ReflectionTestUtils.setField(dto, "description", desc);
         ReflectionTestUtils.setField(dto, "startAt", start);
@@ -60,6 +62,95 @@ class AssignmentUnitTest {
 
     private StudyMember leaderOf(Study s) { return StudyMember.builder().study(s).role(StudyRole.LEADER).build(); }
     private StudyMember memberOf(Study s) { return StudyMember.builder().study(s).role(StudyRole.MEMBER).build(); }
+
+    @DisplayName("성공: 과제가 있을 때 과제 목록 반환")
+    @Test
+    void getAssignments_success_withItems() {
+        // given
+        Long studyId = 1L, userId = 100L;
+
+        Study study = Study.builder().build();
+        StudyMember member = StudyMember.builder().study(study).build();
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(member));
+
+        LocalDateTime now = LocalDateTime.now();
+        Assignment a1 = Assignment.builder()
+                .id(10L).study(study).creator(member)
+                .title("T1").startAt(now).dueAt(now.plusDays(1)).build();
+        Assignment a2 = Assignment.builder()
+                .id(11L).study(study).creator(member)
+                .title("T2").startAt(now).dueAt(now.plusDays(2)).build();
+
+        given(assignmentRepository.findAllByStudyIdOrderByCreatedAtDesc(studyId))
+                .willReturn(List.of(a1, a2));
+
+        // when
+        List<GetAssignmentsResponse> result = assignmentService.getAssignments(studyId, userId);
+
+        // then
+        assertThat(result).hasSize(2);
+        then(studyMemberRepository).should(times(1)).findByStudyIdAndUserId(studyId, userId);
+        then(assignmentRepository).should(times(1)).findAllByStudyIdOrderByCreatedAtDesc(studyId);
+    }
+
+    @DisplayName("성공: 과제가 없을 때 빈 목록 반환")
+    @Test
+    void getAssignments_success_emptyList() {
+        // given
+        Long studyId = 1L, userId = 100L;
+
+        Study study = Study.builder().build();
+        StudyMember member = StudyMember.builder().study(study).build();
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(member));
+
+        given(assignmentRepository.findAllByStudyIdOrderByCreatedAtDesc(studyId))
+                .willReturn(List.of());
+
+        // when
+        List<GetAssignmentsResponse> result = assignmentService.getAssignments(studyId, userId);
+
+        // then
+        assertThat(result).isEmpty();
+        then(assignmentRepository).should(times(1)).findAllByStudyIdOrderByCreatedAtDesc(studyId);
+    }
+
+    @DisplayName("실패: 유저가 해당 스터디 멤버가 아님")
+    @Test
+    void getAssignments_fail_notStudyMember() {
+        // given
+        Long studyId = 1L, userId = 999L;
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.empty());
+
+        // then
+        assertThatThrownBy(() -> assignmentService.getAssignments(studyId, userId))
+                .isInstanceOf(BusinessException.class);
+
+        then(assignmentRepository).should(never()).findAllByStudyIdOrderByCreatedAtDesc(any());
+    }
+
+    @DisplayName("실패: studyId가 null")
+    @Test
+    void getAssignments_fail_nullStudyId() {
+        Long userId = 100L;
+
+        assertThatThrownBy(() -> assignmentService.getAssignments(null, userId))
+                .isInstanceOf(BusinessException.class);
+
+        then(studyMemberRepository).should(never()).findByStudyIdAndUserId(any(), any());
+        then(assignmentRepository).should(never()).findAllByStudyIdOrderByCreatedAtDesc(any());
+    }
+
+    @DisplayName("실패: userId가 null")
+    @Test
+    void getAssignments_fail_nullUserId() {
+        Long studyId = 1L;
+
+        assertThatThrownBy(() -> assignmentService.getAssignments(studyId, null))
+                .isInstanceOf(BusinessException.class);
+
+        then(studyMemberRepository).should(never()).findByStudyIdAndUserId(any(), any());
+        then(assignmentRepository).should(never()).findAllByStudyIdOrderByCreatedAtDesc(any());
+    }
 
     @Test
     @DisplayName("성공: 파일이 존재할 때 과제 생성")
@@ -75,7 +166,7 @@ class AssignmentUnitTest {
         );
         LocalDateTime start = LocalDateTime.now().plusDays(1);
         LocalDateTime due = start.plusDays(7);
-        AssignmentCreateRequestDTO req = dto(start, due, "t", "d", files);
+        CreateAssignmentRequest req = dto(start, due, "t", "d", files);
 
         given(studyRepository.findById(studyId)).willReturn(Optional.of(study));
         given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
@@ -121,7 +212,7 @@ class AssignmentUnitTest {
 
         LocalDateTime start = LocalDateTime.now().plusDays(1);
         LocalDateTime due = start.plusDays(3);
-        AssignmentCreateRequestDTO req = dto(start, due, "t", "d", null);
+        CreateAssignmentRequest req = dto(start, due, "t", "d", null);
 
         given(studyRepository.findById(studyId)).willReturn(Optional.of(study));
         given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
@@ -147,7 +238,7 @@ class AssignmentUnitTest {
 
         LocalDateTime start = LocalDateTime.now().plusDays(1);
         LocalDateTime due = start.plusDays(3);
-        AssignmentCreateRequestDTO req = dto(start, due, "t", "d", null);
+        CreateAssignmentRequest req = dto(start, due, "t", "d", null);
 
         given(studyRepository.findById(studyId)).willReturn(Optional.of(study));
         given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(member));
@@ -167,7 +258,7 @@ class AssignmentUnitTest {
 
         LocalDateTime start = LocalDateTime.now().plusDays(1);
         LocalDateTime due = start.plusDays(3);
-        AssignmentCreateRequestDTO req = dto(start, due, "t", "d", null);
+        CreateAssignmentRequest req = dto(start, due, "t", "d", null);
 
         given(studyRepository.findById(studyId)).willReturn(Optional.of(study));
         given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.empty());
@@ -188,7 +279,7 @@ class AssignmentUnitTest {
 
         LocalDateTime start = LocalDateTime.now().plusDays(1);
         LocalDateTime due = start; // 동시간(또는 이전) → 실패
-        AssignmentCreateRequestDTO req = dto(start, due, "t", "d", null);
+        CreateAssignmentRequest req = dto(start, due, "t", "d", null);
 
         given(studyRepository.findById(studyId)).willReturn(Optional.of(study));
         given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
@@ -213,7 +304,7 @@ class AssignmentUnitTest {
         );
         LocalDateTime start = LocalDateTime.now().plusDays(1);
         LocalDateTime due = start.plusDays(3);
-        AssignmentCreateRequestDTO req = dto(start, due, "t", "d", files);
+        CreateAssignmentRequest req = dto(start, due, "t", "d", files);
 
         given(studyRepository.findById(studyId)).willReturn(Optional.of(study));
         given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));

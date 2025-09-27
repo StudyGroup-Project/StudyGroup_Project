@@ -3,6 +3,7 @@ package com.study.focus.assignment;
 import com.study.focus.account.dto.CustomUserDetails;
 import com.study.focus.account.domain.User;
 import com.study.focus.account.repository.UserRepository;
+import com.study.focus.announcement.domain.Announcement;
 import com.study.focus.assignment.domain.Assignment;
 import com.study.focus.assignment.repository.AssignmentRepository;
 import com.study.focus.common.dto.FileDetailDto;
@@ -32,8 +33,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -69,23 +70,30 @@ class AssignmentIntegrationTest {
         study2 = studyRepository.save(Study.builder().maxMemberCount(30).recruitStatus(RecruitStatus.OPEN).build());
 
         // user1: study1 리더
-        studyMemberRepository.save(StudyMember.builder()
+        StudyMember studyMember1 = studyMemberRepository.save(StudyMember.builder()
                 .user(user1).study(study1)
                 .role(StudyRole.LEADER).status(StudyMemberStatus.JOINED)
                 .exitedAt(LocalDateTime.now().plusMonths(1))
                 .build());
         // user1: study2 멤버
-        studyMemberRepository.save(StudyMember.builder()
+        StudyMember studyMember2 = studyMemberRepository.save(StudyMember.builder()
                 .user(user1).study(study2)
                 .role(StudyRole.MEMBER).status(StudyMemberStatus.JOINED)
                 .exitedAt(LocalDateTime.now().plusMonths(1))
                 .build());
         // user2: study2 리더
-        studyMemberRepository.save(StudyMember.builder()
+        StudyMember studyMember3 = studyMemberRepository.save(StudyMember.builder()
                 .user(user2).study(study2)
                 .role(StudyRole.LEADER).status(StudyMemberStatus.JOINED)
                 .exitedAt(LocalDateTime.now().plusMonths(1))
                 .build());
+
+        LocalDateTime now = LocalDateTime.now();
+
+        assignmentRepository.save(Assignment.builder().study(study1).creator(studyMember1).title("1").startAt(now.minusDays(1))
+                .dueAt(now.plusDays(7)).build());
+        assignmentRepository.save(Assignment.builder().study(study1).creator(studyMember1).title("2").startAt(now.minusHours(1))
+                .dueAt(now.plusDays(10)).build());
     }
 
     @AfterEach
@@ -99,6 +107,26 @@ class AssignmentIntegrationTest {
 
     private String iso(LocalDateTime t) {
         return t.withNano(0).format(ISO); // ModelAttribute 바인딩 기본 ISO 형식
+    }
+
+    @Test
+    @DisplayName("성공: 스터디 멤버가 과제 목록을 성공적으로 조회")
+    void getAssignment_success() throws Exception {
+        // when & then
+        mockMvc.perform(get("/api/studies/" + study1.getId() + "/assignments")
+                        .with(user(new CustomUserDetails(user1.getId())))) // setUp에서 생성된 user를 사용
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].title").value("2"));
+    }
+
+
+    @Test
+    @DisplayName("실패: 스터디 멤버가 아닐 경우 IllegalArgumentException이 발생")
+    void getAssignment_Fail_NotStudyMember() throws Exception {
+        mockMvc.perform(get("/api/studies/" + study1.getId() + "/assignments")
+                        .with(user(new CustomUserDetails(user2.getId()))))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
