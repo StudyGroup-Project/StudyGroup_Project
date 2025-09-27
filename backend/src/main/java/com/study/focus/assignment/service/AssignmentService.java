@@ -40,6 +40,10 @@ public class AssignmentService {
     public List<GetAssignmentsResponse> getAssignments(Long studyId, Long userId) {
         // TODO: 과제 목록 조회
 
+        if (studyId == null || userId == null) {
+            throw new BusinessException(CommonErrorCode.INVALID_PARAMETER);
+        }
+
         studyMemberRepository.findByStudyIdAndUserId(studyId, userId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
 
         List<Assignment> assignments = assignmentRepository.findAllByStudyIdOrderByCreatedAtDesc(studyId);

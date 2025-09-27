@@ -1,7 +1,6 @@
 package com.study.focus.assignment.repository;
 
 import com.study.focus.assignment.domain.Assignment;
-import com.study.focus.assignment.dto.GetAssignmentsResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
