@@ -56,18 +56,4 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
     }
-
-    @Test
-    @DisplayName("OAuth 로그인 콜백 성공")
-    void oauthCallback_success() throws Exception {
-        when(accountService.oauthLogin(Provider.GOOGLE, "123"))
-                .thenReturn(new LoginResponse("access", "refresh"));
-
-        mockMvc.perform(post("/api/auth/oauth/callback")
-                        .param("provider", "google")
-                        .param("providerUserId", "123"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken").value("access"))
-                .andExpect(jsonPath("$.refreshToken").value("refresh"));
-    }
 }

@@ -3,6 +3,7 @@ package com.study.focus.account.domain;
 import com.study.focus.common.domain.Address;
 import com.study.focus.common.domain.BaseUpdatedEntity;
 import com.study.focus.common.domain.Category;
+import com.study.focus.common.domain.File;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -40,7 +41,18 @@ public class UserProfile extends BaseUpdatedEntity {
     @Column(nullable = false)
     private Category preferredCategory;
 
-    @Column(nullable = false, length = 512)
-    @Builder.Default
-    private String profileImageUrl = "https://example.com/default_profile.png";
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "profile_image_id")
+    private File profileImage;
+
+    /**
+     * 프로필 이미지 교체
+     * 기존 파일이 있으면 soft delete 처리 후 새로운 파일로 교체
+     */
+    public void updateProfileImage(File newFile) {
+        if (this.profileImage != null) {
+            this.profileImage.delete(); // isDeleted = true
+        }
+        this.profileImage = newFile;
+    }
 }
