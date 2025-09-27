@@ -1,7 +1,7 @@
 package com.study.focus.assignment.service;
 
 import com.study.focus.assignment.domain.Assignment;
-import com.study.focus.assignment.dto.AssignmentCreateRequestDTO;
+import com.study.focus.assignment.dto.CreateAssignmentRequest;
 import com.study.focus.assignment.repository.AssignmentRepository;
 import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
@@ -18,9 +18,7 @@ import com.study.focus.study.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -43,7 +41,7 @@ public class AssignmentService {
 
     // 과제 생성하기
     @Transactional
-    public Long createAssignment(Long studyId, Long creatorId, AssignmentCreateRequestDTO dto) {
+    public Long createAssignment(Long studyId, Long creatorId, CreateAssignmentRequest dto) {
         // TODO: 과제 생성
         Study study = studyRepository.findById(studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
         StudyMember creator = studyMemberRepository.findByStudyIdAndUserId(studyId, creatorId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
