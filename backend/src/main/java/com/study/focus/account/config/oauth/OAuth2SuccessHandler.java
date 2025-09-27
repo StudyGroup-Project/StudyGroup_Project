@@ -23,7 +23,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     public static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
     public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(14);
-    public static final String REDIRECT_PATH = "/home";
+    public static final String REDIRECT_PATH = "http://3.39.81.234:8080/home";
+    // 프론트 배포 완료시 변경 + 환경변수 설정
+    // public static final String REDIRECT_PATH = System.getenv("FRONTEND_REDIRECT_URL");
 
     private final AccountService accountService;
     private final OAuth2AuthorizationRequestBasedOnCookieRepository authorizationRequestRepository;
@@ -73,7 +75,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     }
 
     private String getTargetUrl(String token) {
-        return UriComponentsBuilder.fromUriString(REDIRECT_PATH)
+        return UriComponentsBuilder.fromHttpUrl(REDIRECT_PATH) // fromUriString → fromHttpUrl 로 교체
                 .queryParam("token", token)
                 .build()
                 .toUriString();
