@@ -1,15 +1,15 @@
 package com.study.focus.assignment.controller;
 
 import com.study.focus.account.dto.CustomUserDetails;
-import com.study.focus.assignment.dto.AssignmentCreateRequestDTO;
+import com.study.focus.assignment.dto.CreateAssignmentRequest;
+import com.study.focus.assignment.dto.GetAssignmentsResponse;
 import com.study.focus.assignment.service.AssignmentService;
+import com.study.focus.study.domain.StudyMember;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
 import java.util.List;
@@ -23,14 +23,17 @@ public class AssignmentController {
 
     // 과제 목록 가져오기
     @GetMapping
-    public void getAssignments(@PathVariable Long studyId) {
-
+    public ResponseEntity<List<GetAssignmentsResponse>> getAssignments(@PathVariable Long studyId,
+                                                                       @AuthenticationPrincipal CustomUserDetails user)
+    {
+        Long userId = user.getUserId();
+        return ResponseEntity.ok(assignmentService.getAssignments(studyId,userId));
     }
 
     // 과제 생성하기
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> createAssignment(@PathVariable Long studyId,
-                                                 @ModelAttribute AssignmentCreateRequestDTO dto,
+                                                 @ModelAttribute CreateAssignmentRequest dto,
                                                  @AuthenticationPrincipal CustomUserDetails user)
     {
         Long creator = user.getUserId();
