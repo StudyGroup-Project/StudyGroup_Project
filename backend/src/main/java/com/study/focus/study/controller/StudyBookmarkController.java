@@ -24,5 +24,9 @@ public class StudyBookmarkController {
 
     // 스터디 그룹 찜 해제하기
     @DeleteMapping
-    public void removeBookmark(@PathVariable Long studyId) {}
+    public ResponseEntity<Void> removeBookmark(@PathVariable Long studyId,  @AuthenticationPrincipal CustomUserDetails user) {
+
+        bookmarkService.removeBookmark(user.getUserId(), studyId);
+        return ResponseEntity.noContent().build();
+    }
 }

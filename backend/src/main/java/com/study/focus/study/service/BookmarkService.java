@@ -51,9 +51,16 @@ public class BookmarkService {
         bookmarkRepository.save(newBookmark);
     }
 
-
     // 스터디 그룹 찜 해제하기
-    public void removeBookmark(Long studyId, Long userId) {
-        // TODO: 스터디 찜 해제
+    public void removeBookmark(Long userId, Long studyId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
+
+        Bookmark bookmark = bookmarkRepository.findByUserAndStudy(user, study)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+
+        bookmarkRepository.delete(bookmark);
     }
 }

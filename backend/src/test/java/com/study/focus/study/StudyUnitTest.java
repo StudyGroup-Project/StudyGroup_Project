@@ -188,4 +188,90 @@ class StudyUnitTest {
         // save 메서드가 절대 호출되지 않았는지 검증
         then(bookmarkRepository).should(never()).save(any());
     }
+
+    @Test
+    @DisplayName("스터디 찜 해제 - 성공")
+    void removeBookmark_Success() {
+        // given (상황 설정)
+        final Long userId = 1L;
+        final Long studyId = 10L;
+
+        User fakeUser = User.builder().id(userId).build();
+        Study fakeStudy = Study.builder().id(studyId).build();
+        Bookmark fakeBookmark = Bookmark.builder().id(100L).build(); // 삭제될 북마크 객체
+
+        // 사용자와 스터디가 모두 존재
+        given(userRepository.findById(userId)).willReturn(Optional.of(fakeUser));
+        given(studyRepository.findById(studyId)).willReturn(Optional.of(fakeStudy));
+        // 삭제할 북마크가 DB에 존재
+        given(bookmarkRepository.findByUserAndStudy(fakeUser, fakeStudy)).willReturn(Optional.of(fakeBookmark));
+
+        // when
+        assertThatCode(() -> bookmarkService.removeBookmark(userId, studyId))
+                .doesNotThrowAnyException();
+
+        // then
+        then(bookmarkRepository).should().delete(fakeBookmark);
+    }
+
+    @Test
+    @DisplayName("스터디 찜 해제 실패 - 찜한 기록이 없는 경우")
+    void removeBookmark_Fail_BookmarkNotFound() {
+        // given
+        final Long userId = 1L;
+        final Long studyId = 10L;
+
+        User fakeUser = User.builder().id(userId).build();
+        Study fakeStudy = Study.builder().id(studyId).build();
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(fakeUser));
+        given(studyRepository.findById(studyId)).willReturn(Optional.of(fakeStudy));
+
+        given(bookmarkRepository.findByUserAndStudy(fakeUser, fakeStudy)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> bookmarkService.removeBookmark(userId, studyId))
+                .isInstanceOf(BusinessException.class);
+
+
+        then(bookmarkRepository).should(never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("스터디 찜 해제 실패 - 존재하지 않는 사용자의 요청")
+    void removeBookmark_Fail_UserNotFound() {
+        // given
+        final Long nonExistentUserId = 999L;
+        final Long studyId = 10L;
+
+        // 존재하지 않는 사용자로 설정
+        given(userRepository.findById(nonExistentUserId)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> bookmarkService.removeBookmark(nonExistentUserId, studyId))
+                .isInstanceOf(BusinessException.class);
+
+        then(bookmarkRepository).should(never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("스터디 찜 해제 실패 - 존재하지 않는 스터디")
+    void removeBookmark_Fail_StudyNotFound() {
+        // given
+        final Long userId = 1L;
+        final Long nonExistentStudyId = 999L;
+
+        User fakeUser = User.builder().id(userId).build();
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(fakeUser));
+        // 존재하지 않는 스터디로 설정
+        given(studyRepository.findById(nonExistentStudyId)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> bookmarkService.removeBookmark(userId, nonExistentStudyId))
+                .isInstanceOf(BusinessException.class);
+
+        then(bookmarkRepository).should(never()).delete(any());
+    }
+
 }
