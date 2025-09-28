@@ -2,7 +2,7 @@ package com.study.focus.announcement.service;
 
 import com.study.focus.announcement.domain.Announcement;
 import com.study.focus.announcement.domain.Comment;
-import com.study.focus.announcement.dto.AnnouncementDataDto;
+import com.study.focus.announcement.dto.AnnouncementUpdateDto;
 import com.study.focus.announcement.dto.GetAnnouncementsResponse;
 import com.study.focus.announcement.repository.AnnouncementRepository;
 import com.study.focus.announcement.repository.CommentRepository;
@@ -17,7 +17,6 @@ import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
 import com.study.focus.study.domain.StudyRole;
 import com.study.focus.study.repository.StudyMemberRepository;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,17 +64,11 @@ public class AnnouncementService {
         //파일이 있는 경우
         if(files !=null && !files.isEmpty()){
             List<FileDetailDto> list = files.stream().map(s3Uploader::makeMetaData).toList();
-           //파일 데이터 db 저장
-           IntStream.range(0,list.size())
-                   .forEach(index ->fileRepository.save(
-                           File.ofAnnouncement(announcement,list.get(index))
-                   ));
-           //파일 데이터 s3에 업로드
-            List<String> keys = list.stream().map(FileDetailDto::getKey).toList();
-            s3Uploader.uploadFiles(keys,files);
+            fileUploadDbAndS3(files, list, announcement);
         }
         return saveAnnouncements.getId();
     }
+
 
     // 공지 삭제하기
     @Transactional
@@ -100,6 +93,47 @@ public class AnnouncementService {
         //공지 삭제
         announcementRepository.delete(findAnnouncement);
     }
+
+
+    // 공지 수정하기
+    @Transactional
+    public void updateAnnouncement(Long studyId, Long announcementId, Long userId, AnnouncementUpdateDto updateDto) {
+        //검증
+        //1. 스터디 멤버 검증
+        StudyMember userStudyMember = memberValidation(studyId, userId);
+        //2. 방장 검증
+        isLeader(userStudyMember);
+        //3. 공지 검증
+        Announcement oldAnnouncement = validationAnnouncement(announcementId, studyId, userStudyMember.getId());
+        //4. 내용 업데이트
+        oldAnnouncement.updateAnnouncement(updateDto.getTitle(), updateDto.getContent());
+
+        //5. 파일 처리
+        //5-1. 삭제할 파일이 있는 경우
+        if(updateDto.getDeleteFileIds() !=null&& !updateDto.getDeleteFileIds().isEmpty())
+        {
+            List<File> deleteFiles = fileRepository.findAllById(updateDto.getDeleteFileIds());
+            deleteFiles.forEach(File::deleteAnnouncementFile);
+            fileRepository.saveAll(deleteFiles);
+            fileRepository.flush();
+        }
+        //5-2. 새로 추가할 파일이 있는 경우
+        if(updateDto.getFiles() != null && !updateDto.getFiles().isEmpty()) {
+            List<FileDetailDto> list = updateDto.getFiles().stream().map(s3Uploader::makeMetaData).toList();
+            fileUploadDbAndS3(updateDto.getFiles(), list, oldAnnouncement);
+        }
+    }
+    private void fileUploadDbAndS3(List<MultipartFile> files, List<FileDetailDto> list, Announcement announcement) {
+        //파일 데이터 db 저장
+        IntStream.range(0, list.size())
+                .forEach(index ->fileRepository.save(
+                        File.ofAnnouncement(announcement, list.get(index))
+                ));
+        //파일 데이터 s3에 업로드
+        List<String> keys = list.stream().map(FileDetailDto::getKey).toList();
+        s3Uploader.uploadFiles(keys, files);
+    }
+
 
     private  Announcement validationAnnouncement(Long announcementId, Long studyId, Long authorId)
     {
@@ -129,14 +163,8 @@ public class AnnouncementService {
         // TODO: 공지 상세 조회
     }
 
-    // 공지 수정하기
-    public void updateAnnouncement(Long studyId, Long announcementId) {
-        // TODO: 공지 수정
-    }
 
-    public void updateAnnouncement(Long studyId, Long announcementId, Long userId, AnnouncementDataDto announcement) {
 
-    }
 
 
 

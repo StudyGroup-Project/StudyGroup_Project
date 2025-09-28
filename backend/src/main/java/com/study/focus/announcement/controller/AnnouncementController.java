@@ -2,13 +2,12 @@ package com.study.focus.announcement.controller;
 
 
 import com.study.focus.account.dto.CustomUserDetails;
-import com.study.focus.announcement.dto.AnnouncementDataDto;
+import com.study.focus.announcement.dto.AnnouncementUpdateDto;
 import com.study.focus.announcement.dto.GetAnnouncementsResponse;
 import com.study.focus.announcement.service.AnnouncementService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +15,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -53,12 +51,12 @@ public class AnnouncementController {
     // 공지 수정하기
     @PutMapping(path ="/{announcementId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> updateAnnouncement(@PathVariable Long studyId, @PathVariable Long announcementId
-    , @AuthenticationPrincipal CustomUserDetails user, @Valid @ModelAttribute AnnouncementDataDto announcement)
+    , @AuthenticationPrincipal CustomUserDetails user, @Valid @ModelAttribute AnnouncementUpdateDto announcement)
     {
         log.info("Update announcement for studyId: {} , for announcementId: {}", studyId,announcementId);
         Long userId = user.getUserId();
         announcementService.updateAnnouncement(studyId,announcementId,userId, announcement);
-        return null;
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     // 공지 삭제하기
