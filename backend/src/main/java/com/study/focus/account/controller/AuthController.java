@@ -39,7 +39,7 @@ public class AuthController {
 
     // 일반 로그인
     @PostMapping("/login")
-    public void login(@ModelAttribute LoginRequest request, HttpServletResponse response) throws IOException {
+    public void login(@RequestBody LoginRequest request, HttpServletResponse response) throws IOException {
         LoginResponse loginResponse = accountService.login(request);
 
         // RefreshToken 쿠키 저장
