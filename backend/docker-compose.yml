@@ -1,6 +1,26 @@
 version: "3.8"
 
 services:
+  # 사용자님의 Spring Boot 애플리케이션 서비스
+  app:
+    image: kbosung/study-app:latest # 현재 디렉토리의 Dockerfile을 사용해 이미지를 빌드
+    container_name: my-app
+    ports:
+      - "8081:8080" # 호스트 PC의 8080 포트와 컨테이너의 8080 포트 연결
+    environment:
+      # Spring Boot 애플리케이션이 사용할 환경 변수
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/${DB_NAME}
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - AWS_S3_ENDPOINT=http://localstack:4566 # LocalStack S3 엔드포인트
+      - AWS_REGION=ap-northeast-2
+    depends_on:
+      - db       # db 컨테이너가 먼저 실행되도록 설정
+      - localstack # localstack 컨테이너가 먼저 실행되도록 설정
+    restart: always
+    volumes:
+      - ./.env:/app/.env
+
   db:
     image: mysql:8.0
     container_name: my-db

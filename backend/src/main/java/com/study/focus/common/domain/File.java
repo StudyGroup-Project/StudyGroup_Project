@@ -63,11 +63,14 @@ public class File extends BaseCreatedEntity {
     @JoinColumn(name = "submission_id")
     private Submission submission;
 
+    public void delete() {
+        isDeleted = true;
+    }
+
     public void deleteAnnouncementFile() {
         isDeleted = true;
         announcement = null;
     }
-
 
     public static File ofResource(Resource resource,
                                   FileDetailDto fileDetail) {

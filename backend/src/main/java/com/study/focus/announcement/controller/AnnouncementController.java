@@ -48,7 +48,6 @@ public class AnnouncementController {
         Long userId = user.getUserId();
         Long savedAnnouncementId = announcementService.createAnnouncement(studyId, userId, title, content, files);
         return new ResponseEntity<>( HttpStatus.CREATED);
-
     }
 
     // 공지 수정하기
