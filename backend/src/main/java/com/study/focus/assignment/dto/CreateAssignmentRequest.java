@@ -1,6 +1,5 @@
 package com.study.focus.assignment.dto;
 
-import com.study.focus.study.domain.StudyMember;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,7 +12,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class AssignmentCreateRequestDTO {
+public class CreateAssignmentRequest {
     String title;
     String description;
     List<MultipartFile> files;
