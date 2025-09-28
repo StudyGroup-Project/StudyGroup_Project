@@ -3,6 +3,8 @@ package com.study.focus.account.service;
 import com.study.focus.account.domain.RefreshToken;
 import com.study.focus.account.domain.User;
 import com.study.focus.account.repository.RefreshTokenRepository;
+import com.study.focus.common.exception.BusinessException;
+import com.study.focus.common.exception.UserErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +38,7 @@ public class RefreshTokenService {
 
     public RefreshToken findByRefreshToken(String refreshToken) {
         return refreshTokenRepository.findByToken(refreshToken)
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 RefreshToken 입니다."));
+                .orElseThrow(() -> new BusinessException(UserErrorCode.REFRESH_TOKEN_INVALID));
     }
 
     public void deleteByUserId(Long userId) {

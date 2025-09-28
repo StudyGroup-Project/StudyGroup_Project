@@ -3,6 +3,8 @@ package com.study.focus.account.config.oauth;
 import com.study.focus.account.domain.Provider;
 import com.study.focus.account.dto.LoginResponse;
 import com.study.focus.account.service.AccountService;
+import com.study.focus.common.exception.BusinessException;
+import com.study.focus.common.exception.UserErrorCode;
 import com.study.focus.common.util.CookieUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,16 +39,12 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String registrationId = ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId();
         Provider provider = Provider.valueOf(registrationId.toUpperCase());
 
-        // providerUserId 추출
         String providerUserId = extractProviderUserId(provider, oAuth2User.getAttributes());
 
-        // AccountService에 위임 (유저 조회/생성, 토큰 발급, RefreshToken 저장)
         LoginResponse loginResponse = accountService.oauthLogin(provider, providerUserId);
 
-        // RefreshToken을 쿠키에 저장
         addRefreshTokenToCookie(request, response, loginResponse.getRefreshToken());
 
-        // AccessToken을 포함한 리다이렉트 URL 생성
         String targetUrl = getTargetUrl(loginResponse.getAccessToken());
 
         clearAuthenticationAttributes(request, response);
@@ -54,12 +52,11 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     }
 
     private String extractProviderUserId(Provider provider, Map<String, Object> attributes) {
-
         return switch (provider) {
             case GOOGLE -> (String) attributes.get("sub");
             case KAKAO -> String.valueOf(attributes.get("id"));
             case NAVER -> ((Map<String, Object>) attributes.get("response")).get("id").toString();
-            default -> throw new IllegalArgumentException("지원하지 않는 Provider: " + provider);
+            default -> throw new BusinessException(UserErrorCode.UNSUPPORTED_PROVIDER);
         };
     }
 
@@ -75,7 +72,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     }
 
     private String getTargetUrl(String token) {
-        return UriComponentsBuilder.fromHttpUrl(REDIRECT_PATH) // fromUriString → fromHttpUrl 로 교체
+        return UriComponentsBuilder.fromHttpUrl(REDIRECT_PATH)
                 .queryParam("token", token)
                 .build()
                 .toUriString();

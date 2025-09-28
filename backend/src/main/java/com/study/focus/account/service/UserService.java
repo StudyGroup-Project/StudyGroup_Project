@@ -13,7 +13,6 @@ import com.study.focus.common.domain.Category;
 import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.exception.BusinessException;
-import com.study.focus.common.exception.CommonErrorCode;
 import com.study.focus.common.exception.UserErrorCode;
 import com.study.focus.common.util.S3Uploader;
 import lombok.RequiredArgsConstructor;
@@ -32,9 +31,6 @@ public class UserService {
     private final S3Uploader s3Uploader;
     private final UserProfileRepository userProfileRepository;
 
-    /**
-     * 초기 프로필 설정 (이미지 제외)
-     */
     public void initProfile(Long userId, InitProfileRequest request) {
         User user = findUser(userId);
 
@@ -44,39 +40,30 @@ public class UserService {
                 request.getNickname(),
                 address,
                 LocalDate.parse(request.getBirthDate()),
-                Job.valueOf(request.getJob()),            // enum 매핑
+                Job.valueOf(request.getJob()),
                 Category.valueOf(request.getPreferredCategory())
         );
 
         userProfileRepository.save(profile);
     }
 
-    /**
-     * 프로필 이미지 등록 / 변경
-     */
     public String setProfileImage(Long userId, MultipartFile file) {
         UserProfile profile = findUserProfile(userId);
 
-        // 파일 메타데이터 생성
         FileDetailDto meta = s3Uploader.makeMetaData(file);
 
-        // 업로드
         try {
             s3Uploader.uploadFile(meta.getKey(), file);
         } catch (Exception e) {
             throw new BusinessException(UserErrorCode.FILE_UPLOAD_FAIL, e);
         }
 
-        // File 엔티티 생성 후 교체
         File newFile = File.ofProfileImage(meta);
         profile.updateProfileImage(newFile);
 
         return s3Uploader.getUrlFile(meta.getKey());
     }
 
-    /**
-     * 프로필 수정 (이미지 제외)
-     */
     public void updateProfile(Long userId, UpdateUserProfileRequest request) {
         UserProfile profile = findUserProfile(userId);
 
@@ -90,9 +77,6 @@ public class UserService {
         );
     }
 
-    /**
-     * 내 프로필 조회
-     */
     @Transactional(readOnly = true)
     public GetMyProfileResponse getMyProfile(Long userId) {
         UserProfile profile = findUserProfile(userId);
@@ -112,11 +96,11 @@ public class UserService {
 
     private User findUser(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+                .orElseThrow(() -> new BusinessException(UserErrorCode.USER_NOT_FOUND));
     }
 
     private UserProfile findUserProfile(Long userId) {
         return userProfileRepository.findByUserId(userId)
-                .orElseThrow(() -> new BusinessException(UserErrorCode.FILE_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(UserErrorCode.PROFILE_NOT_FOUND));
     }
 }
