@@ -4,7 +4,7 @@ import com.study.focus.account.domain.Job;
 import com.study.focus.account.domain.User;
 import com.study.focus.account.domain.UserProfile;
 import com.study.focus.account.dto.GetMyProfileResponse;
-import com.study.focus.account.dto.InitProfileRequest;
+import com.study.focus.account.dto.InitUserProfileRequest;
 import com.study.focus.account.dto.UpdateUserProfileRequest;
 import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.repository.UserRepository;
@@ -31,7 +31,7 @@ public class UserService {
     private final S3Uploader s3Uploader;
     private final UserProfileRepository userProfileRepository;
 
-    public void initProfile(Long userId, InitProfileRequest request) {
+    public void initProfile(Long userId, InitUserProfileRequest request) {
         User user = findUser(userId);
 
         Address address = new Address(request.getProvince(), request.getDistrict());
@@ -40,8 +40,8 @@ public class UserService {
                 request.getNickname(),
                 address,
                 LocalDate.parse(request.getBirthDate()),
-                Job.valueOf(request.getJob()),
-                Category.valueOf(request.getPreferredCategory())
+                request.getJob(),
+                request.getPreferredCategory()
         );
 
         userProfileRepository.save(profile);
@@ -72,8 +72,8 @@ public class UserService {
                 request.getNickname(),
                 newAddress,
                 LocalDate.parse(request.getBirthDate()),
-                Job.valueOf(request.getJob()),
-                Category.valueOf(request.getPreferredCategory())
+                request.getJob(),
+                request.getPreferredCategory()
         );
     }
 
@@ -87,8 +87,8 @@ public class UserService {
                 profile.getAddress().getProvince(),
                 profile.getAddress().getDistrict(),
                 profile.getBirthDate().toString(),
-                profile.getJob().name(),
-                profile.getPreferredCategory().name(),
+                profile.getJob(),
+                profile.getPreferredCategory(),
                 profile.getProfileImage() != null ? s3Uploader.getUrlFile(profile.getProfileImage().getFileKey()) : null,
                 profile.getUser().getTrustScore()
         );

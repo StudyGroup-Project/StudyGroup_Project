@@ -1,7 +1,8 @@
 package com.study.focus.account.controller;
 
+import com.study.focus.account.dto.CustomUserDetails;
 import com.study.focus.account.dto.GetMyProfileResponse;
-import com.study.focus.account.dto.InitProfileRequest;
+import com.study.focus.account.dto.InitUserProfileRequest;
 import com.study.focus.account.dto.UpdateUserProfileRequest;
 import com.study.focus.account.service.UserService;
 import jakarta.validation.Valid;
@@ -22,35 +23,35 @@ public class UserController {
     // 초기 프로필 설정 (이미지 제외)
     @PostMapping("/basic")
     public ResponseEntity<Void> initProfile(
-            @AuthenticationPrincipal Long userId,
-            @RequestBody @Valid InitProfileRequest request) {
-        userService.initProfile(userId, request);
+            @AuthenticationPrincipal CustomUserDetails user,
+            @RequestBody @Valid InitUserProfileRequest request) {
+        userService.initProfile(user.getUserId(), request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     // 프로필 이미지 설정 (등록/변경)
     @PostMapping("/image")
     public ResponseEntity<String> uploadProfileImage(
-            @AuthenticationPrincipal Long userId,
+            @AuthenticationPrincipal CustomUserDetails user,
             @RequestPart("file") MultipartFile file) {
-        String imageUrl = userService.setProfileImage(userId, file);
+        String imageUrl = userService.setProfileImage(user.getUserId(), file);
         return ResponseEntity.ok(imageUrl);
     }
 
     // 내 프로필 수정 (이미지 제외)
     @PatchMapping
     public ResponseEntity<Void> updateProfile(
-            @AuthenticationPrincipal Long userId,
+            @AuthenticationPrincipal CustomUserDetails user,
             @RequestBody UpdateUserProfileRequest request) {
-        userService.updateProfile(userId, request);
+        userService.updateProfile(user.getUserId(), request);
         return ResponseEntity.ok().build();
     }
 
     // 내 프로필 정보 가져오기
     @GetMapping
     public ResponseEntity<GetMyProfileResponse> getMyProfile(
-            @AuthenticationPrincipal Long userId) {
-        GetMyProfileResponse response = userService.getMyProfile(userId);
+            @AuthenticationPrincipal CustomUserDetails user) {
+        GetMyProfileResponse response = userService.getMyProfile(user.getUserId());
         return ResponseEntity.ok(response);
     }
 }
