@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -42,6 +43,7 @@ public class WebOAuthSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            OAuth2SuccessHandler oAuth2SuccessHandler) throws Exception {
         return http
+                .cors(Customizer.withDefaults()) // 🔥 CORS 활성화
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
@@ -50,7 +52,7 @@ public class WebOAuthSecurityConfig {
                 .addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/token", "/api/auth/logout").permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated() // 이 부분은 인증을 요구함
+                        .requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated()
                         .anyRequest().permitAll())
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
