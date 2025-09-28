@@ -47,8 +47,15 @@ public class AssignmentController {
     public void getAssignmentDetail(@PathVariable Long studyId, @PathVariable Long assignmentId) {}
 
     // 과제 수정하기
-    @PutMapping("/{assignmentId}")
-    public void updateAssignment(@PathVariable Long studyId, @PathVariable Long assignmentId) {}
+    @PutMapping(value = "/{assignmentId}",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> updateAssignment(@PathVariable Long studyId,
+                                 @PathVariable Long assignmentId,
+                                 @ModelAttribute CreateAssignmentRequest dto,
+                                 @AuthenticationPrincipal CustomUserDetails user) {
+        Long creator = user.getUserId();
+        assignmentService.updateAssignment(studyId,assignmentId,creator,dto);
+        return ResponseEntity.ok().build();
+    }
 
     // 과제 삭제하기
     @DeleteMapping("/{assignmentId}")

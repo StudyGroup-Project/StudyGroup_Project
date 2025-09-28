@@ -54,7 +54,6 @@ public class AssignmentService {
     // 과제 생성하기
     @Transactional
     public Long createAssignment(Long studyId, Long creatorId, CreateAssignmentRequest dto) {
-        // TODO: 과제 생성
         Study study = studyRepository.findById(studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
         StudyMember creator = studyMemberRepository.findByStudyIdAndUserId(studyId, creatorId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
         if(!creator.getRole().equals(StudyRole.LEADER)) throw new BusinessException(UserErrorCode.URL_FORBIDDEN);
@@ -90,8 +89,14 @@ public class AssignmentService {
     }
 
     // 과제 수정하기
-    public void updateAssignment(Long studyId, Long assignmentId) {
-        // TODO: 과제 수정
+    @Transactional
+    public void updateAssignment(Long studyId, Long assignmentId, Long creatorId, CreateAssignmentRequest dto) {
+        StudyMember creator = studyMemberRepository.findByStudyIdAndUserId(studyId, creatorId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+        if(!creator.getRole().equals(StudyRole.LEADER)) throw new BusinessException(UserErrorCode.URL_FORBIDDEN);
+        Assignment assignment = assignmentRepository.findByIdAndStudyId(assignmentId,studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
+        if(!dto.getDueAt().isAfter(dto.getStartAt())) throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
+
+        assignment.update(dto.getTitle(), dto.getDescription(), dto.getStartAt(), dto.getDueAt());
     }
 
     // 과제 삭제하기

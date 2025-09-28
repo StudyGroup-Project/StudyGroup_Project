@@ -38,4 +38,11 @@ public class Assignment extends BaseTimeEntity {
 
     @Column(nullable = false)
     private LocalDateTime dueAt;
+
+    public void update(String title, String description, LocalDateTime startAt, LocalDateTime dueAt) {
+        this.title = title;
+        this.description = description;
+        this.startAt = startAt;
+        this.dueAt = dueAt;
+    }
 }
