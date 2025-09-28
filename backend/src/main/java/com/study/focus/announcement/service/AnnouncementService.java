@@ -2,6 +2,7 @@ package com.study.focus.announcement.service;
 
 import com.study.focus.announcement.domain.Announcement;
 import com.study.focus.announcement.domain.Comment;
+import com.study.focus.announcement.dto.AnnouncementDataDto;
 import com.study.focus.announcement.dto.GetAnnouncementsResponse;
 import com.study.focus.announcement.repository.AnnouncementRepository;
 import com.study.focus.announcement.repository.CommentRepository;
@@ -16,6 +17,7 @@ import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
 import com.study.focus.study.domain.StudyRole;
 import com.study.focus.study.repository.StudyMemberRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -132,6 +134,10 @@ public class AnnouncementService {
         // TODO: 공지 수정
     }
 
+    public void updateAnnouncement(Long studyId, Long announcementId, Long userId, AnnouncementDataDto announcement) {
+
+    }
+
 
 
     //인터셉터 및 Aop 반영 시 수정 필요
@@ -140,6 +146,7 @@ public class AnnouncementService {
         return studyMemberRepository.findByStudyIdAndUserId(studyId, userId).
                 orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
     }
+
 
 
 }
