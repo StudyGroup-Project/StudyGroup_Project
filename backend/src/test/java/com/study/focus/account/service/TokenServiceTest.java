@@ -4,6 +4,8 @@ import com.study.focus.account.config.jwt.TokenProvider;
 import com.study.focus.account.domain.*;
 import com.study.focus.account.repository.OAuthCredentialRepository;
 import com.study.focus.account.repository.SystemCredentialRepository;
+import com.study.focus.common.exception.BusinessException;
+import com.study.focus.common.exception.UserErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -129,11 +131,12 @@ class TokenServiceTest {
         when(refreshTokenService.findByRefreshToken("expired"))
                 .thenReturn(expired);
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        BusinessException ex = assertThrows(
+                BusinessException.class,
                 () -> tokenService.createNewAccessToken("expired")
         );
 
-        assertThat(ex.getMessage()).isEqualTo("Refresh Token이 만료되었습니다.");
+        assertThat(ex.getErrorCode()).isEqualTo(UserErrorCode.REFRESH_TOKEN_EXPIRED);
     }
+
 }

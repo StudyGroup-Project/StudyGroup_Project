@@ -7,6 +7,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@Slf4j
 @RequiredArgsConstructor
 public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
@@ -54,7 +56,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
             } catch (Exception e) {
                 // 토큰은 유효했지만, 사용자 정보 로드에 실패한 경우
-                System.out.println("토큰은 유효하나 사용자 정보 로드 실패: " + e.getMessage());
+                log.warn("토큰은 유효하나 사용자 정보 로드 실패: {}", e.getMessage());
                 // SecurityContext에 Authentication을 설정하지 않고 넘어가면,
                 // 다음 필터에서 UNAUTHORIZED 처리가 되거나, 컨트롤러에서 null 주입됨.
             }
