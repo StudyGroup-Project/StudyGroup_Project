@@ -1,21 +1,33 @@
 package com.study.focus.application.service;
 
 import com.study.focus.account.domain.User;
+import com.study.focus.account.domain.UserProfile;
+import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.repository.UserRepository;
 import com.study.focus.application.domain.ApplicationStatus;
+import com.study.focus.application.dto.GetApplicationsResponse;
 import com.study.focus.application.dto.SubmitApplicationRequest;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
+import com.study.focus.common.exception.UserErrorCode;
+import com.study.focus.common.util.S3Uploader;
 import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.RecruitStatus;
+import com.study.focus.study.domain.StudyMember;
+import com.study.focus.study.domain.StudyRole;
+import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
 import com.study.focus.application.domain.Application;
 import com.study.focus.application.dto.SubmitApplicationRequest;
 import com.study.focus.application.repository.ApplicationRepository;
 import com.study.focus.study.repository.StudyRepository;
+import com.study.focus.study.service.StudyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import software.amazon.awssdk.services.s3.S3Client;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +37,9 @@ public class ApplicationService {
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
     private final StudyRepository studyRepository;
+    private final UserProfileRepository userProfileRepository;
+    private final S3Uploader s3Uploader;
+    private final StudyMemberRepository studyMemberRepository;
 
     // 지원서 제출하기
     public Long submitApplication(Long applicantId, Long studyId, SubmitApplicationRequest request) {
@@ -59,8 +74,40 @@ public class ApplicationService {
     }
 
     // 지원서 목록 가져오기
-    public void getApplications(Long studyId) {
-        // TODO: 지원서 목록 조회
+    @Transactional(readOnly = true)
+    public List<GetApplicationsResponse> getApplications(Long studyId, Long requestUserId) {
+
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
+
+        // 그룹장(방장) id 조회 및 권한 체크
+        StudyMember leaderMember = studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+        User leader = leaderMember.getUser();
+        if (!leader.getId().equals(requestUserId)) {
+            throw new BusinessException(UserErrorCode.URL_FORBIDDEN); // 방장만 접근 가능
+        }
+
+        List<Application> applications = applicationRepository.findByStudyId(studyId);
+
+        return applications.stream().map(app -> {
+            Long applicantId = app.getApplicant().getId();
+            UserProfile userProfile = userProfileRepository.findByUserId(applicantId)
+                    .orElseThrow(() -> new BusinessException(UserErrorCode.PROFILE_NOT_FOUND));
+            String nickname = userProfile.getNickname();
+            String profileImageUrl = userProfile.getProfileImage() != null
+                    ? s3Uploader.getUrlFile(userProfile.getProfileImage().getFileKey())
+                    : null;
+            return new GetApplicationsResponse(
+                    app.getId(),
+                    applicantId,
+                    nickname,
+                    profileImageUrl,
+                    app.getCreatedAt(),
+                    app.getStatus()
+            );
+        }).toList();
+
     }
 
     // 지원서 상세 가져오기

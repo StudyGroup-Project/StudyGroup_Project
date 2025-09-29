@@ -1,14 +1,22 @@
 package com.study.focus.application;
 
 
+import com.study.focus.account.domain.UserProfile;
+import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.application.domain.Application;
+import com.study.focus.application.dto.GetApplicationsResponse;
 import com.study.focus.application.dto.SubmitApplicationRequest;
 import com.study.focus.application.repository.ApplicationRepository;
 import com.study.focus.application.service.ApplicationService;
 import com.study.focus.account.domain.User;
 import com.study.focus.account.repository.UserRepository;
+import com.study.focus.common.domain.File;
+import com.study.focus.common.util.S3Uploader;
 import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.RecruitStatus;
+import com.study.focus.study.domain.StudyMember;
+import com.study.focus.study.domain.StudyRole;
+import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.application.domain.ApplicationStatus;
@@ -20,6 +28,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,6 +48,12 @@ public class ApplicationUnitTest {
     private UserRepository userRepository;
     @Mock
     private StudyRepository studyRepository;
+    @Mock
+    private StudyMemberRepository studyMemberRepository;
+    @Mock
+    private S3Uploader s3Uploader;
+    @Mock
+    private UserProfileRepository userProfileRepository;
 
     @InjectMocks
     private ApplicationService applicationService;
@@ -221,6 +237,104 @@ public class ApplicationUnitTest {
         assertThatThrownBy(() -> applicationService.submitApplication(applicantId, studyId, request))
                 .isInstanceOf(BusinessException.class);
         then(applicationRepository).should(never()).save(any());
+    }
+
+    @Test
+    @DisplayName("지원서 목록 조회 - 방장 성공")
+    void getApplications_Success_Leader() {
+        // given
+        Long studyId = 10L;
+        Long leaderId = 1L;
+        Long applicantId = 2L;
+        ApplicationStatus status = ApplicationStatus.SUBMITTED;
+
+        User leader = User.builder().id(leaderId).build();
+        User applicant = User.builder().id(applicantId).build();
+        Study study = Study.builder().id(studyId).build();
+        StudyMember leaderMember = StudyMember.builder().user(leader).study(study).role(StudyRole.LEADER).build();
+        Application application = Application.builder()
+                .id(100L)
+                .applicant(applicant)
+                .study(study)
+                .status(status)
+                .content("지원 내용")
+                .build();
+
+        // File 객체를 Mockito로 모킹
+        File file = org.mockito.Mockito.mock(File.class);
+        String fileKey = "fileKey";
+        String expectedUrl = "https://s3.com/fileKey";
+        org.mockito.Mockito.when(file.getFileKey()).thenReturn(fileKey);
+
+        UserProfile applicantProfile = UserProfile.builder()
+                .user(applicant)
+                .nickname("지원자")
+                .profileImage(file)
+                .build();
+
+        given(studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER)).willReturn(Optional.of(leaderMember));
+        given(applicationRepository.findByStudyId(studyId)).willReturn(List.of(application));
+        given(userProfileRepository.findByUserId(applicantId)).willReturn(Optional.of(applicantProfile));
+        given(s3Uploader.getUrlFile(fileKey)).willReturn(expectedUrl);
+        given(studyRepository.findById(studyId)).willReturn(Optional.of(study));
+
+        // when
+        List<GetApplicationsResponse> result = applicationService.getApplications(studyId, leaderId);
+
+        // then
+        assertThat(result).hasSize(1);
+        GetApplicationsResponse response = result.get(0);
+        assertThat(response.getApplicantId()).isEqualTo(applicantId);
+        assertThat(response.getNickname()).isEqualTo("지원자");
+        assertThat(response.getProfileImageUrl()).isEqualTo(expectedUrl);
+        assertThat(response.getStatus()).isEqualTo(status);
+    }
+
+    @Test
+    @DisplayName("지원서 목록 조회 실패 - 방장이 아닌 경우")
+    void getApplications_Fail_NotLeader() {
+        // given
+        Long studyId = 10L;
+        Long leaderId = 1L;
+        Long notLeaderId = 99L;
+        User leader = User.builder().id(leaderId).build();
+        Study study = Study.builder().id(studyId).build();
+        StudyMember leaderMember = StudyMember.builder().user(leader).study(study).role(StudyRole.LEADER).build();
+
+        given(studyRepository.findById(studyId)).willReturn(Optional.of(study));
+        given(studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER)).willReturn(Optional.of(leaderMember));
+
+        // when & then
+        assertThatThrownBy(() -> applicationService.getApplications(studyId, notLeaderId))
+                .isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    @DisplayName("지원서 목록 조회 실패 - 지원자 프로필 없음")
+    void getApplications_Fail_ProfileNotFound() {
+        // given
+        Long studyId = 10L;
+        Long leaderId = 1L;
+        Long applicantId = 2L;
+        User leader = User.builder().id(leaderId).build();
+        User applicant = User.builder().id(applicantId).build();
+        Study study = Study.builder().id(studyId).build();
+        StudyMember leaderMember = StudyMember.builder().user(leader).study(study).role(StudyRole.LEADER).build();
+        Application application = Application.builder()
+                .id(100L)
+                .applicant(applicant)
+                .study(study)
+                .status(ApplicationStatus.SUBMITTED)
+                .build();
+
+        given(studyRepository.findById(studyId)).willReturn(Optional.of(study));
+        given(studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER)).willReturn(Optional.of(leaderMember));
+        given(applicationRepository.findByStudyId(studyId)).willReturn(List.of(application));
+        given(userProfileRepository.findByUserId(applicantId)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> applicationService.getApplications(studyId, leaderId))
+                .isInstanceOf(BusinessException.class);
     }
 
 }

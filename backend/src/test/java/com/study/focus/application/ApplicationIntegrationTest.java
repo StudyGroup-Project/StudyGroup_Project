@@ -1,15 +1,25 @@
 package com.study.focus.application;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.study.focus.account.domain.Job;
 import com.study.focus.account.domain.User;
+import com.study.focus.account.domain.UserProfile;
 import com.study.focus.account.dto.CustomUserDetails;
+import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.repository.UserRepository;
 import com.study.focus.application.domain.Application;
 import com.study.focus.application.domain.ApplicationStatus;
 import com.study.focus.application.dto.SubmitApplicationRequest;
 import com.study.focus.application.repository.ApplicationRepository;
+import com.study.focus.common.domain.Address;
+import com.study.focus.common.domain.Category;
 import com.study.focus.study.domain.RecruitStatus;
 import com.study.focus.study.domain.Study;
+import com.study.focus.study.domain.StudyMember;
+import com.study.focus.study.domain.StudyRole;
+import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +32,9 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -34,6 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 public class ApplicationIntegrationTest {
 
     @Autowired
@@ -47,17 +61,48 @@ public class ApplicationIntegrationTest {
     private StudyRepository studyRepository;
     @Autowired
     private ApplicationRepository applicationRepository;
+    @Autowired
+    private StudyMemberRepository studyMemberRepository;
+    @Autowired
+    private UserProfileRepository userProfileRepository;
 
     private User testUser;
+
+    private User leader;
+    private Study testStudy;
+    private UserProfile applicantProfile;
+    private User applicant;
 
     @BeforeEach
     void setUp() {
         testUser = userRepository.save(User.builder().build());
+        leader = userRepository.save(User.builder().build());
+        applicant = userRepository.save(User.builder().build());
+        testStudy = studyRepository.save(Study.builder().recruitStatus(RecruitStatus.OPEN).build());
+        studyMemberRepository.save(StudyMember.builder()
+                .user(leader)
+                .study(testStudy)
+                .role(StudyRole.LEADER)
+                .build());
+        Address applicantAddress = Address.builder()
+                .province("서울특별시")
+                .district("강남구")
+                .build();
+        applicantProfile = userProfileRepository.save(UserProfile.builder()
+                .user(applicant)
+                .nickname("지원자")
+                .address(applicantAddress)
+                .birthDate(LocalDate.of(1990, 1, 1))
+                .job(Job.STUDENT)
+                .preferredCategory(Category.IT)
+                .build());
     }
 
     @AfterEach
     void tearDown() {
         applicationRepository.deleteAll();
+        studyMemberRepository.deleteAll();
+        userProfileRepository.deleteAll();
         studyRepository.deleteAll();
         userRepository.deleteAll();
     }
@@ -160,6 +205,57 @@ public class ApplicationIntegrationTest {
                 .andExpect(header().exists("Location"));
 
         assertThat(applicationRepository.count()).isEqualTo(initialCount + 1);
+    }
+
+    @Test
+    @DisplayName("지원서 목록 조회 - 방장 성공")
+    void getApplications_Success_Leader() throws Exception {
+        applicationRepository.save(Application.builder()
+                .applicant(applicant)
+                .study(testStudy)
+                .content("지원 내용")
+                .status(ApplicationStatus.SUBMITTED)
+                .build());
+
+        mockMvc.perform(get("/api/studies/" + testStudy.getId() + "/applications")
+                        .with(user(new CustomUserDetails(leader.getId())))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].applicantId").value(applicant.getId()));
+    }
+
+    @Test
+    @DisplayName("지원서 목록 조회 실패 - 방장이 아닌 경우")
+    void getApplications_Fail_NotLeader() throws Exception {
+        User notLeader = userRepository.save(User.builder().build());
+        applicationRepository.save(Application.builder()
+                .applicant(applicant)
+                .study(testStudy)
+                .content("지원 내용")
+                .status(ApplicationStatus.SUBMITTED)
+                .build());
+
+        mockMvc.perform(get("/api/studies/" + testStudy.getId() + "/applications")
+                        .with(user(new CustomUserDetails(notLeader.getId())))
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("지원서 목록 조회 실패 - 지원자 프로필 없음")
+    void getApplications_Fail_ProfileNotFound() throws Exception {
+        User noProfileUser = userRepository.save(User.builder().build());
+        applicationRepository.save(Application.builder()
+                .applicant(noProfileUser)
+                .study(testStudy)
+                .content("지원 내용")
+                .status(ApplicationStatus.SUBMITTED)
+                .build());
+
+        mockMvc.perform(get("/api/studies/" + testStudy.getId() + "/applications")
+                        .with(user(new CustomUserDetails(leader.getId())))
+                        .with(csrf()))
+                .andExpect(status().isNotFound());
     }
 
 }
