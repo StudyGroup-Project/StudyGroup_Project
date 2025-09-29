@@ -27,6 +27,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -183,6 +185,7 @@ public class AnnouncementIntegrationTest {
                 "application/octet-stream",
                 "test".getBytes()
         );
+
         String title = "testTile";
         String content = "testContent";
 
@@ -269,6 +272,47 @@ public class AnnouncementIntegrationTest {
                 .with(csrf())).andExpect(status().isBadRequest());
         Assertions.assertThat(announcementRepository.count()).isEqualTo(initialCount);
 
+    }
+
+    @Test
+    @DisplayName("성공: 공지사항 수정 - 제목/내용 변경 + 파일 삭제 및 추가")
+    void updateAnnouncement_success() throws Exception {
+        StudyMember studyMember = studyMemberRepository.findByStudyIdAndUserId(study1.getId(), user1.getId()).orElseThrow();
+        Announcement announcement = announcementRepository.save(Announcement.builder()
+                .author(studyMember)
+                .study(study1)
+                .title("title")
+                .description("cotent")
+                .build());
+        File fileSaved = fileRepository.save(File.ofAnnouncement(announcement,
+                new FileDetailDto("o.txt", "key", "txt", 10L)));
+        MockMultipartFile newFiles = new MockMultipartFile(
+                "testFile","hello.txt","text/plain","Test".getBytes());
+
+        mockMvc.perform(multipart("/api/studies/" + study1.getId() + "/announcements/" + announcement.getId())
+                        .file(newFiles)
+                        .param("title", "updated title")
+                        .param("content", "updated content")
+                        .param("deleteFileIds", fileSaved.getId().toString())
+                        .with(user(new CustomUserDetails(user1.getId())))
+                        .with(csrf())
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        }))
+                .andExpect(status().isOk());
+    }
+    @Test
+    @DisplayName("실패: 공지사항 수정 - 존재하지 않는 공지")
+    void updateAnnouncement_fail_notFound() throws Exception {
+        Long notExistId = 99999L;
+        mockMvc.perform(multipart("/api/studies/"+ study1.getId() + "/announcements/" + notExistId)
+                        .param("title", "new-title")
+                        .with(user(new CustomUserDetails(user1.getId())))
+                        .with(csrf())
+                        .with(request -> { request.setMethod("PUT"); return request; })
+                )
+                .andExpect(status().isBadRequest());
     }
 
 

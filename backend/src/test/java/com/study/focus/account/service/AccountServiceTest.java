@@ -9,6 +9,8 @@ import com.study.focus.account.repository.OAuthCredentialRepository;
 import com.study.focus.account.repository.RefreshTokenRepository;
 import com.study.focus.account.repository.SystemCredentialRepository;
 import com.study.focus.account.repository.UserRepository;
+import com.study.focus.common.exception.BusinessException;
+import com.study.focus.common.exception.UserErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -76,13 +78,14 @@ class AccountServiceTest {
         when(systemCredentialRepository.findByLoginId("wrongId"))
                 .thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        BusinessException ex = assertThrows(
+                BusinessException.class,
                 () -> accountService.login(new LoginRequest("wrongId", "pw"))
         );
 
-        assertThat(ex.getMessage()).isEqualTo("존재하지 않는 아이디입니다.");
+        assertThat(ex.getErrorCode()).isEqualTo(UserErrorCode.USER_NOT_FOUND);
     }
+
 
     @Test
     @DisplayName("시스템 로그인 실패 - 비밀번호 불일치")
@@ -98,13 +101,14 @@ class AccountServiceTest {
                 .thenReturn(Optional.of(credential));
         when(passwordEncoder.matches("wrongPw", "encodedPw")).thenReturn(false);
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        BusinessException ex = assertThrows(
+                BusinessException.class,
                 () -> accountService.login(new LoginRequest("id", "wrongPw"))
         );
 
-        assertThat(ex.getMessage()).isEqualTo("비밀번호가 일치하지 않습니다.");
+        assertThat(ex.getErrorCode()).isEqualTo(UserErrorCode.INVALID_PASSWORD);
     }
+
 
     @Test
     @DisplayName("회원가입 실패 - 중복 아이디")
@@ -112,13 +116,15 @@ class AccountServiceTest {
         when(systemCredentialRepository.existsByLoginId("dupId")).thenReturn(true);
 
         RegisterRequest request = new RegisterRequest("dupId", "pw");
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+
+        BusinessException ex = assertThrows(
+                BusinessException.class,
                 () -> accountService.register(request)
         );
 
-        assertThat(ex.getMessage()).isEqualTo("이미 존재하는 아이디입니다.");
+        assertThat(ex.getErrorCode()).isEqualTo(UserErrorCode.DUPLICATE_LOGIN_ID);
     }
+
 
     @Test
     @DisplayName("OAuth 로그인 신규 유저 생성")

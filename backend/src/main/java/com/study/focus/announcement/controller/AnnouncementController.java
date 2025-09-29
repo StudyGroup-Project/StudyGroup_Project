@@ -2,11 +2,12 @@ package com.study.focus.announcement.controller;
 
 
 import com.study.focus.account.dto.CustomUserDetails;
+import com.study.focus.announcement.dto.AnnouncementUpdateDto;
 import com.study.focus.announcement.dto.GetAnnouncementsResponse;
 import com.study.focus.announcement.service.AnnouncementService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +15,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -30,7 +30,7 @@ public class AnnouncementController {
     public ResponseEntity<List<GetAnnouncementsResponse>> getAnnouncements
     (@PathVariable Long studyId, @AuthenticationPrincipal CustomUserDetails user)
     {
-        log.info("Fetching announcements for studyId: {}", studyId);
+        log.info("Fetch announcements for studyId: {}", studyId);
         Long userId = user.getUserId();
         return ResponseEntity.ok(announcementService.findAllSummaries(studyId,userId));
     }
@@ -42,10 +42,21 @@ public class AnnouncementController {
      @RequestParam(name = "title") String title, @RequestParam(name = "content") String content,
      @RequestPart(name = "files",required = false) List<MultipartFile> files)
     {
-        log.info("creating announcement for studyId: {}", studyId);
+        log.info("Create announcement for studyId: {}", studyId);
         Long userId = user.getUserId();
         Long savedAnnouncementId = announcementService.createAnnouncement(studyId, userId, title, content, files);
         return new ResponseEntity<>( HttpStatus.CREATED);
+    }
+
+    // 공지 수정하기
+    @PutMapping(path ="/{announcementId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> updateAnnouncement(@PathVariable Long studyId, @PathVariable Long announcementId
+    , @AuthenticationPrincipal CustomUserDetails user, @Valid @ModelAttribute AnnouncementUpdateDto announcement)
+    {
+        log.info("Update announcement for studyId: {} , for announcementId: {}", studyId,announcementId);
+        Long userId = user.getUserId();
+        announcementService.updateAnnouncement(studyId,announcementId,userId, announcement);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     // 공지 삭제하기
@@ -58,12 +69,7 @@ public class AnnouncementController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    // 공지 수정하기
-    @PutMapping("/{announcementId}")
-    public void updateAnnouncement(@PathVariable Long studyId, @PathVariable Long announcementId) {
 
-
-    }
 
 
     // 공지 상세 데이터 가져오기

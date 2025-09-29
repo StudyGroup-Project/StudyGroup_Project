@@ -6,6 +6,8 @@ import com.study.focus.account.repository.OAuthCredentialRepository;
 import com.study.focus.account.repository.RefreshTokenRepository;
 import com.study.focus.account.repository.SystemCredentialRepository;
 import com.study.focus.account.repository.UserRepository;
+import com.study.focus.common.exception.BusinessException;
+import com.study.focus.common.exception.UserErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,17 +22,13 @@ public class AccountService {
     private final SystemCredentialRepository systemCredentialRepository;
     private final OAuthCredentialRepository oAuthCredentialRepository;
     private final TokenService tokenService;
-    private final RefreshTokenService
-            refreshTokenService;
+    private final RefreshTokenService refreshTokenService;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    // OAuth 로그인
     public LoginResponse oauthLogin(Provider provider, String providerUserId) {
-        // Credential 확인
         OAuthCredential credential = oAuthCredentialRepository.findByProviderAndProviderUserId(provider, providerUserId)
                 .orElseGet(() -> {
-                    // 신규 사용자 → User 생성
                     User newUser = User.builder()
                             .loginType(LoginType.OAUTH)
                             .build();
@@ -47,31 +45,24 @@ public class AccountService {
         User user = credential.getUser();
         user.updateLastLoginAt();
 
-        // identifier: "provider:providerId"
         String identifier = provider.name() + ":" + providerUserId;
 
-        // JWT 발급
         TokenResponse tokenResponse = tokenService.createToken(user, identifier);
-
-        // RefreshToken 저장
         refreshTokenService.saveOrUpdate(user, tokenResponse.getRefreshToken(), tokenResponse.getRefreshTokenExpiry());
 
         return new LoginResponse(tokenResponse.getAccessToken(), tokenResponse.getRefreshToken());
     }
 
-    // 회원가입
     public void register(RegisterRequest request) {
         if (systemCredentialRepository.existsByLoginId(request.getLoginId())) {
-            throw new IllegalArgumentException("이미 존재하는 아이디입니다.");
+            throw new BusinessException(UserErrorCode.DUPLICATE_LOGIN_ID);
         }
 
-        // 1. User 생성
         User user = User.builder()
                 .loginType(LoginType.SYSTEM)
                 .build();
         userRepository.save(user);
 
-        // 2. SystemCredential 생성 (loginId, password)
         SystemCredential credential = SystemCredential.builder()
                 .loginId(request.getLoginId())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -80,18 +71,16 @@ public class AccountService {
         systemCredentialRepository.save(credential);
     }
 
-    // 아이디 중복 확인
     public boolean checkId(String loginId) {
         return !systemCredentialRepository.existsByLoginId(loginId);
     }
 
-    // 일반 로그인
     public LoginResponse login(LoginRequest request) {
         SystemCredential credential = systemCredentialRepository.findByLoginId(request.getLoginId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디입니다."));
+                .orElseThrow(() -> new BusinessException(UserErrorCode.USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(request.getPassword(), credential.getPassword())) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            throw new BusinessException(UserErrorCode.INVALID_PASSWORD);
         }
 
         User user = credential.getUser();
@@ -100,18 +89,15 @@ public class AccountService {
         String identifier = credential.getLoginId();
 
         TokenResponse tokenResponse = tokenService.createToken(user, identifier);
-
         refreshTokenService.saveOrUpdate(user, tokenResponse.getRefreshToken(), tokenResponse.getRefreshTokenExpiry());
 
         return new LoginResponse(tokenResponse.getAccessToken(), tokenResponse.getRefreshToken());
     }
 
-    // 로그아웃
     public void logout(Long userId) {
         refreshTokenService.deleteByUserId(userId);
     }
 
-    // 로그아웃
     public void logoutByRefreshToken(String refreshToken) {
         refreshTokenRepository.findByToken(refreshToken)
                 .ifPresent(refreshTokenRepository::delete);
