@@ -9,4 +9,6 @@ import java.util.Optional;
 
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
     Optional<Application> findByApplicantAndStudy(User applicant, Study study);
+
+    Optional<Application> findByApplicantIdAndStudyId(Long applicantId, Long studyId);
 }

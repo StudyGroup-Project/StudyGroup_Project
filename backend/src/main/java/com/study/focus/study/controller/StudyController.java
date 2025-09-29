@@ -2,6 +2,7 @@ package com.study.focus.study.controller;
 
 import com.study.focus.account.dto.CustomUserDetails;
 import com.study.focus.study.dto.CreateStudyRequest;
+import com.study.focus.study.dto.GetStudyProfileResponse;
 import com.study.focus.study.service.StudyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +33,11 @@ public class StudyController {
 
     // 그룹 프로필 정보 가져오기
     @GetMapping("/{studyId}")
-    public void getStudyProfile(@PathVariable Long studyId) {}
+    public ResponseEntity<GetStudyProfileResponse> getStudyProfile(@PathVariable Long studyId, @AuthenticationPrincipal CustomUserDetails user) {
+        Long userId = user.getUserId();
+        GetStudyProfileResponse response = studyService.getStudyProfile(studyId, userId);
+        return ResponseEntity.ok(response);
+    }
 
     // 그룹 프로필 정보 수정하기
     @PutMapping("/{studyId}")
