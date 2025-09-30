@@ -2,6 +2,7 @@ package com.study.focus.announcement.controller;
 
 
 import com.study.focus.account.dto.CustomUserDetails;
+import com.study.focus.announcement.dto.GetAnnouncementDetailResponse;
 import com.study.focus.announcement.dto.GetAnnouncementsResponse;
 import com.study.focus.announcement.service.AnnouncementService;
 import lombok.RequiredArgsConstructor;
@@ -68,7 +69,13 @@ public class AnnouncementController {
 
     // 공지 상세 데이터 가져오기
     @GetMapping("/{announcementId}")
-    public void getAnnouncementDetail(@PathVariable Long studyId, @PathVariable Long announcementId) {}
+    public ResponseEntity<GetAnnouncementDetailResponse> getAnnouncementDetail(@PathVariable Long studyId, @PathVariable Long announcementId,
+                                      @AuthenticationPrincipal CustomUserDetails user) {
+        log.info("Get announcement Detail Data for studyId: {} , for announcementId: {}", studyId,announcementId);
+        Long userId = user.getUserId();
+        GetAnnouncementDetailResponse detailResponse = announcementService.getAnnouncementDetail(studyId, announcementId, userId);
+        return ResponseEntity.ok(detailResponse);
+    }
 
 
 

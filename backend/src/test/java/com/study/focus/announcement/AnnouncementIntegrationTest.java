@@ -1,11 +1,18 @@
 package com.study.focus.announcement;
 
+import com.study.focus.account.domain.Job;
 import com.study.focus.account.domain.User;
+import com.study.focus.account.domain.UserProfile;
 import com.study.focus.account.dto.CustomUserDetails;
+import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.repository.UserRepository;
 import com.study.focus.announcement.domain.Announcement;
+import com.study.focus.announcement.domain.Comment;
 import com.study.focus.announcement.repository.AnnouncementRepository;
+import com.study.focus.announcement.repository.CommentRepository;
 import com.study.focus.announcement.service.AnnouncementService;
+import com.study.focus.common.domain.Address;
+import com.study.focus.common.domain.Category;
 import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.exception.BusinessException;
@@ -61,10 +68,18 @@ public class AnnouncementIntegrationTest {
     @Autowired
     private AnnouncementService announcementService;
 
+    @Autowired
+    private CommentRepository commentRepository;
+
+    @Autowired
+    private UserProfileRepository userProfileRepository;
+
     private Study study1;
     private Study study2;
     private User user1;
     private  User user2;
+
+
 
 
     //임시 데이터 삽입
@@ -92,9 +107,11 @@ public class AnnouncementIntegrationTest {
     @AfterEach
     void after() {
         fileRepository.deleteAll();
+        commentRepository.deleteAll();
         announcementRepository.deleteAll();
         studyMemberRepository.deleteAll();
         studyRepository.deleteAll();
+        userProfileRepository.deleteAll();
         userRepository.deleteAll();
     }
 
@@ -270,6 +287,78 @@ public class AnnouncementIntegrationTest {
         Assertions.assertThat(announcementRepository.count()).isEqualTo(initialCount);
 
     }
+
+    @Test
+    @DisplayName("성공: 공지사항 상세 조회 - 댓글/파일 포함")
+    void getAnnouncementDetail_success() throws Exception
+    {
+        //given
+        //유저 및 프로필 생성
+        User user = userRepository.save(User.builder().trustScore(30L).lastLoginAt(LocalDateTime.now()).build());
+        UserProfile userProfile = UserProfile.builder().user(user)
+                .nickname("testNickname").address(Address.builder().province("testProvince").district("testDistrict").build())
+                .birthDate(LocalDateTime.now().toLocalDate()).job(Job.FREELANCER).preferredCategory(Category.IT).build();
+        userProfileRepository.save(userProfile);
+
+        //study Member 및 공지 생성
+        StudyMember studyMember = studyMemberRepository.save(StudyMember.builder().user(user).study(study1).exitedAt(LocalDateTime.now().plusMonths(1)).
+                role(StudyRole.LEADER).status(StudyMemberStatus.JOINED).build());
+        Announcement announcement = announcementRepository.save(Announcement.builder().study(study1).author( studyMember).title("title").description("content")
+                .build());
+
+        // 공지에대한 댓글 및 파일 생성
+        commentRepository.save(Comment.builder()
+                .announcement(announcement).commenter(studyMember).
+                content("commentContent").build());
+        fileRepository.save(File.ofAnnouncement(announcement,
+                new FileDetailDto("o.txt","key","txt",10L)));
+
+        //when and then
+        mockMvc.perform(get("/api/studies/"+ study1.getId()+"/announcements/" + announcement.getId())
+                .with(user(new CustomUserDetails(user.getId()))))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("공지 상세 데이터 가져오기 실패 - 스터디 멤버 아닌 경우")
+    void getAnnouncementDetail_fail_NotStudyMember() throws Exception
+    {
+        //given
+        //유저 및 프로필 생성
+        User user = userRepository.save(User.builder().trustScore(30L).lastLoginAt(LocalDateTime.now()).build());
+
+        //study Member 및 공지 생성
+        StudyMember studyMember = studyMemberRepository.save(StudyMember.builder().user(user).study(study1).exitedAt(LocalDateTime.now().plusMonths(1)).
+                role(StudyRole.LEADER).status(StudyMemberStatus.JOINED).build());
+        Announcement announcement = announcementRepository.save(Announcement.builder().study(study1).author( studyMember).title("title").description("content")
+                .build());
+
+
+        //when and then
+        mockMvc.perform(get("/api/studies/"+ 100L+"/announcements/" + announcement.getId())
+                        .with(user(new CustomUserDetails(user.getId()))))
+                .andExpect(status().isBadRequest());
+    }
+
+
+    @Test
+    @DisplayName("공지 상세 데이터 가져오기 실패 - 공지가 존재하지 않음")
+    void getAnnouncementDetail_fail_AnnouncementNotFound() throws Exception
+    {
+        //given
+        //유저 및 프로필 생성
+        User user = userRepository.save(User.builder().trustScore(30L).lastLoginAt(LocalDateTime.now()).build());
+
+        //study Member 및 공지 생성
+        StudyMember studyMember = studyMemberRepository.save(StudyMember.builder().user(user).study(study1).exitedAt(LocalDateTime.now().plusMonths(1)).
+                role(StudyRole.LEADER).status(StudyMemberStatus.JOINED).build());
+
+        //when and then
+        mockMvc.perform(get("/api/studies/"+ study1.getId()+"/announcements/" + 100L)
+                        .with(user(new CustomUserDetails(user.getId()))))
+                .andExpect(status().isBadRequest());
+    }
+
 
 
 }

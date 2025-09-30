@@ -14,6 +14,7 @@ import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.UserErrorCode;
+import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.util.S3Uploader;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,7 @@ class UserServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private UserProfileRepository userProfileRepository;
     @Mock private S3Uploader s3Uploader;
+    @Mock private FileRepository fileRepository;
     @InjectMocks private UserService userService;
 
     @Test
@@ -77,6 +79,8 @@ class UserServiceTest {
         when(s3Uploader.makeMetaData(mockFile)).thenReturn(meta);
         doNothing().when(s3Uploader).uploadFile(anyString(), any());
         when(s3Uploader.getUrlFile("key-123")).thenReturn("https://cdn.example.com/hong.png");
+        when(fileRepository.save(any(File.class)))
+                .thenReturn(File.ofProfileImage(meta));
 
         // when
         String url = userService.setProfileImage(1L, mockFile);

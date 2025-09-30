@@ -14,6 +14,7 @@ import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.util.S3Uploader;
 import org.junit.jupiter.api.*;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -51,7 +52,7 @@ class UserControllerTest {
     @Autowired private UserProfileRepository userProfileRepository;
     @Autowired private FileRepository fileRepository;
 
-    @MockBean  // 실제 구현 대신 Mock 사용
+    @MockBean// 실제 구현 대신 Mock 사용
     private S3Uploader s3Uploader;
 
     private User user1;
@@ -66,8 +67,8 @@ class UserControllerTest {
 
     @AfterEach
     void tearDown() {
-        fileRepository.deleteAll();
         userProfileRepository.deleteAll();
+        fileRepository.deleteAll();
         userRepository.deleteAll();
     }
 
