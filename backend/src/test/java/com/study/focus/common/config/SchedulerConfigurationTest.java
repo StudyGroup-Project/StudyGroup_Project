@@ -125,7 +125,6 @@ class FileCleanupSchedulerTest {
                 "dummy.txt",
                 "text/plain",
                 "dummyData".getBytes());
-
         MockMultipartFile dummy3 = new MockMultipartFile(
                 "file",
                 "dummy.txt",
