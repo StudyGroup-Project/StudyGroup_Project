@@ -9,4 +9,9 @@ public interface FileRepository extends JpaRepository<File, Long> {
 
     //True인 모든 리스트 조회
     List<File> findAllByIsDeletedTrue();
+
+    List<File>findAllByAnnouncement_Id(Long announcement_id);
+
+
+
 }

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<meta charset="UTF-8">
+	<title>홈</title>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			text-align: center;
+			margin-top: 50px;
+		}
+		.token-box {
+			border: 1px solid #ddd;
+			background: #f9f9f9;
+			margin: 20px auto;
+			padding: 15px;
+			width: 80%;
+			max-width: 600px;
+			border-radius: 8px;
+			word-break: break-all;
+			text-align: left;
+		}
+		button {
+			padding: 10px 20px;
+			border: none;
+			border-radius: 5px;
+			background: #d9534f;
+			color: white;
+			cursor: pointer;
+			font-size: 14px;
+			margin: 10px;
+		}
+	</style>
+</head>
+<body>
+
+<h1>홈 화면</h1>
+<p>로그인에 성공했습니다 🎉</p>
+
+<div class="token-box">
+	<strong>Access Token:</strong>
+	<p id="accessToken"></p>
+	<strong>User ID (토큰에서 추출):</strong>
+	<p id="userId"></p>
+</div>
+
+<button id="create-study-btn">스터디 생성하기</button>
+<button id="save-token-btn">토큰 저장하기</button> <!-- ✅ 추가 -->
+<button id="logout-btn">로그아웃</button>
+
+<script>
+	// ✅ 쿼리스트링에서 AccessToken 추출 (OAuth SuccessHandler가 붙여준 값)
+	const params = new URLSearchParams(window.location.search);
+	let accessToken = params.get("token");
+
+	// ✅ 토큰 갱신
+	async function refreshAccessToken() {
+		try {
+			const response = await fetch("/api/auth/token", {
+				method: "POST",
+				credentials: "include"
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				accessToken = data.accessToken;
+				document.getElementById("accessToken").textContent = accessToken;
+
+				const payload = JSON.parse(atob(accessToken.split(".")[1]));
+				document.getElementById("userId").textContent = payload.sub;
+			} else {
+				alert("토큰 갱신 실패: " + response.status);
+			}
+		} catch (err) {
+			alert("토큰 요청 오류: " + err);
+		}
+	}
+
+	// ✅ 초기화
+	async function initPage() {
+		if (accessToken) {
+			document.getElementById("accessToken").textContent = accessToken;
+			try {
+				const payload = JSON.parse(atob(accessToken.split(".")[1]));
+				document.getElementById("userId").textContent = payload.sub;
+			} catch (e) {
+				document.getElementById("userId").textContent = "파싱 실패";
+			}
+		} else {
+			await refreshAccessToken();
+		}
+	}
+	initPage();
+
+	// ✅ 스터디 생성 페이지 이동
+	document.getElementById("create-study-btn").addEventListener("click", function() {
+		window.location.href = "studyTest.html";
+	});
+
+	// ✅ 토큰 저장 버튼
+	document.getElementById("save-token-btn").addEventListener("click", function() {
+		if (accessToken) {
+			localStorage.setItem('accessToken', accessToken);
+			alert("AccessToken이 로컬스토리지에 저장되었습니다!");
+		} else {
+			alert("저장할 AccessToken이 없습니다.");
+		}
+	});
+
+	// ✅ 로그아웃
+	document.getElementById("logout-btn").addEventListener("click", async function() {
+		try {
+			localStorage.removeItem('accessToken');
+			const response = await fetch("/api/auth/logout", {
+				method: "POST",
+				credentials: "include"
+			});
+
+			if (response.ok) {
+				alert("로그아웃 성공!");
+				window.location.href = "/login.html";
+			} else {
+				alert("로그아웃 실패: " + response.status);
+			}
+		} catch (err) {
+			alert("로그아웃 요청 오류: " + err);
+		}
+	});
+</script>
+
+</body>
+</html>

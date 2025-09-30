@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<meta charset="UTF-8">
+	<title>로그인</title>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			max-width: 400px;
+			margin: 50px auto;
+		}
+		h1 { text-align: center; }
+		.login-form, .oauth-login, .register-form {
+			border: 1px solid #ddd;
+			padding: 20px;
+			margin-bottom: 20px;
+			border-radius: 8px;
+		}
+		.login-form input, .register-form input {
+			display: block;
+			width: 95%;
+			margin: 10px auto;
+			padding: 10px;
+		}
+		button {
+			display: block;
+			width: 100%;
+			margin: 10px 0;
+			padding: 10px;
+			border: none;
+			border-radius: 5px;
+			font-size: 14px;
+			cursor: pointer;
+		}
+		.google { background: #4285F4; color: white; }
+		.naver { background: #03C75A; color: white; }
+		.kakao { background: #FEE500; color: #3C1E1E; }
+		.error { color: red; font-size: 13px; text-align: center; }
+		.success { color: green; font-size: 13px; text-align: center; }
+	</style>
+</head>
+<body>
+
+<h1>로그인</h1>
+
+<!-- ✅ 시스템 로그인 -->
+<form id="login-form" class="login-form">
+	<input type="text" name="loginId" placeholder="아이디" required>
+	<input type="password" name="password" placeholder="비밀번호" required>
+	<button type="button" id="login-button">로그인</button>
+</form>
+
+<!-- ✅ 회원가입 -->
+<form id="register-form" class="register-form">
+	<input type="text" name="loginId" placeholder="아이디" required>
+	<input type="password" name="password" placeholder="비밀번호" required>
+	<button type="submit">회원가입</button>
+	<p id="register-message"></p>
+</form>
+
+<!-- ✅ OAuth 로그인 -->
+<div class="oauth-login">
+	<p style="text-align:center;">또는 소셜 계정으로 로그인</p>
+	<a href="http://ec2-3-39-81-234.ap-northeast-2.compute.amazonaws.com:8080/oauth2/authorization/google">
+		<button type="button" class="google">Google 로그인</button></a>
+	<a href="/oauth2/authorization/naver"><button type="button" class="naver">Naver 로그인</button></a>
+	<a href="/oauth2/authorization/kakao"><button type="button" class="kakao">Kakao 로그인</button></a>
+</div>
+
+</body>
+</html>
+
+<script>
+	// Login
+	
+	document.addEventListener('DOMContentLoaded', function() {
+		const loginForm = document.getElementById('login-form');
+		const loginButton = document.getElementById('login-button');
+		const LOGIN_API_URL = '/api/auth/login'; // 서버의 로그인 엔드포인트
+		
+		loginButton.addEventListener('click', async function(e) {
+			// e.preventDefault(); // button type="button"이라 필요 없음
+			
+			const loginId = loginForm.querySelector('input[name="loginId"]').value;
+			const password = loginForm.querySelector('input[name="password"]').value;
+			
+			// 1. 요청 데이터를 JSON 객체로 준비
+			const loginData = {
+				loginId: loginId,
+				password: password
+			};
+			
+			try {
+				const response = await fetch(LOGIN_API_URL, {
+					method: 'POST',
+					// ⭐️ Content-Type을 application/json으로 설정 (핵심 수정)
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(loginData) // ⭐️ 데이터를 JSON 문자열로 변환
+				});
+				
+				// 서버가 200 OK 또는 리다이렉트 응답을 보낼 때
+				if (response.ok || response.status === 302 || response.status === 307) {
+					// 2. 서버의 리다이렉트 응답을 따르도록 브라우저 위치 변경
+					// Spring Controller에서 response.sendRedirect()를 사용했으므로,
+					// 브라우저가 응답의 Location 헤더를 자동으로 따라가도록 합니다.
+					
+					// 만약 서버가 302/307 응답을 보냈다면, fetch는 자동으로 따르지 않을 수 있습니다.
+					// 서버 응답 헤더의 'Location'을 확인하여 수동 리다이렉트합니다.
+					const locationHeader = response.headers.get('Location');
+					if (locationHeader) {
+						window.location.href = locationHeader;
+					} else {
+						// Location 헤더가 없으면 에러 처리
+						console.error("Redirect URL not found in response.");
+					}
+				} else {
+					// 3. 로그인 실패 (4xx, 5xx 에러) 처리
+					const errorData = await response.json();
+					alert(`로그인 실패: ${errorData.detail || '서버 오류'}`);
+				}
+				
+			} catch (error) {
+				console.error('Fetch Error:', error);
+				alert('네트워크 연결 또는 서버 오류가 발생했습니다.');
+			}
+		});
+	});
+	
+	// ✅ 회원가입
+	document.getElementById("register-form").addEventListener("submit", async function(e) {
+		e.preventDefault();
+		const loginId = e.target.loginId.value;
+		const password = e.target.password.value;
+		const messageBox = document.getElementById("register-message");
+		messageBox.textContent = "";
+		
+		try {
+			const response = await fetch("/api/auth/register", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ loginId, password })
+			});
+			
+			if (response.ok) {
+				messageBox.textContent = "회원가입 성공! 이제 로그인하세요.";
+				messageBox.className = "success";
+			} else {
+				const err = await response.json();
+				messageBox.textContent = "회원가입 실패: " + (err.message || response.status);
+				messageBox.className = "error";
+			}
+		} catch (err) {
+			messageBox.textContent = "회원가입 요청 중 오류 발생: " + err;
+			messageBox.className = "error";
+		}
+	});
+</script>

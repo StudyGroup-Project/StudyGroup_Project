@@ -42,6 +42,7 @@ public class S3Uploader
     @Value("${spring.servlet.multipart.max-request-size}")
     private DataSize requestMaxByte;
 
+
     //업로드 가능한 파일 List
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
             "jpg", "jpeg", "png", "gif", "bmp", "tiff", "heic",
@@ -169,7 +170,7 @@ public class S3Uploader
         }
     }
     //내부 파일 검증
-    private  void validateFile(MultipartFile file){
+    private  void  validateFile(MultipartFile file){
         if(file == null || file.isEmpty()){
             throw  new BusinessException(UserErrorCode.FILE_EMPTY);
         }

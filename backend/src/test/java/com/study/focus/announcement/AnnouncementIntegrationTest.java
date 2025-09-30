@@ -5,9 +5,15 @@ import com.study.focus.account.dto.CustomUserDetails;
 import com.study.focus.account.repository.UserRepository;
 import com.study.focus.announcement.domain.Announcement;
 import com.study.focus.announcement.repository.AnnouncementRepository;
+import com.study.focus.announcement.service.AnnouncementService;
+import com.study.focus.common.domain.File;
+import com.study.focus.common.dto.FileDetailDto;
+import com.study.focus.common.exception.BusinessException;
+import com.study.focus.common.repository.FileRepository;
 import com.study.focus.study.domain.*;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,18 +21,29 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
+
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 public class AnnouncementIntegrationTest {
 
     @Autowired
@@ -40,11 +57,17 @@ public class AnnouncementIntegrationTest {
     @Autowired
     private AnnouncementRepository announcementRepository;
 
+    @Autowired
+    private FileRepository fileRepository;
+
+    @Autowired
+    private AnnouncementService announcementService;
 
     private Study study1;
     private Study study2;
     private User user1;
     private  User user2;
+
 
     //임시 데이터 삽입
     @BeforeEach
@@ -57,11 +80,11 @@ public class AnnouncementIntegrationTest {
 
 
         StudyMember studyMember1 = studyMemberRepository.save(StudyMember.builder().user(user1).study(study1).exitedAt(LocalDateTime.now().plusMonths(1)).
-                role(StudyRole.MEMBER).status(StudyMemberStatus.JOINED).build());
+                role(StudyRole.LEADER).status(StudyMemberStatus.JOINED).build());
         StudyMember studyMember2 = studyMemberRepository.save(StudyMember.builder().user(user1).study(study2).exitedAt(LocalDateTime.now().plusMonths(1)).
                 role(StudyRole.MEMBER).status(StudyMemberStatus.JOINED).build());
         StudyMember studyMember3 = studyMemberRepository.save(StudyMember.builder().user(user2).study(study2).exitedAt(LocalDateTime.now().plusMonths(1)).
-                role(StudyRole.MEMBER).status(StudyMemberStatus.JOINED).build());
+                role(StudyRole.LEADER).status(StudyMemberStatus.JOINED).build());
 
 
         announcementRepository.save(Announcement.builder().study(study1).author(studyMember1).title("TestTitle1").build());
@@ -70,6 +93,7 @@ public class AnnouncementIntegrationTest {
 
     @AfterEach
     void after() {
+        fileRepository.deleteAll();
         announcementRepository.deleteAll();
         studyMemberRepository.deleteAll();
         studyRepository.deleteAll();
@@ -96,7 +120,6 @@ public class AnnouncementIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
-
     @Test
     @DisplayName("성공: 빈 멤버 리스트 반환")
     void getAnnouncements_success_IsEmptyList() throws Exception {
@@ -107,5 +130,191 @@ public class AnnouncementIntegrationTest {
                 .andExpect(jsonPath("$.length()").value(0));
 
     }
+
+    @Test
+    @DisplayName("성공: 공지사항 생성 - 첨부 파일 포함 ")
+    void createAnnouncement_withFile_success() throws Exception {
+        //given
+        MockMultipartFile file = new MockMultipartFile(
+                "testFile","hello.txt","text/plain","Test".getBytes());
+        String title = "testTile";
+        String content = "testContent";
+
+        //when and then
+        List<Announcement> beforeSaveList = announcementRepository.findAllByStudyId(study1.getId());
+        mockMvc.perform(multipart("/api/studies/" +study1.getId()+"/announcements")
+                .file(file)
+                .param("title",title)
+                .param("content",content)
+                .with(user(new CustomUserDetails(user1.getId())))
+                        .with(csrf()))
+                .andExpect(status().isCreated());
+
+        List<Announcement> afterSaveList = announcementRepository.findAllByStudyId(study1.getId());
+        Assertions.assertThat(beforeSaveList.size() +1).isEqualTo(afterSaveList.size());
+    }
+
+    @Test
+    @DisplayName("성공: 공지사항 생성 - 첨부 파일 제외 ")
+    void createAnnouncement_withoutFile_success() throws Exception {
+        //given
+        String title = "testTile";
+        String content = "testContent";
+        List<Announcement> beforeSaveList = announcementRepository.findAllByStudyId(study1.getId());
+        List<File> files = fileRepository.findAll();
+
+        //when and then
+        mockMvc.perform(multipart("/api/studies/" +study1.getId()+"/announcements")
+                        .param("title",title)
+                        .param("content",content)
+                        .with(user(new CustomUserDetails(user1.getId())))
+                        .with(csrf()))
+                .andExpect(status().isCreated());
+        List<Announcement> afterSaveList = announcementRepository.findAllByStudyId(study1.getId());
+        Assertions.assertThat(beforeSaveList.size() + 1).isEqualTo(afterSaveList.size());
+        Assertions.assertThat(files.size()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("실패: 공지사항 생성 - 지원하지 않는 파일 타입 ")
+    void createAnnouncement_fail_invalidFileType() throws Exception {
+        //given
+        MockMultipartFile file = new MockMultipartFile(
+                "files",
+                "test.exe",
+                "application/octet-stream",
+                "test".getBytes()
+        );
+
+        String title = "testTile";
+        String content = "testContent";
+
+        long initialCount = announcementRepository.count();
+        mockMvc.perform(multipart("/api/studies/" +study1.getId()+"/announcements")
+                        .file(file)
+                        .param("title",title)
+                        .param("content",content)
+                        .with(user(new CustomUserDetails(user1.getId())))
+                        .with(csrf()))
+                        .andExpect(status().isBadRequest());
+        //rollback
+        Assertions.assertThat(announcementRepository.count()).isEqualTo(initialCount);
+    }
+
+    @Test
+    @DisplayName("실패: 공지사항 생성 - 방장이 아닌 경우")
+    void createAnnouncement_fail_isNotLeader() throws Exception {
+        //given
+        String title = "testTile";
+        String content = "testContent";
+
+        //when and then
+        mockMvc.perform(multipart("/api/studies/" +study2.getId()+"/announcements")
+                        .param("title",title)
+                        .param("content",content)
+                        .with(user(new CustomUserDetails(user1.getId())))
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
+
+    }
+
+    @Test
+    @DisplayName("성공: 공지사항 삭제 / 방장 권한이 있고 파일과 댓글도 있는 경우 ")
+    void deleteAnnouncement_success() throws Exception {
+        StudyMember leadMember = studyMemberRepository.findByStudyIdAndUserId(study1.getId(), user1.getId()).orElse(null);
+        Announcement announcement = announcementRepository.save(Announcement.builder()
+                .author(leadMember)
+                .study(study1)
+                .title("title")
+                .description("cotent")
+                .build());
+
+        Long announcementId = announcement.getId();
+        fileRepository.save(
+                File.ofAnnouncement(announcement,
+                        new FileDetailDto("o.txt","key","txt",10L))
+        );
+
+        mockMvc.perform(delete("/api/studies/"+ study1.getId()+"/announcements/" +announcementId)
+                .with(user(new CustomUserDetails(user1.getId())))
+                .with(csrf())).andExpect(status().isOk());
+
+    }
+
+    @Test
+    @DisplayName("실패: 공지사항 삭제 - 방장이 아닌 경우 ")
+    void deleteAnnouncement_Fail_isNotLeader() throws Exception {
+        long initialCount = announcementRepository.count();
+        mockMvc.perform(delete("/api/studies/"+ study2.getId()+"/announcements/" +2L)
+                .with(user(new CustomUserDetails(user1.getId())))
+                .with(csrf())).andExpect(status().isForbidden());
+        Assertions.assertThat(announcementRepository.count()).isEqualTo(initialCount);
+    }
+
+    @Test
+    @DisplayName("실패: 공지사항 삭제 - 스터디 멤버가 아닌 경우 ")
+    void deleteAnnouncement_Fail_isNotStudyMember() throws Exception {
+        long initialCount = announcementRepository.count();
+        mockMvc.perform(delete("/api/studies/"+ study1.getId()+"/announcements/" +2L)
+                .with(user(new CustomUserDetails(user2.getId())))
+                .with(csrf())).andExpect(status().isBadRequest());
+        Assertions.assertThat(announcementRepository.count()).isEqualTo(initialCount);
+
+    }
+
+    @Test
+    @DisplayName("실패: 공지사항 삭제 - 존재하지 않는 공지인 경우")
+    void deleteAnnouncement_Fail_announcementNotFound()throws Exception{
+        long NotExistAnnouncementId = 99999L;
+        long initialCount = announcementRepository.count();
+        mockMvc.perform(delete("/api/studies/"+ study1.getId()+"/announcements/" +NotExistAnnouncementId)
+                .with(user(new CustomUserDetails(user1.getId())))
+                .with(csrf())).andExpect(status().isBadRequest());
+        Assertions.assertThat(announcementRepository.count()).isEqualTo(initialCount);
+
+    }
+
+    @Test
+    @DisplayName("성공: 공지사항 수정 - 제목/내용 변경 + 파일 삭제 및 추가")
+    void updateAnnouncement_success() throws Exception {
+        StudyMember studyMember = studyMemberRepository.findByStudyIdAndUserId(study1.getId(), user1.getId()).orElseThrow();
+        Announcement announcement = announcementRepository.save(Announcement.builder()
+                .author(studyMember)
+                .study(study1)
+                .title("title")
+                .description("cotent")
+                .build());
+        File fileSaved = fileRepository.save(File.ofAnnouncement(announcement,
+                new FileDetailDto("o.txt", "key", "txt", 10L)));
+        MockMultipartFile newFiles = new MockMultipartFile(
+                "testFile","hello.txt","text/plain","Test".getBytes());
+
+        mockMvc.perform(multipart("/api/studies/" + study1.getId() + "/announcements/" + announcement.getId())
+                        .file(newFiles)
+                        .param("title", "updated title")
+                        .param("content", "updated content")
+                        .param("deleteFileIds", fileSaved.getId().toString())
+                        .with(user(new CustomUserDetails(user1.getId())))
+                        .with(csrf())
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        }))
+                .andExpect(status().isOk());
+    }
+    @Test
+    @DisplayName("실패: 공지사항 수정 - 존재하지 않는 공지")
+    void updateAnnouncement_fail_notFound() throws Exception {
+        Long notExistId = 99999L;
+        mockMvc.perform(multipart("/api/studies/"+ study1.getId() + "/announcements/" + notExistId)
+                        .param("title", "new-title")
+                        .with(user(new CustomUserDetails(user1.getId())))
+                        .with(csrf())
+                        .with(request -> { request.setMethod("PUT"); return request; })
+                )
+                .andExpect(status().isBadRequest());
+    }
+
+
 }
 

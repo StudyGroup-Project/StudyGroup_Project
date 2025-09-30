@@ -3,6 +3,7 @@ package com.study.focus.common.domain;
 import com.study.focus.announcement.domain.Announcement;
 import com.study.focus.assignment.domain.Assignment;
 import com.study.focus.assignment.domain.Submission;
+import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.resource.domain.Resource;
 import jakarta.persistence.*;
 import lombok.*;
@@ -16,7 +17,7 @@ import org.hibernate.annotations.Check;
      (CASE WHEN announcement_id IS NOT NULL THEN 1 ELSE 0 END) +
      (CASE WHEN assignment_id   IS NOT NULL THEN 1 ELSE 0 END) +
      (CASE WHEN submission_id   IS NOT NULL THEN 1 ELSE 0 END)
-   ) = 1
+   ) <= 1
    """
 )
 @Getter
@@ -60,41 +61,57 @@ public class File extends BaseCreatedEntity {
     @JoinColumn(name = "submission_id")
     private Submission submission;
 
+    public void delete() {
+        isDeleted = true;
+    }
+
+    public void deleteAnnouncementFile() {
+        isDeleted = true;
+        announcement = null;
+    }
+
     public static File ofResource(Resource resource,
-                                  String fileName, String fileKey, String mimeType, long fileSize) {
-        File f = base(fileName, fileKey, mimeType, fileSize);
+                                  FileDetailDto fileDetail) {
+        File f = base(fileDetail);
         f.resource = resource;
         return f;
     }
 
     public static File ofAnnouncement(Announcement announcement,
-                                      String fileName, String fileKey, String mimeType, long fileSize) {
-        File f = base(fileName, fileKey, mimeType, fileSize);
+                                      FileDetailDto fileDetail) {
+        File f = base(fileDetail);
         f.announcement = announcement;
         return f;
     }
 
     public static File ofAssignment(Assignment assignment,
-                                    String fileName, String fileKey, String mimeType, long fileSize) {
-        File f = base(fileName, fileKey, mimeType, fileSize);
+                                    FileDetailDto fileDetail) {
+        File f = base(fileDetail);
         f.assignment = assignment;
         return f;
     }
 
     public static File ofSubmission(Submission submission,
-                                    String fileName, String fileKey, String mimeType, long fileSize) {
-        File f = base(fileName, fileKey, mimeType, fileSize);
+                                    FileDetailDto fileDetail) {
+        File f = base(fileDetail);
         f.submission = submission;
         return f;
     }
 
+    /**
+     * UserProfile 프로필 이미지용 파일 생성
+     */
+    public static File ofProfileImage(FileDetailDto fileDetail) {
+        return base(fileDetail);
+    }
+
     // 공통 생성 로직
-    private static File base(String fileName, String fileKey, String mimeType, long fileSize) {
+    private static File base( FileDetailDto fileDetail) {
         File f = new File();
-        f.fileName = fileName;
-        f.fileKey = fileKey;
-        f.mimeType = mimeType;
-        f.fileSize = fileSize;
+        f.fileName = fileDetail.getOriginalFileName();
+        f.fileKey = fileDetail.getKey();
+        f.mimeType = fileDetail.getContentType();
+        f.fileSize = fileDetail.getFileSize();
         return f;
     }
 }

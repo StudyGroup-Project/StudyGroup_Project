@@ -3,6 +3,7 @@ package com.study.focus.account.domain;
 import com.study.focus.common.domain.Address;
 import com.study.focus.common.domain.BaseUpdatedEntity;
 import com.study.focus.common.domain.Category;
+import com.study.focus.common.domain.File;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,7 +20,7 @@ public class UserProfile extends BaseUpdatedEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY,  cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
@@ -40,7 +41,53 @@ public class UserProfile extends BaseUpdatedEntity {
     @Column(nullable = false)
     private Category preferredCategory;
 
-    @Column(nullable = false, length = 512)
-    @Builder.Default
-    private String profileImageUrl = "https://example.com/default_profile.png";
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "profile_image_id")
+    private File profileImage;
+
+    /**
+     * 초기 프로필 생성
+     */
+    public static UserProfile create(User user,
+                                     String nickname,
+                                     Address address,
+                                     LocalDate birthDate,
+                                     Job job,
+                                     Category preferredCategory) {
+        return UserProfile.builder()
+                .user(user)
+                .nickname(nickname)
+                .address(address)
+                .birthDate(birthDate)
+                .job(job)
+                .preferredCategory(preferredCategory)
+                .build();
+    }
+
+    /**
+     * 프로필 수정
+     */
+    public void updateProfile(String nickname,
+                              Address address,
+                              LocalDate birthDate,
+                              Job job,
+                              Category preferredCategory) {
+        this.nickname = nickname;
+        this.address = address;
+        this.birthDate = birthDate;
+        this.job = job;
+        this.preferredCategory = preferredCategory;
+    }
+
+    /**
+     * 프로필 이미지 교체
+     * 기존 파일이 있으면 soft delete 후 교체
+     */
+    public void updateProfileImage(File newFile) {
+        if (this.profileImage != null) {
+            this.profileImage.delete(); // File 엔티티의 soft delete 메서드
+        }
+        this.profileImage = newFile;
+    }
 }
+
