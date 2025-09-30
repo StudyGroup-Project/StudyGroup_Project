@@ -4,6 +4,7 @@ import com.study.focus.account.config.jwt.TokenProvider;
 import com.study.focus.account.config.oauth.OAuth2AuthorizationRequestBasedOnCookieRepository;
 import com.study.focus.account.config.oauth.OAuth2SuccessHandler;
 import com.study.focus.account.config.oauth.OAuth2UserCustomService;
+import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -28,6 +29,7 @@ public class WebOAuthSecurityConfig {
     private final OAuth2UserCustomService oAuth2UserCustomService;
     private final TokenProvider tokenProvider;
     private final UserDetailsService userDetailsService; // UserDetailsService 의존성 추가
+    private final UserProfileRepository userProfileRepository;
 
     @Bean
     public WebSecurityCustomizer configure() {
@@ -73,6 +75,8 @@ public class WebOAuthSecurityConfig {
     public OAuth2SuccessHandler oAuth2SuccessHandler(AccountService accountService) {
         return new OAuth2SuccessHandler(
                 accountService,
+                userProfileRepository,
+                tokenProvider,
                 oAuth2AuthorizationRequestBasedOnCookieRepository()
         );
     }

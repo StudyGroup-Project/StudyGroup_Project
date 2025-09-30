@@ -1,11 +1,14 @@
 package com.study.focus.account.config.oauth;
 
+import com.study.focus.account.config.jwt.TokenProvider;
 import com.study.focus.account.domain.Provider;
 import com.study.focus.account.dto.LoginResponse;
+import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.service.AccountService;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.UserErrorCode;
 import com.study.focus.common.util.CookieUtil;
+import com.study.focus.common.util.UrlUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,16 +28,16 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     public static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
     public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(14);
-    public static final String REDIRECT_PATH = "http://3.39.81.234:8080/home";
-    // 프론트 배포 완료시 변경 + 환경변수 설정
-    // public static final String REDIRECT_PATH = System.getenv("FRONTEND_REDIRECT_URL");
 
     private final AccountService accountService;
+    private final UserProfileRepository userProfileRepository;
+    private final TokenProvider tokenProvider;
     private final OAuth2AuthorizationRequestBasedOnCookieRepository authorizationRequestRepository;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
+
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String registrationId = ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId();
         Provider provider = Provider.valueOf(registrationId.toUpperCase());
@@ -42,10 +45,21 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String providerUserId = extractProviderUserId(provider, oAuth2User.getAttributes());
 
         LoginResponse loginResponse = accountService.oauthLogin(provider, providerUserId);
+        String accessToken = loginResponse.getAccessToken();
 
         addRefreshTokenToCookie(request, response, loginResponse.getRefreshToken());
 
-        String targetUrl = getTargetUrl(loginResponse.getAccessToken());
+        Long userId = tokenProvider.getUserIdFromToken(accessToken);
+
+        boolean profileExists = userProfileRepository.findByUserId(userId).isPresent();
+
+        String targetUrl = UrlUtil.createRedirectUrl(
+                UrlUtil.FRONTEND_BASE_URL,
+                UrlUtil.HOME_PATH,
+                UrlUtil.PROFILE_SETUP_PATH,
+                accessToken,
+                profileExists
+        );
 
         clearAuthenticationAttributes(request, response);
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
@@ -69,12 +83,5 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private void clearAuthenticationAttributes(HttpServletRequest request, HttpServletResponse response) {
         super.clearAuthenticationAttributes(request);
         authorizationRequestRepository.removeAuthorizationRequestCookies(request, response);
-    }
-
-    private String getTargetUrl(String token) {
-        return UriComponentsBuilder.fromHttpUrl(REDIRECT_PATH)
-                .queryParam("token", token)
-                .build()
-                .toUriString();
     }
 }
