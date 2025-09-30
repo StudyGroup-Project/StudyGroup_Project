@@ -4,6 +4,7 @@ package com.study.focus.application;
 import com.study.focus.account.domain.UserProfile;
 import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.application.domain.Application;
+import com.study.focus.application.dto.GetApplicationDetailResponse;
 import com.study.focus.application.dto.GetApplicationsResponse;
 import com.study.focus.application.dto.SubmitApplicationRequest;
 import com.study.focus.application.repository.ApplicationRepository;
@@ -337,4 +338,70 @@ public class ApplicationUnitTest {
                 .isInstanceOf(BusinessException.class);
     }
 
+    @Test
+    @DisplayName("지원서 상세 조회 - 방장 성공")
+    void getApplicationDetail_Success_Leader() {
+        // given
+        Long studyId = 10L;
+        Long applicationId = 100L;
+        Long leaderId = 1L;
+        String content = "안녕하세요! 저는 이 스터디에 꼭 참여하고 싶습니다. 열심히 하겠습니다!";
+        User leader = User.builder().id(leaderId).build();
+        Study study = Study.builder().id(studyId).build();
+        StudyMember leaderMember = StudyMember.builder().user(leader).study(study).role(StudyRole.LEADER).build();
+        Application application = Application.builder()
+                .id(applicationId)
+                .study(study)
+                .content(content)
+                .status(ApplicationStatus.SUBMITTED)
+                .build();
+
+        given(studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER)).willReturn(Optional.of(leaderMember));
+        given(applicationRepository.findByIdAndStudyId(applicationId, studyId)).willReturn(Optional.of(application));
+
+        // when
+        GetApplicationDetailResponse response = applicationService.getApplicationDetail(studyId, applicationId, leaderId);
+
+        // then
+        assertThat(response.getContent()).isEqualTo(content);
+    }
+
+    @Test
+    @DisplayName("지원서 상세 조회 실패 - 방장이 아닌 경우")
+    void getApplicationDetail_Fail_NotLeader() {
+        // given
+        Long studyId = 10L;
+        Long applicationId = 100L;
+        Long notLeaderId = 99L;
+        User leader = User.builder().id(1L).build();
+        Study study = Study.builder().id(studyId).build();
+        StudyMember leaderMember = StudyMember.builder().user(leader).study(study).role(StudyRole.LEADER).build();
+
+        given(studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER)).willReturn(Optional.of(leaderMember));
+        // 방장 권한 체크에서 예외가 발생하므로, 지원서 조회 로직은 호출되지 않습니다.
+        // 따라서 applicationRepository에 대한 stubbing은 필요 없습니다.
+
+        // when & then
+        assertThatThrownBy(() -> applicationService.getApplicationDetail(studyId, applicationId, notLeaderId))
+                .isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    @DisplayName("지원서 상세 조회 실패 - 지원서 없음")
+    void getApplicationDetail_Fail_ApplicationNotFound() {
+        // given
+        Long studyId = 10L;
+        Long applicationId = 100L;
+        Long leaderId = 1L;
+        User leader = User.builder().id(leaderId).build();
+        Study study = Study.builder().id(studyId).build();
+        StudyMember leaderMember = StudyMember.builder().user(leader).study(study).role(StudyRole.LEADER).build();
+
+        given(studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER)).willReturn(Optional.of(leaderMember));
+        given(applicationRepository.findByIdAndStudyId(applicationId, studyId)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> applicationService.getApplicationDetail(studyId, applicationId, leaderId))
+                .isInstanceOf(BusinessException.class);
+    }
 }

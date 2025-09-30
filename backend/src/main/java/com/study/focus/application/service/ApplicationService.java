@@ -5,6 +5,7 @@ import com.study.focus.account.domain.UserProfile;
 import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.repository.UserRepository;
 import com.study.focus.application.domain.ApplicationStatus;
+import com.study.focus.application.dto.GetApplicationDetailResponse;
 import com.study.focus.application.dto.GetApplicationsResponse;
 import com.study.focus.application.dto.SubmitApplicationRequest;
 import com.study.focus.common.exception.BusinessException;
@@ -111,8 +112,20 @@ public class ApplicationService {
     }
 
     // 지원서 상세 가져오기
-    public void getApplicationDetail(Long studyId, Long applicationId) {
-        // TODO: 지원서 상세 조회
+    @Transactional(readOnly = true)
+    public GetApplicationDetailResponse getApplicationDetail(Long studyId, Long applicationId, Long requestUserId) {
+        // 방장인지 확인
+        StudyMember leaderMember = studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST)); // 스터디 리더 정보확인 에러
+        if(!leaderMember.getUser().getId().equals(requestUserId)) {
+            throw new BusinessException(UserErrorCode.URL_FORBIDDEN); // 리더만 지원서 조회가능
+        }
+
+        // 지원서 조회
+        Application application = applicationRepository.findByIdAndStudyId(applicationId, studyId)
+                .orElseThrow(()-> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+
+        return new GetApplicationDetailResponse(application.getContent());
     }
 
     // 지원서 처리하기 (승인/거절 등)
