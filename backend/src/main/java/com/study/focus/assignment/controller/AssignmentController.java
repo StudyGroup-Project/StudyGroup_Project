@@ -2,6 +2,7 @@ package com.study.focus.assignment.controller;
 
 import com.study.focus.account.dto.CustomUserDetails;
 import com.study.focus.assignment.dto.CreateAssignmentRequest;
+import com.study.focus.assignment.dto.GetAssignmentDetailResponse;
 import com.study.focus.assignment.dto.GetAssignmentsResponse;
 import com.study.focus.assignment.service.AssignmentService;
 import com.study.focus.study.domain.StudyMember;
@@ -44,7 +45,12 @@ public class AssignmentController {
 
     // 과제 상세 내용 가져오기
     @GetMapping("/{assignmentId}")
-    public void getAssignmentDetail(@PathVariable Long studyId, @PathVariable Long assignmentId) {}
+    public ResponseEntity<GetAssignmentDetailResponse> getAssignmentDetail(@PathVariable Long studyId, @PathVariable Long assignmentId,
+                                                                           @AuthenticationPrincipal CustomUserDetails user)
+    {
+        Long userId = user.getUserId();
+        return ResponseEntity.ok(assignmentService.getAssignmentDetail(studyId,assignmentId,userId));
+    }
 
     // 과제 수정하기
     @PutMapping(value = "/{assignmentId}",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

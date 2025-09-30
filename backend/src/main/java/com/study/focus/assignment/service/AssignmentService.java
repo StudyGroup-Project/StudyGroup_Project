@@ -1,10 +1,15 @@
 package com.study.focus.assignment.service;
 
 import com.study.focus.assignment.domain.Assignment;
+import com.study.focus.assignment.domain.Submission;
 import com.study.focus.assignment.dto.CreateAssignmentRequest;
+import com.study.focus.assignment.dto.GetAssignmentDetailResponse;
 import com.study.focus.assignment.dto.GetAssignmentsResponse;
+import com.study.focus.assignment.dto.SubmissionListResponse;
 import com.study.focus.assignment.repository.AssignmentRepository;
+import com.study.focus.assignment.repository.SubmissionRepository;
 import com.study.focus.common.domain.File;
+import com.study.focus.common.dto.AssignmentFileResponse;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
@@ -23,8 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import static java.time.LocalDateTime.now;
-
 @Service
 @RequiredArgsConstructor
 public class AssignmentService {
@@ -34,6 +37,7 @@ public class AssignmentService {
     private final StudyMemberRepository studyMemberRepository;
     private final FileRepository fileRepository;
     private final S3Uploader s3Uploader;
+    private final SubmissionRepository submissionRepository;
 
     // 과제 목록 가져오기(생성 순 내림차순 정렬)
     @Transactional
@@ -84,8 +88,26 @@ public class AssignmentService {
     }
 
     // 과제 상세 내용 가져오기
-    public void getAssignmentDetail(Long studyId, Long assignmentId) {
+    public GetAssignmentDetailResponse getAssignmentDetail(Long studyId, Long assignmentId, Long userId) {
         // TODO: 과제 상세 조회
+        if (studyId == null || userId == null || assignmentId == null) {
+            throw new BusinessException(CommonErrorCode.INVALID_PARAMETER);
+        }
+
+        studyMemberRepository.findByStudyIdAndUserId(studyId, userId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+        Assignment assignment = assignmentRepository.findById(assignmentId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+        List<SubmissionListResponse> submissions = submissionRepository.findSubmissionList(assignmentId);
+        List<File> files = fileRepository.findAllByAssignmentId(assignmentId);
+        List<AssignmentFileResponse> attachFiles = files.stream().map(a -> new AssignmentFileResponse(a.getFileKey())).toList();
+
+        return new GetAssignmentDetailResponse(assignment.getId(),
+                assignment.getTitle(),
+                assignment.getDescription(),
+                assignment.getStartAt(),
+                assignment.getDueAt(),
+                assignment.getCreatedAt(),
+                attachFiles,
+                submissions);
     }
 
     // 과제 수정하기
