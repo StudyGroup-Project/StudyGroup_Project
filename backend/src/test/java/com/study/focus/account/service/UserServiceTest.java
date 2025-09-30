@@ -14,6 +14,7 @@ import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.UserErrorCode;
+import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.util.S3Uploader;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,7 @@ class UserServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private UserProfileRepository userProfileRepository;
     @Mock private S3Uploader s3Uploader;
+    @Mock private FileRepository fileRepository;
     @InjectMocks private UserService userService;
 
     @Test
@@ -73,6 +75,9 @@ class UserServiceTest {
 
         MultipartFile mockFile = mock(MultipartFile.class);
         FileDetailDto meta = new FileDetailDto("hong.png", "key-123", "image/png", 123L);
+
+        File savedFile = File.ofProfileImage(meta);
+        when(fileRepository.save(any(File.class))).thenReturn(savedFile);
 
         when(s3Uploader.makeMetaData(mockFile)).thenReturn(meta);
         doNothing().when(s3Uploader).uploadFile(anyString(), any());
