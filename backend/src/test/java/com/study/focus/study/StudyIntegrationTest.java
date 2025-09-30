@@ -1,16 +1,28 @@
 package com.study.focus.study;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.study.focus.account.domain.Job;
 import com.study.focus.account.domain.User;
+import com.study.focus.account.domain.UserProfile;
 import com.study.focus.account.dto.CustomUserDetails;
+import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.repository.UserRepository;
+import com.study.focus.application.repository.ApplicationRepository;
+import com.study.focus.common.domain.Address;
 import com.study.focus.common.domain.Category;
-import com.study.focus.study.domain.Study;
+import com.study.focus.common.domain.File;
+import com.study.focus.common.dto.FileDetailDto;
+import com.study.focus.common.repository.FileRepository;
+import com.study.focus.common.util.S3Uploader;
+import com.study.focus.study.domain.*;
 import com.study.focus.study.dto.CreateStudyRequest;
+import com.study.focus.study.dto.GetStudyProfileResponse;
 import com.study.focus.study.repository.BookmarkRepository;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyProfileRepository;
 import com.study.focus.study.repository.StudyRepository;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,7 +32,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -34,6 +50,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 class StudyIntegrationTest {
 
     @Autowired
@@ -44,6 +61,8 @@ class StudyIntegrationTest {
     @Autowired
     private UserRepository userRepository;
     @Autowired
+    private UserProfileRepository userProfileRepository;
+    @Autowired
     private StudyRepository studyRepository;
     @Autowired
     private StudyProfileRepository studyProfileRepository;
@@ -51,20 +70,66 @@ class StudyIntegrationTest {
     private StudyMemberRepository studyMemberRepository;
     @Autowired
     private BookmarkRepository bookmarkRepository;
+    @Autowired
+    private ApplicationRepository applicationRepository;
+    @Autowired
+    private FileRepository fileRepository;
+
+
+    @MockitoBean
+    private S3Uploader s3Uploader;
 
     private User testUser;
+    private User leader;
+    private Study testStudy;
+    private StudyProfile testProfile;
+    private StudyMember leaderMember;
+    private UserProfile leaderProfile;
+
 
     @BeforeEach
     void setUp() {
         testUser = userRepository.save(User.builder().build());
+        leader = userRepository.save(User.builder().trustScore(82).build());
+        testStudy = studyRepository.save(Study.builder()
+                .recruitStatus(RecruitStatus.OPEN)
+                .maxMemberCount(10)
+                .build());
+        testProfile = studyProfileRepository.save(StudyProfile.builder()
+                .study(testStudy) // 반드시 save()로 영속화된 객체
+                .title("알고리즘 스터디")
+                .bio("매주 알고리즘 문제 풀이")
+                .description("알고리즘 문제를 풀고 토론하는 스터디입니다.")
+                .category(Category.IT)
+                .address(Address.builder().province("경상북도").district("경산시").build())
+                .build());
+        leaderMember = studyMemberRepository.save(StudyMember.builder()
+                .study(testStudy)
+                .user(leader)
+                .role(StudyRole.LEADER)
+                .status(StudyMemberStatus.JOINED)
+                .build());
+        Address address = Address.builder().province("서울특별시").district("강남구").build();
+        System.out.println("address.district = " + address.getDistrict());
+        leaderProfile = userProfileRepository.save(UserProfile.builder()
+                .user(leader)
+                .nickname("홍길동")
+                .address(address)
+                .birthDate(LocalDate.of(2000, 1, 1))
+                .job(Job.STUDENT)
+                .preferredCategory(Category.IT)
+                .profileImage(null)
+                .build());
     }
 
     @AfterEach
     void tearDown() {
+        applicationRepository.deleteAll();
         bookmarkRepository.deleteAll();
         studyMemberRepository.deleteAll();
         studyProfileRepository.deleteAll();
         studyRepository.deleteAll();
+        userProfileRepository.deleteAll();
         userRepository.deleteAll();
     }
 
@@ -201,6 +266,56 @@ class StudyIntegrationTest {
 
         // 북마크 개수가 변하지 않았는지 확인
         assertThat(bookmarkRepository.count()).isEqualTo(initialBookmarkCount);
+    }
+
+    @Test
+    @DisplayName("그룹 프로필 정보 조회 - 성공 (프로필 이미지 없음)")
+    void getStudyProfile_Success_NoImage() throws Exception {
+        mockMvc.perform(get("/api/studies/" + testStudy.getId())
+                        .with(user(new CustomUserDetails(testUser.getId())))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(result -> {
+                    String json = result.getResponse().getContentAsString();
+                    GetStudyProfileResponse response = objectMapper.readValue(json, GetStudyProfileResponse.class);
+                    assertThat(response.getId()).isEqualTo(testStudy.getId());
+                    assertThat(response.getLeader().getNickname()).isEqualTo("홍길동");
+                    assertThat(response.getLeader().getProfileImageUrl()).isNull();
+                    assertThat(response.isCanApply()).isTrue();
+                });
+    }
+
+    @Test
+    @DisplayName("그룹 프로필 정보 조회 - 성공 (프로필 이미지 있음)")
+    void getStudyProfile_Success_WithImage() throws Exception {
+        String fileKey = "profile/leader.png";
+        String expectedUrl = "http://localhost/test-bucket/" + fileKey;
+        FileDetailDto fileDetail = new FileDetailDto("profile.png", fileKey, "image/png", 100L);
+        File profileImage = File.ofResource(null, fileDetail); // 관계 없는 필드는 null
+        // 이미 저장된 leaderProfile의 필드만 변경
+        leaderProfile.updateProfileImage(profileImage); // profileImage만 변경
+        userProfileRepository.save(leaderProfile); // update 쿼리로 동작
+        org.mockito.Mockito.when(s3Uploader.getUrlFile(fileKey)).thenReturn(expectedUrl);
+
+        mockMvc.perform(get("/api/studies/" + testStudy.getId())
+                        .with(user(new CustomUserDetails(testUser.getId())))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(result -> {
+                    String json = result.getResponse().getContentAsString();
+                    GetStudyProfileResponse response = objectMapper.readValue(json, GetStudyProfileResponse.class);
+                    assertThat(response.getLeader().getProfileImageUrl()).isEqualTo(expectedUrl);
+                });
+    }
+
+    @Test
+    @DisplayName("그룹 프로필 정보 조회 - 실패: 스터디 없음")
+    void getStudyProfile_Fail_StudyNotFound() throws Exception {
+        long nonExistentStudyId = 999L;
+        mockMvc.perform(get("/api/studies/" + nonExistentStudyId)
+                        .with(user(new CustomUserDetails(testUser.getId())))
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
     }
 
 }
