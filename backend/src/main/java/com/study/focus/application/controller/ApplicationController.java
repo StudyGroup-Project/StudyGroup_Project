@@ -1,6 +1,7 @@
 package com.study.focus.application.controller;
 
 import com.study.focus.account.dto.CustomUserDetails;
+import com.study.focus.application.dto.GetApplicationsResponse;
 import com.study.focus.application.dto.SubmitApplicationRequest;
 import com.study.focus.application.service.ApplicationService;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +10,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -33,7 +35,13 @@ public class ApplicationController {
 
     // 지원서 목록 가져오기
     @GetMapping
-    public void getApplications(@PathVariable Long studyId) {}
+    public ResponseEntity<List<GetApplicationsResponse>> getApplications(
+            @PathVariable Long studyId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long requestUserId = userDetails.getUserId();
+        List<GetApplicationsResponse> applications = applicationService.getApplications(studyId, requestUserId);
+        return ResponseEntity.ok(applications);
+    }
 
     // 지원서 상세 가져오기
     @GetMapping("/{applicationId}")
