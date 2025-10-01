@@ -3,6 +3,7 @@ package com.study.focus.application.controller;
 import com.study.focus.account.dto.CustomUserDetails;
 import com.study.focus.application.dto.GetApplicationDetailResponse;
 import com.study.focus.application.dto.GetApplicationsResponse;
+import com.study.focus.application.dto.HandleApplicationRequest;
 import com.study.focus.application.dto.SubmitApplicationRequest;
 import com.study.focus.application.service.ApplicationService;
 import lombok.RequiredArgsConstructor;
@@ -58,5 +59,12 @@ public class ApplicationController {
 
     // 지원서 처리하기
     @PutMapping("/{applicationId}")
-    public void handleApplication(@PathVariable Long studyId, @PathVariable Long applicationId) {}
+    public ResponseEntity<Void> handleApplication(@PathVariable Long studyId,
+                                  @PathVariable Long applicationId,
+                                  @RequestBody HandleApplicationRequest request,
+                                  @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long requestUserId = userDetails.getUserId();
+        applicationService.handleApplication(studyId, applicationId, requestUserId, request);
+        return ResponseEntity.ok().build();
+    }
 }

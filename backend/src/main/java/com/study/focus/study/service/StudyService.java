@@ -16,6 +16,10 @@ import com.study.focus.common.util.S3Uploader;
 import com.study.focus.study.domain.*;
 import com.study.focus.study.dto.*;
 import com.study.focus.study.repository.BookmarkRepository;
+import com.study.focus.study.dto.CreateStudyRequest;
+import com.study.focus.study.dto.GetStudyProfileResponse;
+import com.study.focus.study.dto.StudyHomeResponse;
+import com.study.focus.study.dto.UpdateStudyProfileRequest;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyProfileRepository;
 import com.study.focus.study.repository.StudyRepository;
@@ -170,6 +174,16 @@ public class StudyService {
                 request.getBio(),
                 request.getDescription()
         );
+    }
+
+    //스터디 메인 데이터 조회하기
+    @Transactional(readOnly = true)
+    public StudyHomeResponse getStudyHome(Long studyId) {
+
+        StudyProfile studyProfile = studyProfileRepository.findByStudyId(studyId)
+                .orElseThrow(()-> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
+
+        return new StudyHomeResponse(studyProfile.getTitle());
     }
 
     // 그룹 삭제

@@ -1,5 +1,6 @@
 package com.study.focus.study;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -389,6 +390,31 @@ class StudyIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest()); // then: 400 Bad Request 응답을 기대
+    }
+
+    @Test
+    @DisplayName("스터디 메인 데이터 조회 - 성공")
+    void getStudyHome_Success() throws Exception {
+        // given: setUp()에서 'testStudy'와 'testProfile'이 생성되었음
+        // testProfile의 title은 "알고리즘 스터디"
+
+        // when & then: 생성된 testStudy의 ID로 API를 호출하고 결과를 검증
+        mockMvc.perform(get("/api/studies/{studyId}/home", testStudy.getId())
+                        .with(user(new CustomUserDetails(leader.getId())))) // 스터디 멤버로 인증
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("알고리즘 스터디"));
+    }
+
+    @Test
+    @DisplayName("스터디 메인 데이터 조회 실패 - 존재하지 않는 스터디")
+    void getStudyHome_Fail_StudyNotFound() throws Exception {
+        // given: 존재하지 않는 스터디 ID
+        final long nonExistentStudyId = 999L;
+
+        // when & then: 존재하지 않는 ID로 API를 호출하면 400 Bad Request가 반환되는지 검증
+        mockMvc.perform(get("/api/studies/{studyId}/home", nonExistentStudyId)
+                        .with(user(new CustomUserDetails(leader.getId()))))
+                .andExpect(status().isBadRequest());
     }
 
 }

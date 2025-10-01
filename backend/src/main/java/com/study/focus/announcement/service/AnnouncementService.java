@@ -1,9 +1,10 @@
 package com.study.focus.announcement.service;
 
+import com.study.focus.account.dto.GetMyProfileResponse;
+import com.study.focus.account.service.UserService;
 import com.study.focus.announcement.domain.Announcement;
 import com.study.focus.announcement.domain.Comment;
-import com.study.focus.announcement.dto.AnnouncementUpdateDto;
-import com.study.focus.announcement.dto.GetAnnouncementsResponse;
+import com.study.focus.announcement.dto.*;
 import com.study.focus.announcement.repository.AnnouncementRepository;
 import com.study.focus.announcement.repository.CommentRepository;
 import com.study.focus.common.domain.File;
@@ -18,6 +19,7 @@ import com.study.focus.study.domain.StudyMember;
 import com.study.focus.study.domain.StudyRole;
 import com.study.focus.study.repository.StudyMemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,7 +38,7 @@ public class AnnouncementService {
     private  final FileRepository fileRepository;
     private  final S3Uploader s3Uploader;
     private  final CommentRepository commentRepository;
-
+    private final UserService userService;
     //ID를 통해 StudyId에 userId가 포함되는지 확인하여 그룹 내 유효성 검증
     public List<GetAnnouncementsResponse> findAllSummaries(Long studyId, Long userId)
     {
@@ -123,6 +125,83 @@ public class AnnouncementService {
             fileUploadDbAndS3(updateDto.getFiles(), list, oldAnnouncement);
         }
     }
+    //공지 상세 데이터 가져오기
+    public GetAnnouncementDetailResponse getAnnouncementDetail(Long studyId, Long announcementId, Long userId) {
+        // 멤버 검증
+        memberValidation(studyId, userId);
+
+        //공지 가져오기
+        Announcement announcement = findAnnouncement(studyId, announcementId);
+        GetMyProfileResponse authorProfile = userService.getMyProfile(announcement.getAuthor().getUser().getId());
+
+        //공지 댓글 가져오기
+        List<Comment> comments = commentRepository.findAllByAnnouncement_Id(announcementId);
+        List<AnnouncementComments> announcementComments = makeCommentToAnnouncementComment(comments);
+
+        //공지 파일 가져오기
+        List<File> files = fileRepository.findAllByAnnouncement_Id(announcementId);
+        List<AnnouncementFiles> announcementFiles = makeFileToAnnouncementFile(files);
+
+        return GetAnnouncementDetailResponse.builder().
+                announcementId(announcementId).studyId(studyId).
+                title(announcement.getTitle()).content(announcement.getDescription()).
+                updatedAt(announcement.getUpdatedAt()).userName(authorProfile.getNickname()).
+                userProfileImageUrl(authorProfile.getProfileImageUrl())
+                .comments(announcementComments).files(announcementFiles).build();
+    }
+
+
+
+    // 공지 상세 화면 댓글 작성
+    @Transactional
+    public void addComment(Long studyId, Long announcementId,Long userId,
+                           CreateCommentRequest commentRequest) {
+        //1. 스터디 멤버 검증
+        StudyMember userStudyMember = memberValidation(studyId, userId);
+
+        //2.공지 가져오기
+        Announcement announcement = findAnnouncement(studyId, announcementId);
+
+        //3. 댓글 저장
+        commentRepository.save(
+                Comment.builder().announcement(announcement)
+                .commenter(userStudyMember)
+                .content(commentRequest.getContent())
+                .build());
+    }
+
+
+    @NotNull
+    private List<AnnouncementComments> makeCommentToAnnouncementComment(List<Comment> comments) {
+        return comments.stream().map(c -> {
+            GetMyProfileResponse commentUserProfile = userService.getMyProfile(c.getCommenter().getUser().getId());
+            return AnnouncementComments.builder()
+                    .commentId(c.getId())
+                    .userName(commentUserProfile.getNickname())
+                    .userProfileImageUrl(commentUserProfile.getProfileImageUrl())
+                    .content(c.getContent())
+                    .createdAt(c.getCreatedAt())
+                    .build();
+        }).toList();
+    }
+
+    @NotNull
+    private List<AnnouncementFiles> makeFileToAnnouncementFile(List<File> files) {
+        return files.stream().map(f -> {
+            String fileUrl = s3Uploader.getUrlFile(f.getFileKey());
+            return AnnouncementFiles.builder()
+                    .fileId(f.getId())
+                    .fileName(f.getFileName())
+                    .fileUrl(fileUrl)
+                    .build();
+        }).toList();
+    }
+
+    private  Announcement findAnnouncement(Long studyId, Long announcementId) {
+        return announcementRepository.findByIdAndStudyId(announcementId, studyId)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+    }
+
     private void fileUploadDbAndS3(List<MultipartFile> files, List<FileDetailDto> list, Announcement announcement) {
         //파일 데이터 db 저장
         IntStream.range(0, list.size())
@@ -155,14 +234,6 @@ public class AnnouncementService {
             throw new BusinessException(UserErrorCode.URL_FORBIDDEN);
         }
     }
-
-
-
-    // 공지 상세 데이터 가져오기
-    public void getAnnouncementDetail(Long studyId, Long announcementId) {
-        // TODO: 공지 상세 조회
-    }
-
 
 
 
