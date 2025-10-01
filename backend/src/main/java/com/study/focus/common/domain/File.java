@@ -105,6 +105,13 @@ public class File extends BaseCreatedEntity {
         return f;
     }
 
+    /**
+     * UserProfile 프로필 이미지용 파일 생성
+     */
+    public static File ofProfileImage(FileDetailDto fileDetail) {
+        return base(fileDetail);
+    }
+
     // 공통 생성 로직
     private static File base( FileDetailDto fileDetail) {
         File f = new File();

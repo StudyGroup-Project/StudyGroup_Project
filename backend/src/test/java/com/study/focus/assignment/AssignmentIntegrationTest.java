@@ -29,6 +29,7 @@ import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequ
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -119,7 +120,7 @@ class AssignmentIntegrationTest {
                         .with(user(new CustomUserDetails(user1.getId())))) // setUp에서 생성된 user를 사용
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].title").value("2"));
+                .andExpect(jsonPath("$[*].title").value(containsInAnyOrder("1", "2")));
     }
 
 

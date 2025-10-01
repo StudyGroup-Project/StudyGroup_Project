@@ -3,6 +3,7 @@ package com.study.focus.announcement;
 import com.study.focus.account.domain.User;
 import com.study.focus.announcement.domain.Announcement;
 import com.study.focus.announcement.domain.Comment;
+import com.study.focus.announcement.dto.AnnouncementUpdateDto;
 import com.study.focus.announcement.dto.GetAnnouncementsResponse;
 import com.study.focus.announcement.repository.AnnouncementRepository;
 import com.study.focus.announcement.repository.CommentRepository;
@@ -328,8 +329,63 @@ class AnnouncementUnitTest {
                 .isInstanceOf(BusinessException.class);
         then(commentRepository).should(never()).deleteAll(anyList());
         then(announcementRepo).should(never()).delete(any());
-
     }
+
+    @Test
+    @DisplayName("공지사항 수정 성공 - 제목/내용 업데이트 , 기존 파일 삭제, 새 파일 업로드")
+    void updateAnnouncement_success() {
+        // given
+        Long studyId = 1L, userId = 1L, announcementId = 10L;
+        Study study = Study.builder().id(studyId).build();
+        StudyMember leader = StudyMember.builder().id(studyId).study(study).role(StudyRole.LEADER).build();
+        Announcement oldAnnouncement = Announcement.builder().id(announcementId).study(study).author(leader).
+                title("old-title").
+                description("old-content")
+                .build();
+
+        List<Long> deleteIds = List.of(100L, 200L);
+        List<File> mockFiles = List.of(
+                File.ofAnnouncement(oldAnnouncement, new FileDetailDto("test.png","test-key","image/png",10L))
+        );
+        MockMultipartFile newFile = new MockMultipartFile("files", "b.png", "image/png", "b".getBytes());
+
+        // stub
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
+        given(announcementRepo.findByIdAndStudy_IdAndAuthor_Id(announcementId, studyId, userId))
+                .willReturn(Optional.of(oldAnnouncement));
+        given(fileRepository.findAllById(deleteIds)).willReturn(mockFiles);
+        given(s3uploader.makeMetaData(any(MultipartFile.class)))
+                .willReturn(new FileDetailDto("b.png", "key-b", "image/png", 5L));
+
+        AnnouncementUpdateDto updateDto = new AnnouncementUpdateDto("new-title", "new-content", List.of(newFile), deleteIds);
+
+        // when
+        announcementService.updateAnnouncement(studyId, announcementId, userId, updateDto);
+
+        // then
+        then(fileRepository).should(times(1)).findAllById(deleteIds);
+        then(fileRepository).should(times(1)).saveAll(mockFiles);
+        then(s3uploader).should(times(1)).makeMetaData(any(MultipartFile.class));
+        then(s3uploader).should(times(1)).uploadFiles(anyList(), anyList());
+    }
+
+    @Test
+    @DisplayName("공지사항 수정 실패 - 공지가 존재하지 않음")
+    void updateAnnouncement_fail_notFound() {
+        Long studyId = 1L, userId = 1L, announcementId = 10L;
+        Study study = Study.builder().id(studyId).build();
+        StudyMember leader = StudyMember.builder().id(userId).study(study).role(StudyRole.LEADER).build();
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
+        given(announcementRepo.findByIdAndStudy_IdAndAuthor_Id(announcementId, studyId, userId))
+                .willReturn(Optional.empty());
+
+
+        assertThatThrownBy(() ->
+                announcementService.updateAnnouncement(studyId, announcementId, userId, null))
+                .isInstanceOf(BusinessException.class);
+    }
+
 
 
 }

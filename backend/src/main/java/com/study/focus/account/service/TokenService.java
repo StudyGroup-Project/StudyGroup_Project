@@ -8,6 +8,8 @@ import com.study.focus.account.config.jwt.TokenProvider;
 import com.study.focus.account.dto.TokenResponse;
 import com.study.focus.account.repository.OAuthCredentialRepository;
 import com.study.focus.account.repository.SystemCredentialRepository;
+import com.study.focus.common.exception.BusinessException;
+import com.study.focus.common.exception.UserErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,12 +20,9 @@ public class TokenService {
 
     private final TokenProvider tokenProvider;
     private final RefreshTokenService refreshTokenService;
-    private final SystemCredentialRepository  systemCredentialRepository;
+    private final SystemCredentialRepository systemCredentialRepository;
     private final OAuthCredentialRepository oAuthCredentialRepository;
 
-    /**
-     * 토큰 생성 (로그인 시 호출)
-     */
     public TokenResponse createToken(User user, String identifier) {
         String accessToken = tokenProvider.createAccessToken(user.getId(), identifier);
         String refreshToken = tokenProvider.createRefreshToken(user.getId());
@@ -35,28 +34,24 @@ public class TokenService {
         );
     }
 
-    /**
-     * RefreshToken 기반 AccessToken 재발급
-     */
     @Transactional
     public String createNewAccessToken(String refreshTokenValue) {
         RefreshToken refreshToken = refreshTokenService.findByRefreshToken(refreshTokenValue);
 
         if (refreshToken.isExpired()) {
-            throw new IllegalArgumentException("Refresh Token이 만료되었습니다.");
+            throw new BusinessException(UserErrorCode.REFRESH_TOKEN_EXPIRED);
         }
 
         User user = refreshToken.getUser();
 
-        // identifier 결정
         String identifier;
         if (user.getLoginType() == LoginType.SYSTEM) {
             identifier = systemCredentialRepository.findByUser(user)
-                    .orElseThrow(() -> new IllegalArgumentException("SystemCredential이 존재하지 않습니다."))
+                    .orElseThrow(() -> new BusinessException(UserErrorCode.SYSTEM_CREDENTIAL_NOT_FOUND))
                     .getLoginId();
         } else {
             OAuthCredential credential = oAuthCredentialRepository.findByUser(user)
-                    .orElseThrow(() -> new IllegalArgumentException("OAuthCredential이 존재하지 않습니다."));
+                    .orElseThrow(() -> new BusinessException(UserErrorCode.OAUTH_CREDENTIAL_NOT_FOUND));
             identifier = credential.getProvider().name() + ":" + credential.getProviderUserId();
         }
 

@@ -3,6 +3,8 @@ package com.study.focus.account.service;
 import com.study.focus.account.domain.RefreshToken;
 import com.study.focus.account.domain.User;
 import com.study.focus.account.repository.RefreshTokenRepository;
+import com.study.focus.common.exception.BusinessException;
+import com.study.focus.common.exception.UserErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,11 +48,11 @@ class RefreshTokenServiceTest {
     void findByRefreshToken_fail() {
         when(refreshTokenRepository.findByToken("wrong")).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        BusinessException ex = assertThrows(
+                BusinessException.class,
                 () -> refreshTokenService.findByRefreshToken("wrong")
         );
 
-        assertThat(ex.getMessage()).isEqualTo("유효하지 않은 RefreshToken 입니다.");
+        assertThat(ex.getErrorCode()).isEqualTo(UserErrorCode.REFRESH_TOKEN_INVALID);
     }
 }

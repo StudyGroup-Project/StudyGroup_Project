@@ -34,7 +34,7 @@ public class StudyMember extends BaseCreatedEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private StudyRole role = MEMBER;
+    private StudyRole role;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

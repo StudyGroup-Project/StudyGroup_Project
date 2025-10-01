@@ -17,7 +17,7 @@ public class StudyProfile extends BaseUpdatedEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "study_id", nullable = false, unique = true)
     private Study study;
 
@@ -37,7 +37,11 @@ public class StudyProfile extends BaseUpdatedEntity {
     @Column(nullable = false)
     private Category category;
 
-    @Column(nullable = false, length = 512)
-    @Builder.Default
-    private String profileImageUrl = "https://example.com/default_profile.png";
+    public void update(String title, Category category, Address address, String bio, String description) {
+        this.title = title;
+        this.category = category;
+        this.address = address;
+        this.bio = bio;
+        this.description = description;
+    }
 }
