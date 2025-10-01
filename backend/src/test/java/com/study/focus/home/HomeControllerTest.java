@@ -122,17 +122,6 @@ class HomeControllerTest {
                 .thenReturn("https://test-bucket.s3.ap-northeast-2.amazonaws.com/profile.png");
     }
 
-    @AfterEach
-    void tearDown() {
-        bookmarkRepository.deleteAll();
-        studyMemberRepository.deleteAll();
-        studyProfileRepository.deleteAll();
-        studyRepository.deleteAll();
-        userProfileRepository.deleteAll();
-        userRepository.deleteAll();
-        fileRepository.deleteAll();
-    }
-
     @Test
     @DisplayName("성공: 홈 데이터 조회 API")
     void getHomeData_success() throws Exception {
