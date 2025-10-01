@@ -1,12 +1,24 @@
 package com.study.focus.resource.service;
 
+import com.study.focus.announcement.dto.GetAnnouncementsResponse;
+import com.study.focus.announcement.service.AnnouncementService;
+import com.study.focus.resource.dto.GetResourcesResponse;
+import com.study.focus.resource.repository.ResourceRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
+@RequiredArgsConstructor
 public class ResourceService {
 
+    private final ResourceRepository resourceRepository;
+    private final AnnouncementService announcementService;
     // 자료 목록 가져오기
-    public void getResources(Long studyId) {
+    public List<GetResourcesResponse> getResources(Long studyId, Long UserId) {
+
+        return  null;
         // TODO: 자료 목록 조회
     }
 
