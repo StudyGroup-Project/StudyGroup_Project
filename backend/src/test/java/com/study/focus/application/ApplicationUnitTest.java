@@ -6,6 +6,7 @@ import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.application.domain.Application;
 import com.study.focus.application.dto.GetApplicationDetailResponse;
 import com.study.focus.application.dto.GetApplicationsResponse;
+import com.study.focus.application.dto.HandleApplicationRequest;
 import com.study.focus.application.dto.SubmitApplicationRequest;
 import com.study.focus.application.repository.ApplicationRepository;
 import com.study.focus.application.service.ApplicationService;
@@ -13,10 +14,7 @@ import com.study.focus.account.domain.User;
 import com.study.focus.account.repository.UserRepository;
 import com.study.focus.common.domain.File;
 import com.study.focus.common.util.S3Uploader;
-import com.study.focus.study.domain.Study;
-import com.study.focus.study.domain.RecruitStatus;
-import com.study.focus.study.domain.StudyMember;
-import com.study.focus.study.domain.StudyRole;
+import com.study.focus.study.domain.*;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
 import com.study.focus.common.exception.BusinessException;
@@ -25,8 +23,10 @@ import com.study.focus.application.domain.ApplicationStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
@@ -35,10 +35,10 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ApplicationUnitTest {
@@ -262,7 +262,7 @@ public class ApplicationUnitTest {
                 .build();
 
         // File 객체를 Mockito로 모킹
-        File file = org.mockito.Mockito.mock(File.class);
+        File file = mock(File.class);
         String fileKey = "fileKey";
         String expectedUrl = "https://s3.com/fileKey";
         org.mockito.Mockito.when(file.getFileKey()).thenReturn(fileKey);
@@ -404,4 +404,140 @@ public class ApplicationUnitTest {
         assertThatThrownBy(() -> applicationService.getApplicationDetail(studyId, applicationId, leaderId))
                 .isInstanceOf(BusinessException.class);
     }
+
+
+    @Test
+    @DisplayName("지원서 수락 - 성공")
+    void handleApplication_Accept_Success() {
+        // given: 정원이 넉넉한 스터디의 지원서를 방장이 수락하는 상황
+        final Long studyId = 1L;
+        final Long applicationId = 10L;
+        final Long leaderUserId = 100L;
+        final HandleApplicationRequest request = new HandleApplicationRequest(ApplicationStatus.ACCEPTED);
+
+        User leader = User.builder().id(leaderUserId).build();
+        User applicant = User.builder().id(200L).build();
+        Study mockStudy = mock(Study.class);
+        Application mockApplication = mock(Application.class);
+        StudyMember leaderMember = StudyMember.builder().user(leader).study(mockStudy).role(StudyRole.LEADER).build();
+
+        given(studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER)).willReturn(Optional.of(leaderMember));
+        given(applicationRepository.findByIdAndStudyId(applicationId, studyId)).willReturn(Optional.of(mockApplication));
+        given(mockApplication.getStatus()).willReturn(ApplicationStatus.SUBMITTED); // 초기 상태는 SUBMITTED
+        given(mockApplication.getStudy()).willReturn(mockStudy);
+        given(mockApplication.getApplicant()).willReturn(applicant);
+        given(mockStudy.getMaxMemberCount()).willReturn(10);
+        given(studyMemberRepository.countByStudyIdAndStatus(studyId, StudyMemberStatus.JOINED)).willReturn(5L);
+
+        // when: 서비스 메서드 호출
+        assertDoesNotThrow(() -> applicationService.handleApplication(studyId, applicationId, leaderUserId, request));
+
+        // then: 지원서 상태가 'ACCEPTED'로 변경되고, 새로운 멤버가 저장되었는지 검증
+        then(mockApplication).should().updateStatus(ApplicationStatus.ACCEPTED);
+
+        ArgumentCaptor<StudyMember> memberCaptor = ArgumentCaptor.forClass(StudyMember.class);
+        then(studyMemberRepository).should().save(memberCaptor.capture());
+
+        StudyMember newMember = memberCaptor.getValue();
+        assertThat(newMember.getUser()).isEqualTo(applicant);
+        assertThat(newMember.getRole()).isEqualTo(StudyRole.MEMBER);
+        assertThat(newMember.getStatus()).isEqualTo(StudyMemberStatus.JOINED);
+    }
+
+    @Test
+    @DisplayName("지원서 거절 - 성공")
+    void handleApplication_Reject_Success() {
+        // given: 방장이 지원서를 거절하는 상황
+        final Long studyId = 1L;
+        final Long applicationId = 10L;
+        final Long leaderUserId = 100L;
+        final HandleApplicationRequest request = new HandleApplicationRequest(ApplicationStatus.REJECTED);
+
+        User leader = User.builder().id(leaderUserId).build();
+        Study mockStudy = mock(Study.class);
+        Application mockApplication = mock(Application.class);
+        StudyMember leaderMember = StudyMember.builder().user(leader).study(mockStudy).role(StudyRole.LEADER).build();
+
+        given(studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER)).willReturn(Optional.of(leaderMember));
+        given(applicationRepository.findByIdAndStudyId(applicationId, studyId)).willReturn(Optional.of(mockApplication));
+        given(mockApplication.getStatus()).willReturn(ApplicationStatus.SUBMITTED);
+
+        // when: 서비스 메서드 호출
+        assertDoesNotThrow(() -> applicationService.handleApplication(studyId, applicationId, leaderUserId, request));
+
+        // then: 지원서 상태가 'REJECTED'로 변경되고, 새로운 멤버는 저장되지 않았는지 검증
+        then(mockApplication).should().updateStatus(ApplicationStatus.REJECTED);
+        then(studyMemberRepository).should(never()).save(any(StudyMember.class));
+    }
+
+    @Test
+    @DisplayName("지원서 처리 실패 - 방장이 아닌 경우")
+    void handleApplication_Fail_NotLeader() {
+        // given: 방장이 아닌 사용자가 요청
+        final Long studyId = 1L;
+        final Long applicationId = 10L;
+        final Long notLeaderUserId = 999L;
+        final HandleApplicationRequest request = new HandleApplicationRequest(ApplicationStatus.ACCEPTED);
+
+        User leader = User.builder().id(100L).build();
+        Study study = Study.builder().id(studyId).build();
+        StudyMember leaderMember = StudyMember.builder().user(leader).study(study).role(StudyRole.LEADER).build();
+
+        given(studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER)).willReturn(Optional.of(leaderMember));
+
+        // when & then: 권한 없음 예외 발생 검증
+        assertThatThrownBy(() -> applicationService.handleApplication(studyId, applicationId, notLeaderUserId, request))
+                .isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    @DisplayName("지원서 처리 실패 - 이미 처리된 지원서인 경우")
+    void handleApplication_Fail_AlreadyProcessed() {
+        // given: 이미 'ACCEPTED' 상태인 지원서
+        final Long studyId = 1L;
+        final Long applicationId = 10L;
+        final Long leaderUserId = 100L;
+        final HandleApplicationRequest request = new HandleApplicationRequest(ApplicationStatus.REJECTED);
+
+        User leader = User.builder().id(leaderUserId).build();
+        Study study = Study.builder().id(studyId).build();
+        StudyMember leaderMember = StudyMember.builder().user(leader).study(study).role(StudyRole.LEADER).build();
+        Application application = Application.builder().status(ApplicationStatus.ACCEPTED).build(); // 이미 처리됨
+
+        given(studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER)).willReturn(Optional.of(leaderMember));
+        given(applicationRepository.findByIdAndStudyId(applicationId, studyId)).willReturn(Optional.of(application));
+
+        // when & then: 잘못된 요청 예외 발생 검증
+        assertThatThrownBy(() -> applicationService.handleApplication(studyId, applicationId, leaderUserId, request))
+                .isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    @DisplayName("지원서 수락 실패 - 정원이 가득 찬 경우")
+    void handleApplication_Accept_Fail_StudyIsFull() {
+        // given
+        final Long studyId = 1L;
+        final Long applicationId = 10L;
+        final Long leaderUserId = 100L;
+        final HandleApplicationRequest request = new HandleApplicationRequest(ApplicationStatus.ACCEPTED);
+
+        User leader = User.builder().id(leaderUserId).build();
+        Study mockStudy = mock(Study.class);
+        Application mockApplication = mock(Application.class);
+        StudyMember leaderMember = StudyMember.builder().user(leader).study(mockStudy).role(StudyRole.LEADER).build();
+
+        given(studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER)).willReturn(Optional.of(leaderMember));
+        given(applicationRepository.findByIdAndStudyId(applicationId, studyId)).willReturn(Optional.of(mockApplication));
+        given(mockApplication.getStatus()).willReturn(ApplicationStatus.SUBMITTED);
+        given(mockApplication.getStudy()).willReturn(mockStudy);
+        given(mockStudy.getMaxMemberCount()).willReturn(5); // 최대 인원 5명
+        given(studyMemberRepository.countByStudyIdAndStatus(studyId, StudyMemberStatus.JOINED)).willReturn(5L); // 현재 인원 5명
+
+        // when & then
+        assertThatThrownBy(() -> applicationService.handleApplication(studyId, applicationId, leaderUserId, request))
+                .isInstanceOf(BusinessException.class);
+
+        then(studyMemberRepository).should(never()).save(any(StudyMember.class));
+    }
+
 }
