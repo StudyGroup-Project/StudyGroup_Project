@@ -35,4 +35,8 @@ public class Application extends BaseCreatedEntity {
     @Lob
     @Column(nullable = false)
     private String content;
+
+    public void updateStatus(ApplicationStatus newStatus) {
+        this.status = newStatus;
+    }
 }

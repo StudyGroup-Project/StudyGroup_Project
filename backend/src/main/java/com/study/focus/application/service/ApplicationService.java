@@ -5,17 +5,12 @@ import com.study.focus.account.domain.UserProfile;
 import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.repository.UserRepository;
 import com.study.focus.application.domain.ApplicationStatus;
-import com.study.focus.application.dto.GetApplicationDetailResponse;
-import com.study.focus.application.dto.GetApplicationsResponse;
-import com.study.focus.application.dto.SubmitApplicationRequest;
+import com.study.focus.application.dto.*;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
 import com.study.focus.common.exception.UserErrorCode;
 import com.study.focus.common.util.S3Uploader;
-import com.study.focus.study.domain.Study;
-import com.study.focus.study.domain.RecruitStatus;
-import com.study.focus.study.domain.StudyMember;
-import com.study.focus.study.domain.StudyRole;
+import com.study.focus.study.domain.*;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
 import com.study.focus.application.domain.Application;
@@ -129,7 +124,43 @@ public class ApplicationService {
     }
 
     // 지원서 처리하기 (승인/거절 등)
-    public void handleApplication(Long studyId, Long applicationId) {
-        // TODO: 지원서 상태 변경
+    @Transactional
+    public void handleApplication(Long studyId, Long applicationId, Long requestUserId, HandleApplicationRequest request) {
+
+        // 방잠 권한 확인
+        StudyMember leadermember = studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER)
+                .orElseThrow(()-> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+        if(!leadermember.getUser().getId().equals(requestUserId)){
+            throw new BusinessException(UserErrorCode.URL_FORBIDDEN);
+        }
+
+        // 지원서 조회
+        Application application = applicationRepository.findByIdAndStudyId(applicationId, studyId)
+                .orElseThrow(()->new BusinessException(CommonErrorCode.INVALID_REQUEST));
+
+        // 이미 처리된 지원서는 수정 불가
+        if(application.getStatus() != ApplicationStatus.SUBMITTED) {
+            throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
+        }
+
+        application.updateStatus(request.getStatus());
+
+        // 지원서 수락으로 상태가 변경되면 스터디 멤버로 추가
+        if(request.getStatus() == ApplicationStatus.ACCEPTED) {
+            Study study = application.getStudy();
+
+            int currentMemberCount = (int) studyMemberRepository.countByStudyIdAndStatus(studyId, StudyMemberStatus.JOINED);
+            if(currentMemberCount >= study.getMaxMemberCount()){
+                throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
+            }
+
+            StudyMember newMember = StudyMember.builder()
+                    .study(study)
+                    .user(application.getApplicant())
+                    .role(StudyRole.MEMBER)
+                    .status(StudyMemberStatus.JOINED)
+                    .build();
+            studyMemberRepository.save(newMember);
+        }
     }
 }
