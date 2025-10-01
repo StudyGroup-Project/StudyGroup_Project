@@ -15,6 +15,7 @@ import com.study.focus.common.util.S3Uploader;
 import com.study.focus.study.domain.*;
 import com.study.focus.study.dto.CreateStudyRequest;
 import com.study.focus.study.dto.GetStudyProfileResponse;
+import com.study.focus.study.dto.StudyHomeResponse;
 import com.study.focus.study.dto.UpdateStudyProfileRequest;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyProfileRepository;
@@ -525,5 +526,38 @@ class StudyUnitTest {
         then(mockStudyProfile).should(never()).update(any(), any(), any(), any(), any());
     }
 
+    @Test
+    @DisplayName("스터디 메인 데이터 조회 - 성공")
+    void getStudyHome_Success() {
+        // given: 존재하는 studyId와 해당 스터디의 프로필을 설정
+        final Long studyId = 1L;
+        final String expectedTitle = "백엔드 스터디";
+
+        StudyProfile mockProfile = StudyProfile.builder()
+                .title(expectedTitle)
+                .build();
+
+        given(studyProfileRepository.findByStudyId(studyId)).willReturn(Optional.of(mockProfile));
+
+        // when: 서비스 메서드 호출
+        StudyHomeResponse response = studyService.getStudyHome(studyId);
+
+        // then: 반환된 DTO가 null이 아니며, 기대한 title 값을 가지고 있는지 검증
+        assertThat(response).isNotNull();
+        assertThat(response.getTitle()).isEqualTo(expectedTitle);
+    }
+
+    @Test
+    @DisplayName("스터디 메인 데이터 조회 실패 - 존재하지 않는 스터디")
+    void getStudyHome_Fail_StudyNotFound() {
+        // given: 존재하지 않는 studyId를 설정
+        final Long nonExistentStudyId = 999L;
+
+        given(studyProfileRepository.findByStudyId(nonExistentStudyId)).willReturn(Optional.empty());
+
+        // when & then: BusinessException이 발생하는지 검증
+        assertThatThrownBy(() -> studyService.getStudyHome(nonExistentStudyId))
+                .isInstanceOf(BusinessException.class);
+    }
 
 }
