@@ -6,10 +6,7 @@ import com.study.focus.assignment.domain.Submission;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.resource.domain.Resource;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.Check;
 
 @Entity

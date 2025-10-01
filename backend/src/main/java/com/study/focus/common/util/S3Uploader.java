@@ -158,7 +158,7 @@ public class S3Uploader
         try{
             s3Template.deleteObject(bucket,key);
         }catch (S3Exception  e){
-            log.error("s3 파일 삭제에 실패했습니다. key: {}, Error: {}",key ,e.getMessage());
+            log.error("S3 File Delete Exception key:{} ErrorMessage: {}",key,e.getMessage());
             throw new BusinessException(CommonErrorCode.INTERNAL_SERVER_ERROR,e);
         }
     }

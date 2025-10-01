@@ -69,7 +69,7 @@ public class AnnouncementIntegrationTest {
 
     @Autowired
     private FileRepository fileRepository;
-    
+
     @Autowired
     private AnnouncementService announcementService;
 
