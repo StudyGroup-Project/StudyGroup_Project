@@ -1,13 +1,18 @@
 package com.study.focus.announcement;
 
+import com.study.focus.account.domain.Job;
 import com.study.focus.account.domain.User;
+import com.study.focus.account.dto.GetMyProfileResponse;
+import com.study.focus.account.service.UserService;
 import com.study.focus.announcement.domain.Announcement;
 import com.study.focus.announcement.domain.Comment;
 import com.study.focus.announcement.dto.AnnouncementUpdateDto;
+import com.study.focus.announcement.dto.GetAnnouncementDetailResponse;
 import com.study.focus.announcement.dto.GetAnnouncementsResponse;
 import com.study.focus.announcement.repository.AnnouncementRepository;
 import com.study.focus.announcement.repository.CommentRepository;
 import com.study.focus.announcement.service.AnnouncementService;
+import com.study.focus.common.domain.Category;
 import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.exception.BusinessException;
@@ -63,6 +68,9 @@ class AnnouncementUnitTest {
     @Mock
     private S3Uploader s3uploader;
 
+
+    @Mock
+    private UserService userService;
 
 
 
@@ -386,6 +394,98 @@ class AnnouncementUnitTest {
                 .isInstanceOf(BusinessException.class);
     }
 
+
+
+    @Test
+    @DisplayName("공지 상세 데이터 가져오기 성공 - 댓글/파일 포함")
+    void getAnnouncementDetail_success() {
+        // given
+        Long studyId = 1L;
+        Long userId = 1L;
+        Long announcementId = 10L;
+
+        StudyMember member = StudyMember.builder().id(userId).user(testUser).study(testStudy).role(StudyRole.MEMBER).build();
+        Announcement announcement = Announcement.builder().id(announcementId).study(testStudy).
+                author(member).
+                title("공지 제목").
+                description("공지 내용").build();
+        Comment comment = Comment.builder().id(100L).commenter(member).content("댓글 내용").
+                announcement(announcement).build();
+
+        File file = File.ofAnnouncement(announcement,
+                new FileDetailDto("test.jpg", "testKey", "image/jpg", 10L));
+        ReflectionTestUtils.setField(file, "id", 200L);
+
+        GetMyProfileResponse mockProfile = new GetMyProfileResponse(1L,
+                "testName","testProvince","testDistrict","testBirth",
+                Job.JOB_SEEKER, Category.ACADEMICS,"tesUrl",30L);
+
+        // mocking
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId))
+                .willReturn(Optional.of(member));
+        given(announcementRepo.findByIdAndStudyId(announcementId, studyId))
+                .willReturn(Optional.of(announcement));
+        given(userService.getMyProfile(any()))
+                .willReturn(mockProfile);
+        given(commentRepository.findAllByAnnouncement_Id(announcementId))
+                .willReturn(List.of(comment));
+        given(fileRepository.findAllByAnnouncement_Id(announcementId))
+                .willReturn(List.of(file));
+        given(s3uploader.getUrlFile(file.getFileKey()))
+                .willReturn("https://s3/testKey");
+
+        // when
+        GetAnnouncementDetailResponse result =
+                announcementService.getAnnouncementDetail(studyId, announcementId, userId);
+
+
+        assertThatThrownBy(() ->
+                announcementService.updateAnnouncement(studyId, announcementId, userId, null))
+                .isInstanceOf(BusinessException.class);
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getAnnouncementId()).isEqualTo(announcementId);
+        assertThat(result.getTitle()).isEqualTo("공지 제목");
+        assertThat(result.getContent()).isEqualTo("공지 내용");
+        assertThat(result.getUserName()).isEqualTo("testName");
+        assertThat(result.getUserProfileImageUrl()).isEqualTo("tesUrl");
+        assertThat(result.getComments()).hasSize(1);
+        assertThat(result.getFiles()).hasSize(1);
+        then(userService).should(atLeastOnce()).getMyProfile(any());
+        then(s3uploader).should(times(1)).getUrlFile(file.getFileKey());
+    }
+
+
+
+    @Test
+    @DisplayName("공지 상세 데이터 가져오기 실패 - 스터디 멤버 아닌 경우")
+    void getAnnouncementDetail_fail_NotStudyMember() {
+        Long studyId = 1L;
+        Long userId = 1L;
+        Long announcementId = 10L;
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId))
+                .willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> announcementService.getAnnouncementDetail(studyId, announcementId, userId))
+                .isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    @DisplayName("공지 상세 데이터 가져오기 실패 - 공지가 존재하지 않음")
+    void getAnnouncementDetail_fail_AnnouncementNotFound() {
+        Long studyId = 1L;
+        Long userId = 1L;
+        Long announcementId = 10L;
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId))
+                .willReturn(Optional.of(teststudyMember));
+        given(announcementRepo.findByIdAndStudyId(announcementId, studyId))
+                .willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> announcementService.getAnnouncementDetail(studyId, announcementId, userId))
+                .isInstanceOf(BusinessException.class);
+    }
 
 
 }
