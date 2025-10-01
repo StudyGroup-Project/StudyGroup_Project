@@ -10,6 +10,7 @@ import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.repository.UserRepository;
 import com.study.focus.common.domain.Address;
 import com.study.focus.common.domain.Category;
+import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.util.S3Uploader;
@@ -66,8 +67,8 @@ class UserControllerTest {
 
     @AfterEach
     void tearDown() {
-        fileRepository.deleteAll();
         userProfileRepository.deleteAll();
+        fileRepository.deleteAll();
         userRepository.deleteAll();
     }
 
@@ -133,6 +134,7 @@ class UserControllerTest {
 
         // S3Uploader 동작 Mocking
         FileDetailDto fakeMeta = new FileDetailDto("profile.png", "fake-key", "image/png", 100L);
+
         given(s3Uploader.makeMetaData(any(MultipartFile.class))).willReturn(fakeMeta);
         willDoNothing().given(s3Uploader).uploadFile(eq("fake-key"), any(MultipartFile.class));
         given(s3Uploader.getUrlFile("fake-key")).willReturn("http://localhost/fake-url");

@@ -294,6 +294,8 @@ class StudyIntegrationTest {
         String expectedUrl = "http://localhost/test-bucket/" + fileKey;
         FileDetailDto fileDetail = new FileDetailDto("profile.png", fileKey, "image/png", 100L);
         File profileImage = File.ofResource(null, fileDetail); // 관계 없는 필드는 null
+
+        fileRepository.save(profileImage);
         // 이미 저장된 leaderProfile의 필드만 변경
         leaderProfile.updateProfileImage(profileImage); // profileImage만 변경
         userProfileRepository.save(leaderProfile); // update 쿼리로 동작

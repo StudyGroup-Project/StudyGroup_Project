@@ -17,7 +17,7 @@ public class StudyProfile extends BaseUpdatedEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "study_id", nullable = false, unique = true)
     private Study study;
 
@@ -44,5 +44,4 @@ public class StudyProfile extends BaseUpdatedEntity {
         this.bio = bio;
         this.description = description;
     }
-
 }
