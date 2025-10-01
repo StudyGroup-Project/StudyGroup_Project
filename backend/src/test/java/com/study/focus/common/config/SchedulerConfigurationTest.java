@@ -82,6 +82,7 @@ class FileCleanupSchedulerTest {
                 .contentType("TestType")
                 .fileSize(30L).build()));
 
+
         fileToDelete1.deleteAnnouncementFile();
         fileToDelete2 = fileRepository.save(File.ofAnnouncement(announcement, FileDetailDto.builder().
                 originalFileName("originalName")
