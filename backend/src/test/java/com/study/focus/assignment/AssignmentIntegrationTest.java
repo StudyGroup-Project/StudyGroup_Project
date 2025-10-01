@@ -3,7 +3,6 @@ package com.study.focus.assignment;
 import com.study.focus.account.dto.CustomUserDetails;
 import com.study.focus.account.domain.User;
 import com.study.focus.account.repository.UserRepository;
-import com.study.focus.announcement.domain.Announcement;
 import com.study.focus.assignment.domain.Assignment;
 import com.study.focus.assignment.repository.AssignmentRepository;
 import com.study.focus.common.dto.FileDetailDto;
@@ -29,7 +28,6 @@ import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequ
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -111,6 +109,8 @@ class AssignmentIntegrationTest {
         return t.withNano(0).format(ISO); // ModelAttribute 바인딩 기본 ISO 형식
     }
 
+    /* 과제 목록 조회 기능 test */
+
     @Test
     @DisplayName("성공: 스터디 멤버가 과제 목록을 성공적으로 조회")
     void getAssignment_success() throws Exception {
@@ -130,6 +130,8 @@ class AssignmentIntegrationTest {
                         .with(user(new CustomUserDetails(user2.getId()))))
                 .andExpect(status().isBadRequest());
     }
+
+    /* 과제 생성 기능 test */
 
     @Test
     @DisplayName("성공: 파일이 존재할 때 과제 생성 (201 Created + Location)")
@@ -309,6 +311,8 @@ class AssignmentIntegrationTest {
     private MockMultipartHttpServletRequestBuilder putMultipart(String urlTemplate, Object... uriVars) {
         return multipart(HttpMethod.PUT, urlTemplate, uriVars);
     }
+
+    /* 과제 수정 기능 test */
 
     @Test
     @DisplayName("수정 성공: 파일 변화 없이 과제 수정")
@@ -528,6 +532,97 @@ class AssignmentIntegrationTest {
         Assertions.assertThat(fileRepository.count()).isEqualTo(beforeFiles);
         verify(s3Uploader, times(1)).makeMetaData(any());
         verify(s3Uploader, never()).uploadFiles(anyList(), anyList());
+    }
+
+    /* 과제 상세보기 기능 test */
+
+    @Test
+    @DisplayName("조회 성공: 파일이 있을 때 과제 상세 조회")
+    void getAssignmentDetail_success_withFiles_it() throws Exception {
+        // given
+        var leader = studyMemberRepository.findByStudyIdAndUserId(study1.getId(), user1.getId()).orElseThrow();
+
+        var a = assignmentRepository.save(Assignment.builder()
+                .study(study1).creator(leader)
+                .title("detail t").description("detail d")
+                .startAt(LocalDateTime.now().minusDays(1).withNano(0))
+                .dueAt(LocalDateTime.now().plusDays(3).withNano(0))
+                .build());
+
+        // 첨부 파일 2개
+        var meta1 = new FileDetailDto("a.pdf", "key-a", "application/pdf", 10);
+        var meta2 = new FileDetailDto("b.png", "key-b", "image/png", 20);
+        fileRepository.save(com.study.focus.common.domain.File.ofAssignment(a, meta1));
+        fileRepository.save(com.study.focus.common.domain.File.ofAssignment(a, meta2));
+
+        // when & then
+        mockMvc.perform(get("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId())
+                        .with(user(new com.study.focus.account.dto.CustomUserDetails(user1.getId()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(a.getId()))
+                .andExpect(jsonPath("$.title").value("detail t"))
+                .andExpect(jsonPath("$.description").value("detail d"))
+                .andExpect(jsonPath("$.files.length()").value(2))
+                .andExpect(jsonPath("$.files[*].url").value(org.hamcrest.Matchers.containsInAnyOrder("key-a", "key-b")))
+                .andExpect(jsonPath("$.submissions.length()").value(0)); // 별도 제출 데이터 없으므로 0 가정
+    }
+
+    // 성공: 파일이 없을 때 과제 상세 조회(빈 리스트)
+    @Test
+    @DisplayName("조회 성공: 파일이 없을 때 과제 상세 조회(빈 리스트)")
+    void getAssignmentDetail_success_withoutFiles_it() throws Exception {
+        // given
+        var leader = studyMemberRepository.findByStudyIdAndUserId(study1.getId(), user1.getId()).orElseThrow();
+
+        var a = assignmentRepository.save(Assignment.builder()
+                .study(study1).creator(leader)
+                .title("no files").description("none")
+                .startAt(LocalDateTime.now().minusDays(1).withNano(0))
+                .dueAt(LocalDateTime.now().plusDays(2).withNano(0))
+                .build());
+
+        // when & then
+        mockMvc.perform(get("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId())
+                        .with(user(new com.study.focus.account.dto.CustomUserDetails(user1.getId()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(a.getId()))
+                .andExpect(jsonPath("$.files.length()").value(0))
+                .andExpect(jsonPath("$.submissions.length()").value(0));
+    }
+
+    // 실패: 스터디 멤버가 아닌 경우
+    @Test
+    @DisplayName("조회 실패: 스터디 멤버가 아님 (400 Bad Request)")
+    void getAssignmentDetail_fail_notStudyMember_it() throws Exception {
+        // given: study1에는 user2 미소속(세팅에 따라 다르면 보정)
+        var leader = studyMemberRepository.findByStudyIdAndUserId(study1.getId(), user1.getId()).orElseThrow();
+        var a = assignmentRepository.save(Assignment.builder()
+                .study(study1).creator(leader)
+                .title("t").description("d")
+                .startAt(LocalDateTime.now().minusDays(1).withNano(0))
+                .dueAt(LocalDateTime.now().plusDays(1).withNano(0))
+                .build());
+
+        // when & then
+        mockMvc.perform(get("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId())
+                        .with(user(new com.study.focus.account.dto.CustomUserDetails(user2.getId())))) // study1 미소속
+                .andExpect(status().isBadRequest());
+    }
+
+    // 실패: 인증 주체 없음(=userId 없음에 준함) → 보안 설정에 따라 401 Unauthorized 예상
+    @Test
+    @DisplayName("조회 실패: 인증되지 않은 사용자 (401 Unauthorized)")
+    void getAssignmentDetail_fail_unauthenticated_it() throws Exception {
+        var leader = studyMemberRepository.findByStudyIdAndUserId(study1.getId(), user1.getId()).orElseThrow();
+        var a = assignmentRepository.save(Assignment.builder()
+                .study(study1).creator(leader)
+                .title("t").description("d")
+                .startAt(LocalDateTime.now().minusDays(1).withNano(0))
+                .dueAt(LocalDateTime.now().plusDays(1).withNano(0))
+                .build());
+
+        mockMvc.perform(get("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId()))
+                .andExpect(status().isUnauthorized()); // 스프링 시큐리티 기본 정책 가정
     }
 
 }
