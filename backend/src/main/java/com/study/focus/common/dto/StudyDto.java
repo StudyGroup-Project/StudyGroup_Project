@@ -1,5 +1,6 @@
 package com.study.focus.common.dto;
 
+import com.study.focus.common.domain.Category;
 import com.study.focus.study.domain.StudyProfile;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,7 +14,7 @@ public class StudyDto {
     private int memberCount;
     private long bookmarkCount;
     private String bio;
-    private String category;
+    private Category category;
     private long trustScore;
     private boolean bookmarked;
 
@@ -29,7 +30,7 @@ public class StudyDto {
                 memberCount,
                 bookmarkCount,
                 profile.getBio(),
-                profile.getCategory().name(),
+                profile.getCategory(),
                 trustScore,
                 bookmarked
         );

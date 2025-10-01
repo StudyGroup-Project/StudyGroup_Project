@@ -8,18 +8,21 @@ import com.study.focus.application.domain.Application;
 import com.study.focus.application.domain.ApplicationStatus;
 import com.study.focus.application.repository.ApplicationRepository;
 import com.study.focus.common.domain.Address;
+import com.study.focus.common.dto.StudyDto;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
 import com.study.focus.common.exception.UserErrorCode;
 import com.study.focus.common.util.S3Uploader;
 import com.study.focus.study.domain.*;
-import com.study.focus.study.dto.CreateStudyRequest;
-import com.study.focus.study.dto.GetStudyProfileResponse;
-import com.study.focus.study.dto.UpdateStudyProfileRequest;
+import com.study.focus.study.dto.*;
+import com.study.focus.study.repository.BookmarkRepository;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyProfileRepository;
 import com.study.focus.study.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -172,15 +175,5 @@ public class StudyService {
     // 그룹 삭제
     public void deleteStudy(Long studyId) {
         // TODO: 스터디 삭제
-    }
-
-    // 스터디 그룹 검색 요청
-    public void searchStudies() {
-        // TODO: 스터디 검색
-    }
-
-    // 내 그룹 데이터 가져오기
-    public void getMyStudies(Long userId) {
-        // TODO: 내가 가입한 스터디 조회
     }
 }
