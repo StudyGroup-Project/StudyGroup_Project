@@ -2,10 +2,7 @@ package com.study.focus.assignment.service;
 
 import com.study.focus.assignment.domain.Assignment;
 import com.study.focus.assignment.domain.Submission;
-import com.study.focus.assignment.dto.CreateAssignmentRequest;
-import com.study.focus.assignment.dto.GetAssignmentDetailResponse;
-import com.study.focus.assignment.dto.GetAssignmentsResponse;
-import com.study.focus.assignment.dto.SubmissionListResponse;
+import com.study.focus.assignment.dto.*;
 import com.study.focus.assignment.repository.AssignmentRepository;
 import com.study.focus.assignment.repository.SubmissionRepository;
 import com.study.focus.common.domain.File;
@@ -112,13 +109,31 @@ public class AssignmentService {
 
     // 과제 수정하기
     @Transactional
-    public void updateAssignment(Long studyId, Long assignmentId, Long creatorId, CreateAssignmentRequest dto) {
+    public void updateAssignment(Long studyId, Long assignmentId, Long creatorId, UpdateAssignmentRequest dto) {
         StudyMember creator = studyMemberRepository.findByStudyIdAndUserId(studyId, creatorId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
         if(!creator.getRole().equals(StudyRole.LEADER)) throw new BusinessException(UserErrorCode.URL_FORBIDDEN);
         Assignment assignment = assignmentRepository.findByIdAndStudyId(assignmentId,studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
         if(!dto.getDueAt().isAfter(dto.getStartAt())) throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
 
         assignment.update(dto.getTitle(), dto.getDescription(), dto.getStartAt(), dto.getDueAt());
+
+        if(dto.getDeleteFileIds() !=null&& !dto.getDeleteFileIds().isEmpty())
+        {
+            List<File> deleteFiles = fileRepository.findAllById(dto.getDeleteFileIds());
+            deleteFiles.forEach(File::deleteAssignmentFile);
+            fileRepository.saveAll(deleteFiles);
+            fileRepository.flush();
+        }
+
+        if(dto.getFiles() != null && !dto.getFiles().isEmpty()){
+            List<FileDetailDto> list = dto.getFiles().stream().map(s3Uploader::makeMetaData).toList();
+            IntStream.range(0,list.size())
+                    .forEach(index ->fileRepository.save(
+                            File.ofAssignment(assignment,list.get(index))
+                    ));
+            List<String> keys = list.stream().map(FileDetailDto::getKey).toList();
+            s3Uploader.uploadFiles(keys,dto.getFiles());
+        }
     }
 
     // 과제 삭제하기

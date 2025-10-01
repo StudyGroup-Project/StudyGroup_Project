@@ -4,8 +4,10 @@ import com.study.focus.account.dto.CustomUserDetails;
 import com.study.focus.assignment.dto.CreateAssignmentRequest;
 import com.study.focus.assignment.dto.GetAssignmentDetailResponse;
 import com.study.focus.assignment.dto.GetAssignmentsResponse;
+import com.study.focus.assignment.dto.UpdateAssignmentRequest;
 import com.study.focus.assignment.service.AssignmentService;
 import com.study.focus.study.domain.StudyMember;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -34,7 +36,7 @@ public class AssignmentController {
     // 과제 생성하기
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> createAssignment(@PathVariable Long studyId,
-                                                 @ModelAttribute CreateAssignmentRequest dto,
+                                                 @ModelAttribute @Valid CreateAssignmentRequest dto,
                                                  @AuthenticationPrincipal CustomUserDetails user)
     {
         Long creator = user.getUserId();
@@ -56,7 +58,7 @@ public class AssignmentController {
     @PutMapping(value = "/{assignmentId}",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> updateAssignment(@PathVariable Long studyId,
                                  @PathVariable Long assignmentId,
-                                 @ModelAttribute CreateAssignmentRequest dto,
+                                 @ModelAttribute @Valid UpdateAssignmentRequest dto,
                                  @AuthenticationPrincipal CustomUserDetails user) {
         Long creator = user.getUserId();
         assignmentService.updateAssignment(studyId,assignmentId,creator,dto);
