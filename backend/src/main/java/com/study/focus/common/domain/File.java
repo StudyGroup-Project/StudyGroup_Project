@@ -23,7 +23,6 @@ import org.hibernate.annotations.Check;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Builder//스케줄러 테스트를 위한 builder추가
 public class File extends BaseCreatedEntity {
 
     @Id

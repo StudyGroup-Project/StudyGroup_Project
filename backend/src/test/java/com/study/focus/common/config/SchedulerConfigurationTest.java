@@ -5,7 +5,7 @@ import com.study.focus.account.repository.UserRepository;
 import com.study.focus.announcement.domain.Announcement;
 import com.study.focus.announcement.repository.AnnouncementRepository;
 import com.study.focus.common.domain.File;
-import com.study.focus.common.exception.BusinessException;
+import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.util.S3Uploader;
 import com.study.focus.config.S3TestConfig;
@@ -23,11 +23,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -80,34 +75,32 @@ class FileCleanupSchedulerTest {
 
 
         //삭제 예약된 파일
-        fileToDelete1 = fileRepository.save(File.builder()
-                .fileName("testName")
-                .fileKey("Testkey1")
-                .mimeType("TestType")
-                .fileSize(30L)
-                .isDeleted(true)
-                .announcement(announcement)
-                .build()
+        fileToDelete1 = fileRepository.save(
+                File.ofAnnouncement(announcement, FileDetailDto.builder().
+                originalFileName("originalName")
+                .key("Testkey1")
+                .contentType("TestType")
+                .fileSize(30L).build()));
+
+        fileToDelete1.deleteAnnouncementFile();
+        fileToDelete2 = fileRepository.save(File.ofAnnouncement(announcement, FileDetailDto.builder().
+                originalFileName("originalName")
+                .key("Testkey2")
+                .contentType("TestType")
+                .fileSize(30L).build())
         );
-        fileToDelete2 = fileRepository.save(File.builder()
-                .fileName("testName")
-                .fileKey("Testkey2")
-                .mimeType("TestType")
-                .fileSize(30L)
-                .isDeleted(true)
-                .announcement(announcement)
-                .build()
-        );
+        fileToDelete2.deleteAnnouncementFile();
+
         //삭제 예약되지 않은 파일
-        fileToKeep = fileRepository.save(File.builder()
-                .fileName("testName")
-                .fileKey("Testkey3")
-                .mimeType("TestType")
-                .fileSize(30L)
-                .isDeleted(false)
-                .announcement(announcement)
-                .build()
-        );
+        fileToKeep = fileRepository.save(
+                File.ofAnnouncement(announcement, FileDetailDto.builder().
+                        originalFileName("originalName")
+                        .key("Testkey3")
+                        .contentType("TestType")
+                        .fileSize(30L).build()));
+        //삭제 데이터 반영
+        fileRepository.save(fileToDelete1);
+        fileRepository.save(fileToDelete2);
     }
 
     @Test
