@@ -1,9 +1,8 @@
 package com.study.focus.assignment.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import com.study.focus.common.dto.AssignmentFileResponse;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.multipart.MultipartFile;
@@ -11,23 +10,24 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Getter
 @Setter
-@NoArgsConstructor
-public class CreateAssignmentRequest {
-    @NotBlank
+@Getter
+@AllArgsConstructor
+public class GetAssignmentDetailResponse {
+    Long id;
     String title;
-
-    @NotBlank
     String description;
 
-    List<MultipartFile> files;
-
-    @NotNull
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     LocalDateTime startAt;
 
-    @NotNull
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     LocalDateTime dueAt;
+
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    LocalDateTime CreateAt;
+
+    List<AssignmentFileResponse> files;
+
+    List<SubmissionListResponse> submissions;
 }

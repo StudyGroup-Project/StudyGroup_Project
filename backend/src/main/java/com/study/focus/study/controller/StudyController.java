@@ -3,6 +3,7 @@ package com.study.focus.study.controller;
 import com.study.focus.account.dto.CustomUserDetails;
 import com.study.focus.study.dto.CreateStudyRequest;
 import com.study.focus.study.dto.GetStudyProfileResponse;
+import com.study.focus.study.dto.StudyHomeResponse;
 import com.study.focus.study.dto.UpdateStudyProfileRequest;
 import com.study.focus.study.service.StudyService;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +51,13 @@ public class StudyController {
         Long requestUserId = user.getUserId();
         studyService.updateStudyProfile(studyId, requestUserId, request);
         return ResponseEntity.ok().build();
+    }
+
+    //스터디 메인 데이터 조회하기
+    @GetMapping("/{studyId}/home")
+    public ResponseEntity<StudyHomeResponse> getStudyHome(@PathVariable Long studyId) {
+        StudyHomeResponse response = studyService.getStudyHome(studyId);
+        return ResponseEntity.ok(response);
     }
 
     // 그룹 삭제

@@ -11,14 +11,12 @@ import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.repository.UserRepository;
 import com.study.focus.application.domain.Application;
 import com.study.focus.application.domain.ApplicationStatus;
+import com.study.focus.application.dto.HandleApplicationRequest;
 import com.study.focus.application.dto.SubmitApplicationRequest;
 import com.study.focus.application.repository.ApplicationRepository;
 import com.study.focus.common.domain.Address;
 import com.study.focus.common.domain.Category;
-import com.study.focus.study.domain.RecruitStatus;
-import com.study.focus.study.domain.Study;
-import com.study.focus.study.domain.StudyMember;
-import com.study.focus.study.domain.StudyRole;
+import com.study.focus.study.domain.*;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -35,6 +33,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -42,6 +42,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 
 @SpringBootTest
@@ -78,7 +79,7 @@ public class ApplicationIntegrationTest {
         testUser = userRepository.save(User.builder().build());
         leader = userRepository.save(User.builder().build());
         applicant = userRepository.save(User.builder().build());
-        testStudy = studyRepository.save(Study.builder().recruitStatus(RecruitStatus.OPEN).build());
+        testStudy = studyRepository.save(Study.builder().maxMemberCount(10).recruitStatus(RecruitStatus.OPEN).build());
         studyMemberRepository.save(StudyMember.builder()
                 .user(leader)
                 .study(testStudy)
@@ -308,6 +309,123 @@ public class ApplicationIntegrationTest {
                         .with(user(new CustomUserDetails(leader.getId())))
                         .with(csrf()))
                 .andExpect(status().isBadRequest()); // or isNotFound(), depending on your exception handling
+    }
+
+    @Test
+    @DisplayName("지원서 수락 - 성공")
+    void handleApplication_Accept_Success() throws Exception {
+        // given: 'applicant'가 'testStudy'에 제출한 지원서를 생성
+        Application application = applicationRepository.save(Application.builder()
+                .study(testStudy)
+                .applicant(applicant)
+                .status(ApplicationStatus.SUBMITTED)
+                .content("지원합니다.")
+                .build());
+
+        HandleApplicationRequest request = new HandleApplicationRequest(ApplicationStatus.ACCEPTED);
+
+        // when: 방장 권한으로 '수락' 요청
+        mockMvc.perform(put("/api/studies/{studyId}/applications/{applicationId}", testStudy.getId(), application.getId())
+                        .with(user(new CustomUserDetails(leader.getId())))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        // then: DB 상태 검증
+        // 1. 지원서 상태가 'ACCEPTED'로 변경되었는지 확인
+        Application processedApplication = applicationRepository.findById(application.getId()).orElseThrow();
+        assertThat(processedApplication.getStatus()).isEqualTo(ApplicationStatus.ACCEPTED);
+
+        // 2. 지원자가 스터디 멤버로 추가되었는지 안정적인 방법으로 확인
+        List<StudyMember> allMembers = studyMemberRepository.findAll();
+        boolean isApplicantNowMember = allMembers.stream()
+                .anyMatch(member -> member.getUser().getId().equals(applicant.getId()) &&
+                        member.getStudy().getId().equals(testStudy.getId()));
+        assertThat(isApplicantNowMember).isTrue();
+    }
+
+    @Test
+    @DisplayName("지원서 거절 - 성공")
+    void handleApplication_Reject_Success() throws Exception {
+        // given
+        Application application = applicationRepository.save(Application.builder()
+                .study(testStudy)
+                .applicant(applicant)
+                .status(ApplicationStatus.SUBMITTED)
+                .content("지원서를 냅니다.")
+                .build());
+
+        HandleApplicationRequest request = new HandleApplicationRequest(ApplicationStatus.REJECTED);
+
+        // when
+        mockMvc.perform(put("/api/studies/{studyId}/applications/{applicationId}", testStudy.getId(), application.getId())
+                        .with(user(new CustomUserDetails(leader.getId())))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        // then
+        // 1. 지원서 상태가 'REJECTED'로 변경되었는지 확인
+        Application processedApplication = applicationRepository.findById(application.getId()).orElseThrow();
+        assertThat(processedApplication.getStatus()).isEqualTo(ApplicationStatus.REJECTED);
+
+        // 2. 지원자가 스터디 멤버로 추가되지 않았는지 확인
+        List<StudyMember> allMembers = studyMemberRepository.findAll();
+        boolean isApplicantNowMember = allMembers.stream()
+                .anyMatch(member -> member.getUser().getId().equals(applicant.getId()) &&
+                        member.getStudy().getId().equals(testStudy.getId()));
+        assertThat(isApplicantNowMember).isFalse();
+    }
+
+    // ... [방장이 아닌 경우], [정원 초과] 실패 테스트 케이스는 이전과 동일 ...
+
+    @Test
+    @DisplayName("지원서 처리 실패 - 방장이 아닌 경우")
+    void handleApplication_Fail_NotLeader() throws Exception {
+        // given
+        Application application = applicationRepository.save(Application.builder()
+                .study(testStudy)
+                .applicant(applicant)
+                .status(ApplicationStatus.SUBMITTED)
+                .content("지원서를 합니다.")
+                .build());
+
+        HandleApplicationRequest request = new HandleApplicationRequest(ApplicationStatus.ACCEPTED);
+
+        // when & then
+        mockMvc.perform(put("/api/studies/{studyId}/applications/{applicationId}", testStudy.getId(), application.getId())
+                        .with(user(new CustomUserDetails(testUser.getId()))) // 방장이 아닌 사용자
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("지원서 수락 실패 - 정원이 가득 찬 경우")
+    void handleApplication_Accept_Fail_StudyIsFull() throws Exception {
+        // given: 스터디 정원을 현재 멤버 수(1명)와 같게 설정
+        testStudy.updateMaxMemberCount(1);
+        studyRepository.save(testStudy);
+
+        Application application = applicationRepository.save(Application.builder()
+                .study(testStudy)
+                .applicant(applicant)
+                .status(ApplicationStatus.SUBMITTED)
+                .content("지원해줘요")
+                .build());
+
+        HandleApplicationRequest request = new HandleApplicationRequest(ApplicationStatus.ACCEPTED);
+
+        // when & then
+        mockMvc.perform(put("/api/studies/{studyId}/applications/{applicationId}", testStudy.getId(), application.getId())
+                        .with(user(new CustomUserDetails(leader.getId())))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 
 }
