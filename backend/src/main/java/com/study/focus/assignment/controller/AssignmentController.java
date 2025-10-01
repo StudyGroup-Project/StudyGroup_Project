@@ -2,9 +2,12 @@ package com.study.focus.assignment.controller;
 
 import com.study.focus.account.dto.CustomUserDetails;
 import com.study.focus.assignment.dto.CreateAssignmentRequest;
+import com.study.focus.assignment.dto.GetAssignmentDetailResponse;
 import com.study.focus.assignment.dto.GetAssignmentsResponse;
+import com.study.focus.assignment.dto.UpdateAssignmentRequest;
 import com.study.focus.assignment.service.AssignmentService;
 import com.study.focus.study.domain.StudyMember;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +36,7 @@ public class AssignmentController {
     // 과제 생성하기
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> createAssignment(@PathVariable Long studyId,
-                                                 @ModelAttribute CreateAssignmentRequest dto,
+                                                 @ModelAttribute @Valid CreateAssignmentRequest dto,
                                                  @AuthenticationPrincipal CustomUserDetails user)
     {
         Long creator = user.getUserId();
@@ -44,11 +47,23 @@ public class AssignmentController {
 
     // 과제 상세 내용 가져오기
     @GetMapping("/{assignmentId}")
-    public void getAssignmentDetail(@PathVariable Long studyId, @PathVariable Long assignmentId) {}
+    public ResponseEntity<GetAssignmentDetailResponse> getAssignmentDetail(@PathVariable Long studyId, @PathVariable Long assignmentId,
+                                                                           @AuthenticationPrincipal CustomUserDetails user)
+    {
+        Long userId = user.getUserId();
+        return ResponseEntity.ok(assignmentService.getAssignmentDetail(studyId,assignmentId,userId));
+    }
 
     // 과제 수정하기
-    @PutMapping("/{assignmentId}")
-    public void updateAssignment(@PathVariable Long studyId, @PathVariable Long assignmentId) {}
+    @PutMapping(value = "/{assignmentId}",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> updateAssignment(@PathVariable Long studyId,
+                                 @PathVariable Long assignmentId,
+                                 @ModelAttribute @Valid UpdateAssignmentRequest dto,
+                                 @AuthenticationPrincipal CustomUserDetails user) {
+        Long creator = user.getUserId();
+        assignmentService.updateAssignment(studyId,assignmentId,creator,dto);
+        return ResponseEntity.ok().build();
+    }
 
     // 과제 삭제하기
     @DeleteMapping("/{assignmentId}")
