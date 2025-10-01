@@ -1,5 +1,6 @@
 package com.study.focus.announcement;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.study.focus.account.domain.Job;
 import com.study.focus.account.domain.User;
 import com.study.focus.account.domain.UserProfile;
@@ -8,6 +9,7 @@ import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.repository.UserRepository;
 import com.study.focus.announcement.domain.Announcement;
 import com.study.focus.announcement.domain.Comment;
+import com.study.focus.announcement.dto.CreateCommentRequest;
 import com.study.focus.announcement.repository.AnnouncementRepository;
 import com.study.focus.announcement.repository.CommentRepository;
 import com.study.focus.announcement.service.AnnouncementService;
@@ -28,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -75,6 +78,9 @@ public class AnnouncementIntegrationTest {
 
     @Autowired
     private CommentRepository commentRepository;
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     private Study study1;
     private Study study2;
@@ -401,6 +407,83 @@ public class AnnouncementIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    @DisplayName("공지에 댓글 달기 성공")
+    void addComment_success() throws Exception {
+
+        User user = userRepository.save(User.builder().trustScore(30L).lastLoginAt(LocalDateTime.now()).build());
+
+        //study Member 및 공지 생성
+        StudyMember studyMember = studyMemberRepository.save(StudyMember.builder().user(user).study(study1).exitedAt(LocalDateTime.now().plusMonths(1)).
+                role(StudyRole.LEADER).status(StudyMemberStatus.JOINED).build());
+
+        Announcement announcement = announcementRepository.
+                save(Announcement.builder().study(study1).author(studyMember).title("TestTitle1").build());
+
+        CreateCommentRequest reqeust = CreateCommentRequest.builder()
+                .content("test").build();
+        String requestJson = objectMapper.writeValueAsString(reqeust);
+
+
+        mockMvc.perform(post("/api/studies/"+ study1.getId()+"/announcements/" +
+                announcement.getId()+"/comments").
+                with(user(new CustomUserDetails(user.getId())))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson)).andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("공지에 댓글 달기 실패 : 공지가 없는 경우")
+    void addComment_Fail_AnnouncementNotFound() throws Exception {
+
+        User user = userRepository.save(User.builder().trustScore(30L).lastLoginAt(LocalDateTime.now()).build());
+
+        //study Member 및 공지 생성
+        StudyMember studyMember = studyMemberRepository.save(StudyMember.builder().user(user).study(study1).exitedAt(LocalDateTime.now().plusMonths(1)).
+                role(StudyRole.LEADER).status(StudyMemberStatus.JOINED).build());
+
+        Announcement announcement = announcementRepository.
+                save(Announcement.builder().study(study1).author(studyMember).title("TestTitle1").build());
+
+        CreateCommentRequest reqeust = CreateCommentRequest.builder()
+                .content("test").build();
+        String requestJson = objectMapper.writeValueAsString(reqeust);
+
+
+        mockMvc.perform(post("/api/studies/"+ study1.getId()+"/announcements/" +
+                100L+"/comments").
+                with(user(new CustomUserDetails(user.getId())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson)).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("공지에 댓글 달기 실패 - 스터디 멤버가 아닌 경우")
+    void addComment_Fail_isNotMember() throws Exception {
+
+        User user = userRepository.save(User.builder().trustScore(30L).lastLoginAt(LocalDateTime.now()).build());
+
+        //study Member 및 공지 생성
+        StudyMember studyMember = studyMemberRepository.save(StudyMember.builder().user(user).study(study1).exitedAt(LocalDateTime.now().plusMonths(1)).
+                role(StudyRole.LEADER).status(StudyMemberStatus.JOINED).build());
+
+        Announcement announcement = announcementRepository.
+                save(Announcement.builder().study(study1).author(studyMember).title("TestTitle1").build());
+
+        CreateCommentRequest reqeust = CreateCommentRequest.builder()
+                .content("test").build();
+        String requestJson = objectMapper.writeValueAsString(reqeust);
+
+
+        mockMvc.perform(post("/api/studies/"+ 100L+"/announcements/" +
+                announcement.getId()+"/comments").
+                with(user(new CustomUserDetails(user.getId())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson)).andExpect(status().isBadRequest());
+    }
 
 
 

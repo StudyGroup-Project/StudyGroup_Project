@@ -150,6 +150,27 @@ public class AnnouncementService {
                 .comments(announcementComments).files(announcementFiles).build();
     }
 
+
+
+    // 공지 상세 화면 댓글 작성
+    @Transactional
+    public void addComment(Long studyId, Long announcementId,Long userId,
+                           CreateCommentRequest commentRequest) {
+        //1. 스터디 멤버 검증
+        StudyMember userStudyMember = memberValidation(studyId, userId);
+
+        //2.공지 가져오기
+        Announcement announcement = findAnnouncement(studyId, announcementId);
+
+        //3. 댓글 저장
+        commentRepository.save(
+                Comment.builder().announcement(announcement)
+                .commenter(userStudyMember)
+                .content(commentRequest.getContent())
+                .build());
+    }
+
+
     @NotNull
     private List<AnnouncementComments> makeCommentToAnnouncementComment(List<Comment> comments) {
         return comments.stream().map(c -> {

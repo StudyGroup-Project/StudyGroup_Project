@@ -3,6 +3,7 @@ package com.study.focus.announcement.controller;
 
 import com.study.focus.account.dto.CustomUserDetails;
 import com.study.focus.announcement.dto.AnnouncementUpdateDto;
+import com.study.focus.announcement.dto.CreateCommentRequest;
 import com.study.focus.announcement.dto.GetAnnouncementDetailResponse;
 import com.study.focus.announcement.dto.GetAnnouncementsResponse;
 import com.study.focus.announcement.service.AnnouncementService;
@@ -75,7 +76,8 @@ public class AnnouncementController {
 
     // 공지 상세 데이터 가져오기
     @GetMapping("/{announcementId}")
-    public ResponseEntity<GetAnnouncementDetailResponse> getAnnouncementDetail(@PathVariable Long studyId, @PathVariable Long announcementId,
+    public ResponseEntity<GetAnnouncementDetailResponse> getAnnouncementDetail(@PathVariable Long studyId,
+                                                                               @PathVariable Long announcementId,
                                                                                @AuthenticationPrincipal CustomUserDetails user) {
         log.info("Get announcement Detail Data for studyId: {} , for announcementId: {}", studyId,announcementId);
         Long userId = user.getUserId();
@@ -87,5 +89,12 @@ public class AnnouncementController {
 
     // 공지 상세 화면 댓글 작성
     @PostMapping("/{announcementId}/comments")
-    public void addComment(@PathVariable Long studyId, @PathVariable Long announcementId) {}
+    public ResponseEntity<Void> addComment(@PathVariable Long studyId, @PathVariable Long announcementId,
+                           @RequestBody CreateCommentRequest commentRequest,
+                           @AuthenticationPrincipal CustomUserDetails user) {
+        log.info("add Comment at Announcement for studyId: {} , for announcementId: {}", studyId,announcementId);
+        Long userId = user.getUserId();
+        announcementService.addComment(studyId,announcementId,userId,commentRequest);
+        return new ResponseEntity<>( HttpStatus.CREATED);
+    }
 }

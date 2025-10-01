@@ -7,6 +7,7 @@ import com.study.focus.account.service.UserService;
 import com.study.focus.announcement.domain.Announcement;
 import com.study.focus.announcement.domain.Comment;
 import com.study.focus.announcement.dto.AnnouncementUpdateDto;
+import com.study.focus.announcement.dto.CreateCommentRequest;
 import com.study.focus.announcement.dto.GetAnnouncementDetailResponse;
 import com.study.focus.announcement.dto.GetAnnouncementsResponse;
 import com.study.focus.announcement.repository.AnnouncementRepository;
@@ -23,6 +24,7 @@ import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
 import com.study.focus.study.domain.StudyRole;
 import com.study.focus.study.repository.StudyMemberRepository;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -453,6 +455,7 @@ class AnnouncementUnitTest {
         assertThat(result.getFiles()).hasSize(1);
         then(userService).should(atLeastOnce()).getMyProfile(any());
         then(s3uploader).should(times(1)).getUrlFile(file.getFileKey());
+
     }
 
 
@@ -485,6 +488,105 @@ class AnnouncementUnitTest {
 
         assertThatThrownBy(() -> announcementService.getAnnouncementDetail(studyId, announcementId, userId))
                 .isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    @DisplayName("공지에 댓글 달기 성공")
+    void addComment_success(){
+
+        //given
+        Long studyId = 1L;
+        Long userId = 1L;
+        Long announcementId = 10L;
+
+        StudyMember member = StudyMember.builder().id(userId).user(testUser).study(testStudy).role(StudyRole.MEMBER).build();
+        Announcement announcement = Announcement.builder().id(announcementId).study(testStudy).
+                author(member).
+                title("공지 제목").
+                description("공지 내용").build();
+        Comment comment = Comment.builder().id(100L).commenter(member).content("댓글 내용").
+                announcement(announcement).build();
+
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId,userId))
+                .willReturn(Optional.of(member));
+        given(announcementRepo.findByIdAndStudyId(announcementId,studyId))
+                .willReturn(Optional.of(announcement));
+
+        given(commentRepository.save(any())).willReturn(comment);
+
+
+        //when
+        announcementService.addComment(studyId,announcementId,userId,
+                CreateCommentRequest.builder().content("test").build());
+
+
+        //then
+        then(studyMemberRepository).should(times(1)).findByStudyIdAndUserId(studyId,userId);
+        then(announcementRepo).should(times(1)).findByIdAndStudyId(announcementId,studyId) ;
+        then(commentRepository).should(times(1)).save(any(Comment.class));
+    }
+
+    @Test
+    @DisplayName("공지에 댓글 달기 실패 - 스터디 멤버가 아닌 경우")
+    void addComment_Fail_isNotMember(){
+
+        //given
+        Long studyId = 1L;
+        Long userId = 1L;
+        Long announcementId = 10L;
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId,userId))
+                .willReturn(Optional.empty());
+        //when
+        Assertions.assertThatThrownBy(() -> {
+            announcementService.addComment(studyId,announcementId,userId,
+                    CreateCommentRequest.builder().content("test").build());
+        }).isInstanceOf(BusinessException.class);
+
+
+        //then
+        then(studyMemberRepository).should(times(1)).findByStudyIdAndUserId(studyId,userId);
+        then(announcementRepo).should(times(0)).findByIdAndStudyId(announcementId,studyId) ;
+        then(commentRepository).should(times(0)).save(any(Comment.class));
+    }
+
+    @Test
+    @DisplayName("공지에 댓글 달기 실패 : 공지가 없는 경우")
+    void addComment_Fail_AnnouncementNotFound(){
+
+        //given
+        Long studyId = 1L;
+        Long userId = 1L;
+        Long announcementId = 10L;
+
+        StudyMember member = StudyMember.builder().id(userId).user(testUser).study(testStudy).role(StudyRole.MEMBER).build();
+        Announcement announcement = Announcement.builder().id(announcementId).study(testStudy).
+                author(member).
+                title("공지 제목").
+                description("공지 내용").build();
+        Comment comment = Comment.builder().id(100L).commenter(member).content("댓글 내용").
+                announcement(announcement).build();
+
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId,userId))
+                .willReturn(Optional.of(member));
+        given(announcementRepo.findByIdAndStudyId(announcementId,studyId))
+                .willReturn(Optional.empty());
+
+
+        //when
+        Assertions.assertThatThrownBy(() -> {
+            announcementService.addComment(studyId,announcementId,userId,
+                    CreateCommentRequest.builder().content("test").build());
+        }).isInstanceOf(BusinessException.class);
+
+
+
+        //then
+        then(studyMemberRepository).should(times(1)).findByStudyIdAndUserId(studyId,userId);
+        then(announcementRepo).should(times(1)).findByIdAndStudyId(announcementId,studyId) ;
+        then(commentRepository).should(times(0)).save(any(Comment.class));
     }
 
 
