@@ -15,6 +15,7 @@ import com.study.focus.common.util.S3Uploader;
 import com.study.focus.study.domain.*;
 import com.study.focus.study.dto.CreateStudyRequest;
 import com.study.focus.study.dto.GetStudyProfileResponse;
+import com.study.focus.study.dto.UpdateStudyProfileRequest;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyProfileRepository;
 import com.study.focus.study.repository.StudyRepository;
@@ -137,8 +138,35 @@ public class StudyService {
     }
 
     // 그룹 프로필 정보 수정하기
-    public void updateStudyProfile(Long studyId) {
-        // TODO: 스터디 프로필 수정
+    public void updateStudyProfile(Long studyId, Long requestUserId, UpdateStudyProfileRequest request) {
+
+        //방장 권한
+        StudyMember leaderMember = studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER)
+                .orElseThrow(()-> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+        if(!leaderMember.getUser().getId().equals(requestUserId)){
+            throw new BusinessException(UserErrorCode.URL_FORBIDDEN);
+        }
+
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
+        StudyProfile studyProfile = studyProfileRepository.findByStudy(study)
+                .orElseThrow(()-> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
+
+        // 최대 멤버는 현재 참여중인 멤버보다 적으면 안됨.
+        int currentMemberCount = (int) studyMemberRepository.countByStudyIdAndStatus(studyId, StudyMemberStatus.JOINED);
+        if(request.getMaxMemberCount() < currentMemberCount){
+            throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
+        }
+
+        study.updateMaxMemberCount(request.getMaxMemberCount());
+
+        studyProfile.update(
+                request.getTitle(),
+                request.getCategory(),
+                new Address(request.getProvince(), request.getDistrict()),
+                request.getBio(),
+                request.getDescription()
+        );
     }
 
     // 그룹 삭제

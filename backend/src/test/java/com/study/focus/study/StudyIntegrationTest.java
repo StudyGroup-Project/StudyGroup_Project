@@ -1,5 +1,8 @@
 package com.study.focus.study;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.study.focus.account.domain.Job;
@@ -18,6 +21,7 @@ import com.study.focus.common.util.S3Uploader;
 import com.study.focus.study.domain.*;
 import com.study.focus.study.dto.CreateStudyRequest;
 import com.study.focus.study.dto.GetStudyProfileResponse;
+import com.study.focus.study.dto.UpdateStudyProfileRequest;
 import com.study.focus.study.repository.BookmarkRepository;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyProfileRepository;
@@ -39,8 +43,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -316,6 +318,75 @@ class StudyIntegrationTest {
                         .with(user(new CustomUserDetails(testUser.getId())))
                         .with(csrf()))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("그룹 프로필 정보 수정 - 성공")
+    void updateStudyProfile_Success() throws Exception {
+        // given: 방장이 프로필 수정을 요청할 데이터
+        final UpdateStudyProfileRequest request = new UpdateStudyProfileRequest(
+                "JPA 마스터 스터디", // title
+                20,                 // maxMemberCount
+                Category.DESIGN,    // category
+                "서울특별시",         // province
+                "강남구",             // district
+                "JPA 전문가가 되기 위한 스터디", // bio
+                "더 심도 있는 학습을 진행합니다." // description
+        );
+
+        // when: 방장 권한으로 PUT 요청
+        mockMvc.perform(put("/api/studies/{studyId}", testStudy.getId())
+                        .with(user(new CustomUserDetails(leader.getId()))) // 방장으로 인증
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk()); // then: 200 OK 응답을 기대
+
+        // then: DB에서 직접 데이터를 다시 조회하여 변경 사항을 검증
+        Study updatedStudy = studyRepository.findById(testStudy.getId()).orElseThrow();
+        StudyProfile updatedProfile = studyProfileRepository.findByStudy(testStudy).orElseThrow();
+
+        assertThat(updatedStudy.getMaxMemberCount()).isEqualTo(request.getMaxMemberCount());
+        assertThat(updatedProfile.getTitle()).isEqualTo(request.getTitle());
+        assertThat(updatedProfile.getCategory()).isEqualTo(request.getCategory());
+        assertThat(updatedProfile.getAddress().getProvince()).isEqualTo(request.getProvince());
+        assertThat(updatedProfile.getBio()).isEqualTo(request.getBio());
+        assertThat(updatedProfile.getDescription()).isEqualTo(request.getDescription());
+    }
+
+    @Test
+    @DisplayName("그룹 프로필 정보 수정 실패 - 방장이 아닌 경우")
+    void updateStudyProfile_Fail_NotLeader() throws Exception {
+        // given: 방장이 아닌 일반 사용자와 요청 데이터
+        final User notLeader = userRepository.save(User.builder().build());
+        final UpdateStudyProfileRequest request = new UpdateStudyProfileRequest(
+                "수정 시도", 10, Category.IT, "서울", "강남", "소개", "설명"
+        );
+
+        // when: 방장이 아닌 사용자로 PUT 요청
+        mockMvc.perform(put("/api/studies/" + testStudy.getId())
+                        .with(user(new CustomUserDetails(notLeader.getId()))) // 방장이 아닌 사용자로 인증
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden()); // then: 403 Forbidden 응답을 기대
+    }
+
+    @Test
+    @DisplayName("그룹 프로필 정보 수정 실패 - 최대 인원 수가 현재 인원보다 적은 경우")
+    void updateStudyProfile_Fail_MaxMemberCountTooLow() throws Exception {
+        // given: 현재 멤버(leader)는 1명. 최대 인원을 0으로 수정 요청
+        final UpdateStudyProfileRequest request = new UpdateStudyProfileRequest(
+                "수정 시도", 0, Category.IT, "서울", "강남", "소개", "설명"
+        );
+
+        // when: 방장 권한으로 PUT 요청
+        mockMvc.perform(put("/api/studies/" + testStudy.getId())
+                        .with(user(new CustomUserDetails(leader.getId()))) // 방장으로 인증
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest()); // then: 400 Bad Request 응답을 기대
     }
 
 }
