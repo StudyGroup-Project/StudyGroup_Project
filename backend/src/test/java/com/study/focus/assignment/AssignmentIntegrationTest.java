@@ -20,10 +20,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -303,4 +305,229 @@ class AssignmentIntegrationTest {
 
         Assertions.assertThat(assignmentRepository.count()).isEqualTo(before);
     }
+
+    private MockMultipartHttpServletRequestBuilder putMultipart(String urlTemplate, Object... uriVars) {
+        return multipart(HttpMethod.PUT, urlTemplate, uriVars);
+    }
+
+    @Test
+    @DisplayName("수정 성공: 파일 변화 없이 과제 수정")
+    void updateAssignment_success_withoutFileChanges() throws Exception {
+        // given
+        var leader = studyMemberRepository.findByStudyIdAndUserId(study1.getId(), user1.getId()).orElseThrow();
+        var a = assignmentRepository.save(Assignment.builder()
+                .study(study1).creator(leader)
+                .title("old").description("old")
+                .startAt(LocalDateTime.now().minusDays(1).withNano(0))
+                .dueAt(LocalDateTime.now().plusDays(5).withNano(0))
+                .build());
+
+        LocalDateTime newStart = LocalDateTime.now().plusDays(1).withNano(0);
+        LocalDateTime newDue = newStart.plusDays(3);
+
+        // when & then
+        mockMvc.perform(
+                        putMultipart("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId())
+                                .param("title", "new title")
+                                .param("description", "new desc")
+                                .param("startAt", iso(newStart))
+                                .param("dueAt", iso(newDue))
+                                .with(user(new CustomUserDetails(user1.getId())))
+                                .with(csrf())
+                )
+                .andExpect(status().isOk());
+
+        // verify DB changed
+        var updated = assignmentRepository.findById(a.getId()).orElseThrow();
+        Assertions.assertThat(updated.getTitle()).isEqualTo("new title");
+        Assertions.assertThat(updated.getDescription()).isEqualTo("new desc");
+        Assertions.assertThat(updated.getStartAt().withNano(0)).isEqualTo(newStart);
+        Assertions.assertThat(updated.getDueAt().withNano(0)).isEqualTo(newDue);
+
+        verify(s3Uploader, never()).uploadFiles(anyList(), anyList());
+    }
+
+    @Test
+    @DisplayName("수정 성공: 파일 삭제 + 파일 추가가 함께 있는 과제 수정")
+    void updateAssignment_success_withFileDeleteAndAdd() throws Exception {
+        // given
+        var leader = studyMemberRepository.findByStudyIdAndUserId(study1.getId(), user1.getId()).orElseThrow();
+        var a = assignmentRepository.save(Assignment.builder()
+                .study(study1).creator(leader)
+                .title("t").description("d")
+                .startAt(LocalDateTime.now().minusDays(1).withNano(0))
+                .dueAt(LocalDateTime.now().plusDays(5).withNano(0))
+                .build());
+
+        // 기존 첨부 2개 심기 (삭제 대상)
+        var meta1 = new FileDetailDto("a.pdf", "key-a", "application/pdf", 10);
+        var meta2 = new FileDetailDto("b.jpg", "key-b", "image/jpeg", 20);
+        var f1 = fileRepository.save(com.study.focus.common.domain.File.ofAssignment(a, meta1));
+        var f2 = fileRepository.save(com.study.focus.common.domain.File.ofAssignment(a, meta2));
+
+        long beforeFiles = fileRepository.count();
+
+        // 추가할 파일 2개
+        var up1 = new MockMultipartFile("files", "c.pdf", "application/pdf", "C".getBytes());
+        var up2 = new MockMultipartFile("files", "d.png", "image/png", "D".getBytes());
+
+        // S3 메타 생성/업로드 목
+        when(s3Uploader.makeMetaData(any())).thenAnswer(inv -> {
+            MockMultipartFile f = inv.getArgument(0);
+            return new FileDetailDto(f.getOriginalFilename(), "key-" + f.getOriginalFilename(), f.getContentType(), f.getSize());
+        });
+        doNothing().when(s3Uploader).uploadFiles(anyList(), anyList());
+
+        LocalDateTime newStart = LocalDateTime.now().plusDays(1).withNano(0);
+        LocalDateTime newDue = newStart.plusDays(7);
+
+        // when & then
+        mockMvc.perform(
+                        putMultipart("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId())
+                                .file(up1)
+                                .file(up2)
+                                .param("title", "t2")
+                                .param("description", "d2")
+                                .param("startAt", iso(newStart))
+                                .param("dueAt", iso(newDue))
+                                .param("deleteFileIds", String.valueOf(f1.getId()), String.valueOf(f2.getId()))
+                                .with(user(new CustomUserDetails(user1.getId())))
+                                .with(csrf())
+                )
+                .andExpect(status().isOk());
+
+        // 파일 개수: 소프트 삭제 가정 → 총 행수는 +2(추가분) 증가
+        Assertions.assertThat(fileRepository.count()).isEqualTo(beforeFiles + 2);
+        verify(s3Uploader, times(2)).makeMetaData(any());
+        verify(s3Uploader, times(1)).uploadFiles(anyList(), anyList());
+    }
+
+    @Test
+    @DisplayName("수정 실패: 방장이 아닌 경우 (403 Forbidden)")
+    void updateAssignment_fail_notLeader() throws Exception {
+        // user1은 study2에서 MEMBER, 과제는 study2 리더(user2)가 생성
+        var leader2 = studyMemberRepository.findByStudyIdAndUserId(study2.getId(), user2.getId()).orElseThrow();
+        var a = assignmentRepository.save(Assignment.builder()
+                .study(study2).creator(leader2)
+                .title("t").description("d")
+                .startAt(LocalDateTime.now().minusDays(1).withNano(0))
+                .dueAt(LocalDateTime.now().plusDays(5).withNano(0))
+                .build());
+
+        LocalDateTime newStart = LocalDateTime.now().plusDays(1).withNano(0);
+        LocalDateTime newDue = newStart.plusDays(3);
+
+        mockMvc.perform(
+                        putMultipart("/api/studies/{studyId}/assignments/{assignmentId}", study2.getId(), a.getId())
+                                .param("title", "x")
+                                .param("description", "y")
+                                .param("startAt", iso(newStart))
+                                .param("dueAt", iso(newDue))
+                                .with(user(new CustomUserDetails(user1.getId()))) // MEMBER
+                                .with(csrf())
+                )
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("수정 실패: 스터디원이 아닌 경우 (400 Bad Request)")
+    void updateAssignment_fail_notStudyMember() throws Exception {
+        // 과제는 study1 (user1 리더), 요청자는 user2(미소속)
+        var leader1 = studyMemberRepository.findByStudyIdAndUserId(study1.getId(), user1.getId()).orElseThrow();
+        var a = assignmentRepository.save(Assignment.builder()
+                .study(study1).creator(leader1)
+                .title("t").description("d")
+                .startAt(LocalDateTime.now().minusDays(1).withNano(0))
+                .dueAt(LocalDateTime.now().plusDays(5).withNano(0))
+                .build());
+
+        LocalDateTime newStart = LocalDateTime.now().plusDays(1).withNano(0);
+        LocalDateTime newDue = newStart.plusDays(3);
+
+        mockMvc.perform(
+                        putMultipart("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId())
+                                .param("title", "x")
+                                .param("description", "y")
+                                .param("startAt", iso(newStart))
+                                .param("dueAt", iso(newDue))
+                                .with(user(new CustomUserDetails(user2.getId()))) // study1 미소속
+                                .with(csrf())
+                )
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("수정 실패: 마감일이 시작일 이후가 아님 (400 Bad Request)")
+    void updateAssignment_fail_dueNotAfterStart() throws Exception {
+        var leader1 = studyMemberRepository.findByStudyIdAndUserId(study1.getId(), user1.getId()).orElseThrow();
+        var a = assignmentRepository.save(Assignment.builder()
+                .study(study1).creator(leader1)
+                .title("t").description("d")
+                .startAt(LocalDateTime.now().minusDays(1).withNano(0))
+                .dueAt(LocalDateTime.now().plusDays(5).withNano(0))
+                .build());
+
+        LocalDateTime start = LocalDateTime.now().plusDays(1).withNano(0);
+        LocalDateTime due = start; // 동일 → 실패
+
+        mockMvc.perform(
+                        putMultipart("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId())
+                                .param("title", "bad")
+                                .param("description", "range")
+                                .param("startAt", iso(start))
+                                .param("dueAt", iso(due))
+                                .with(user(new CustomUserDetails(user1.getId())))
+                                .with(csrf())
+                )
+                .andExpect(status().isBadRequest());
+
+        // 내용 미변경 확인
+        var after = assignmentRepository.findById(a.getId()).orElseThrow();
+        Assertions.assertThat(after.getTitle()).isEqualTo("t");
+        Assertions.assertThat(after.getDescription()).isEqualTo("d");
+    }
+
+    @Test
+    @DisplayName("수정 실패: 추가 파일 형식이 잘못됨 (400 Bad Request, 트랜잭션 롤백)")
+    void updateAssignment_fail_invalidFileType_onAdd() throws Exception {
+        var leader1 = studyMemberRepository.findByStudyIdAndUserId(study1.getId(), user1.getId()).orElseThrow();
+        var a = assignmentRepository.save(Assignment.builder()
+                .study(study1).creator(leader1)
+                .title("t").description("d")
+                .startAt(LocalDateTime.now().minusDays(1).withNano(0))
+                .dueAt(LocalDateTime.now().plusDays(5).withNano(0))
+                .build());
+
+        // s3 메타 생성에서 예외
+        when(s3Uploader.makeMetaData(any())).thenThrow(
+                new com.study.focus.common.exception.BusinessException(
+                        com.study.focus.common.exception.UserErrorCode.INVALID_FILE_TYPE
+                )
+        );
+
+        LocalDateTime newStart = LocalDateTime.now().plusDays(1).withNano(0);
+        LocalDateTime newDue = newStart.plusDays(3);
+
+        var bad = new MockMultipartFile("files", "evil.exe", "application/octet-stream", "BAD".getBytes());
+
+        long beforeFiles = fileRepository.count();
+
+        mockMvc.perform(
+                        putMultipart("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId())
+                                .file(bad)
+                                .param("title", "x")
+                                .param("description", "y")
+                                .param("startAt", iso(newStart))
+                                .param("dueAt", iso(newDue))
+                                .with(user(new CustomUserDetails(user1.getId())))
+                                .with(csrf())
+                )
+                .andExpect(status().isBadRequest());
+
+        // 파일/메타 추가되지 않음
+        Assertions.assertThat(fileRepository.count()).isEqualTo(beforeFiles);
+        verify(s3Uploader, times(1)).makeMetaData(any());
+        verify(s3Uploader, never()).uploadFiles(anyList(), anyList());
+    }
+
 }

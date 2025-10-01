@@ -3,6 +3,7 @@ package com.study.focus.assignment;
 import com.study.focus.assignment.domain.Assignment;
 import com.study.focus.assignment.dto.CreateAssignmentRequest;
 import com.study.focus.assignment.dto.GetAssignmentsResponse;
+import com.study.focus.assignment.dto.UpdateAssignmentRequest;
 import com.study.focus.assignment.repository.AssignmentRepository;
 import com.study.focus.assignment.service.AssignmentService;
 import com.study.focus.common.domain.File;
@@ -331,4 +332,243 @@ class AssignmentUnitTest {
         then(fileRepository).should(times(0)).save(any(File.class));
         then(s3Uploader).should(times(0)).uploadFiles(anyList(), anyList());
     }
+
+    @Test
+    @DisplayName("수정 성공: 파일 변화 없이 과제 수정(제목/내용/기간만 변경)")
+    void updateAssignment_success_withoutFileChanges() {
+        // given
+        Long studyId = 1L, assignmentId = 10L, userId = 100L;
+
+        Study study = Study.builder().id(studyId).build();
+        StudyMember leader = StudyMember.builder().study(study).role(StudyRole.LEADER).build();
+
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        LocalDateTime due = start.plusDays(3);
+
+        UpdateAssignmentRequest dto = new UpdateAssignmentRequest();
+        ReflectionTestUtils.setField(dto, "title", "new title");
+        ReflectionTestUtils.setField(dto, "description", "new desc");
+        ReflectionTestUtils.setField(dto, "startAt", start);
+        ReflectionTestUtils.setField(dto, "dueAt", due);
+        ReflectionTestUtils.setField(dto, "files", null);
+        ReflectionTestUtils.setField(dto, "deleteFileIds", null);
+
+        Assignment assignment = Assignment.builder()
+                .id(assignmentId).study(study).creator(leader)
+                .title("old").description("old")
+                .startAt(LocalDateTime.now()).dueAt(LocalDateTime.now().plusDays(1))
+                .build();
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
+        given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
+
+        // when
+        assignmentService.updateAssignment(studyId, assignmentId, userId, dto);
+
+        // then
+        then(fileRepository).should(never()).save(any(File.class));
+        then(fileRepository).should(never()).saveAll(anyList());
+        then(s3Uploader).should(never()).uploadFiles(anyList(), anyList());
+    }
+
+    @Test
+    @DisplayName("수정 성공: 파일 삭제 + 파일 추가가 함께 있는 과제 수정")
+    void updateAssignment_success_withFileDeleteAndAdd() {
+        // given
+        Long studyId = 1L, assignmentId = 10L, userId = 100L;
+
+        Study study = Study.builder().id(studyId).build();
+        StudyMember leader = StudyMember.builder().study(study).role(StudyRole.LEADER).build();
+
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        LocalDateTime due = start.plusDays(7);
+
+        List<Long> deleteIds = List.of(101L, 102L);
+        List<MultipartFile> files = List.of(
+                new MockMultipartFile("files","a.jpg","image/jpeg","a".getBytes()),
+                new MockMultipartFile("files","b.pdf","application/pdf","b".getBytes())
+        );
+
+        UpdateAssignmentRequest dto = new UpdateAssignmentRequest();
+        ReflectionTestUtils.setField(dto, "title", "t");
+        ReflectionTestUtils.setField(dto, "description", "d");
+        ReflectionTestUtils.setField(dto, "startAt", start);
+        ReflectionTestUtils.setField(dto, "dueAt", due);
+        ReflectionTestUtils.setField(dto, "files", files);
+        ReflectionTestUtils.setField(dto, "deleteFileIds", deleteIds);
+
+        Assignment assignment = Assignment.builder()
+                .id(assignmentId).study(study).creator(leader)
+                .title("old").description("old")
+                .startAt(LocalDateTime.now()).dueAt(LocalDateTime.now().plusDays(1))
+                .build();
+
+        // 삭제할 파일 조회
+        File del1 = mock(File.class);
+        File del2 = mock(File.class);
+        List<File> toDelete = List.of(del1, del2);
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
+        given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
+        given(fileRepository.findAllById(deleteIds)).willReturn(toDelete);
+
+        when(s3Uploader.makeMetaData(any(MultipartFile.class))).thenAnswer(inv -> {
+            MultipartFile f = inv.getArgument(0);
+            return new FileDetailDto(f.getOriginalFilename(), "key-" + f.getOriginalFilename(),
+                    f.getContentType(), f.getSize());
+        });
+
+        // when
+        assignmentService.updateAssignment(studyId, assignmentId, userId, dto);
+
+        // then
+        // 삭제 관련
+        then(fileRepository).should(times(1)).findAllById(deleteIds);
+        // saveAll은 리스트 한 번으로 1회 호출이 맞음
+        then(fileRepository).should(times(1)).saveAll(anyList());
+        then(fileRepository).should(times(1)).flush();
+        // 도메인 메서드 호출 여부(선택) — mock이라면 verify 가능
+        verify(del1, times(1)).deleteAssignmentFile();
+        verify(del2, times(1)).deleteAssignmentFile();
+
+        // 추가 관련
+        then(s3Uploader).should(times(files.size())).makeMetaData(any(MultipartFile.class));
+        then(fileRepository).should(times(files.size())).save(any(File.class));
+        then(s3Uploader).should(times(1)).uploadFiles(anyList(), eq(files));
+    }
+
+    @Test
+    @DisplayName("수정 실패: 방장이 아닌 경우")
+    void updateAssignment_fail_notLeader() {
+        // given
+        Long studyId = 1L, assignmentId = 10L, userId = 100L;
+
+        Study study = Study.builder().id(studyId).build();
+        StudyMember member = StudyMember.builder().study(study).role(StudyRole.MEMBER).build();
+
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        LocalDateTime due = start.plusDays(3);
+
+        UpdateAssignmentRequest dto = new UpdateAssignmentRequest();
+        ReflectionTestUtils.setField(dto, "title", "t");
+        ReflectionTestUtils.setField(dto, "description", "d");
+        ReflectionTestUtils.setField(dto, "startAt", start);
+        ReflectionTestUtils.setField(dto, "dueAt", due);
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(member));
+
+        // then
+        assertThrows(BusinessException.class, () -> assignmentService.updateAssignment(studyId, assignmentId, userId, dto));
+        then(assignmentRepository).should(never()).findByIdAndStudyId(any(), any());
+        then(fileRepository).should(never()).save(any());
+        then(s3Uploader).should(never()).uploadFiles(anyList(), anyList());
+    }
+
+    @Test
+    @DisplayName("수정 실패: 스터디 멤버가 아닌 경우")
+    void updateAssignment_fail_notStudyMember() {
+        // given
+        Long studyId = 1L, assignmentId = 10L, userId = 100L;
+
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        LocalDateTime due = start.plusDays(3);
+
+        UpdateAssignmentRequest dto = new UpdateAssignmentRequest();
+        ReflectionTestUtils.setField(dto, "title", "t");
+        ReflectionTestUtils.setField(dto, "description", "d");
+        ReflectionTestUtils.setField(dto, "startAt", start);
+        ReflectionTestUtils.setField(dto, "dueAt", due);
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.empty());
+
+        // then
+        assertThrows(BusinessException.class, () -> assignmentService.updateAssignment(studyId, assignmentId, userId, dto));
+        then(assignmentRepository).should(never()).findByIdAndStudyId(any(), any());
+    }
+
+    @Test
+    @DisplayName("수정 실패: 마감일이 시작일 이후가 아님")
+    void updateAssignment_fail_dueNotAfterStart() {
+        // given
+        Long studyId = 1L, assignmentId = 10L, userId = 100L;
+
+        Study study = Study.builder().id(studyId).build();
+        StudyMember leader = StudyMember.builder().study(study).role(StudyRole.LEADER).build();
+
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        LocalDateTime due = start; // 동시간 → 실패
+
+        UpdateAssignmentRequest dto = new UpdateAssignmentRequest();
+        ReflectionTestUtils.setField(dto, "title", "t");
+        ReflectionTestUtils.setField(dto, "description", "d");
+        ReflectionTestUtils.setField(dto, "startAt", start);
+        ReflectionTestUtils.setField(dto, "dueAt", due);
+
+        Assignment assignment = Assignment.builder()
+                .id(assignmentId).study(study).creator(leader)
+                .title("old").description("old")
+                .startAt(LocalDateTime.now()).dueAt(LocalDateTime.now().plusDays(1))
+                .build();
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
+        given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
+
+        // when & then
+        assertThrows(BusinessException.class,
+                () -> assignmentService.updateAssignment(studyId, assignmentId, userId, dto));
+
+        // 과제 조회는 1회 일어남(never 아님)
+        then(assignmentRepository).should(times(1)).findByIdAndStudyId(assignmentId, studyId);
+
+        // 파일 관련 저장/업로드는 수행되지 않음
+        then(fileRepository).should(never()).save(any());
+        then(fileRepository).should(never()).saveAll(anyList());
+        then(s3Uploader).should(never()).uploadFiles(anyList(), anyList());
+    }
+
+    @Test
+    @DisplayName("수정 실패: 추가 파일의 형식이 잘못됨(makeMetaData에서 예외)")
+    void updateAssignment_fail_invalidFileType_onAdd() {
+        // given
+        Long studyId = 1L, assignmentId = 10L, userId = 100L;
+
+        Study study = Study.builder().id(studyId).build();
+        StudyMember leader = StudyMember.builder().study(study).role(StudyRole.LEADER).build();
+
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        LocalDateTime due = start.plusDays(7);
+
+        List<MultipartFile> files = List.of(
+                new MockMultipartFile("files","evil.exe","application/octet-stream","x".getBytes())
+        );
+
+        UpdateAssignmentRequest dto = new UpdateAssignmentRequest();
+        ReflectionTestUtils.setField(dto, "title", "t");
+        ReflectionTestUtils.setField(dto, "description", "d");
+        ReflectionTestUtils.setField(dto, "startAt", start);
+        ReflectionTestUtils.setField(dto, "dueAt", due);
+        ReflectionTestUtils.setField(dto, "files", files);
+
+        Assignment assignment = Assignment.builder()
+                .id(assignmentId).study(study).creator(leader)
+                .title("old").description("old")
+                .startAt(LocalDateTime.now()).dueAt(LocalDateTime.now().plusDays(1))
+                .build();
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
+        given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
+
+        // 파일 메타에서 예외 발생
+        doThrow(new BusinessException(UserErrorCode.INVALID_FILE_TYPE))
+                .when(s3Uploader).makeMetaData(any(MultipartFile.class));
+
+        // when & then
+        assertThrows(BusinessException.class, () -> assignmentService.updateAssignment(studyId, assignmentId, userId, dto));
+
+        // 파일 저장/업로드는 수행되지 않음
+        then(fileRepository).should(never()).save(any(File.class));
+        then(s3Uploader).should(never()).uploadFiles(anyList(), anyList());
+    }
+
+
 }
