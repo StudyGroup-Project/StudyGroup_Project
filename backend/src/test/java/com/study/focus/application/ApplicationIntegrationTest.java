@@ -258,4 +258,56 @@ public class ApplicationIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
+
+    @Test
+    @DisplayName("지원서 상세 조회 - 방장 성공")
+    void getApplicationDetail_Success_Leader() throws Exception {
+        // given: 지원서를 미리 저장
+        Application application = applicationRepository.save(Application.builder()
+                .applicant(applicant)
+                .study(testStudy)
+                .content("안녕하세요! 저는 이 스터디에 꼭 참여하고 싶습니다. 열심히 하겠습니다!")
+                .status(ApplicationStatus.SUBMITTED)
+                .build());
+
+        // when & then: 방장이 저장된 지원서의 ID로 상세 조회를 요청
+        mockMvc.perform(get("/api/studies/" + testStudy.getId() + "/applications/" + application.getId())
+                        .with(user(new CustomUserDetails(leader.getId())))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").value("안녕하세요! 저는 이 스터디에 꼭 참여하고 싶습니다. 열심히 하겠습니다!"));
+    }
+
+    @Test
+    @DisplayName("지원서 상세 조회 실패 - 방장이 아닌 경우")
+    void getApplicationDetail_Fail_NotLeader() throws Exception {
+        // given
+        User notLeader = userRepository.save(User.builder().build());
+        Application application = applicationRepository.save(Application.builder()
+                .applicant(applicant)
+                .study(testStudy)
+                .content("지원 내용")
+                .status(ApplicationStatus.SUBMITTED)
+                .build());
+
+        // when & then
+        mockMvc.perform(get("/api/studies/" + testStudy.getId() + "/applications/" + application.getId())
+                        .with(user(new CustomUserDetails(notLeader.getId())))
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("지원서 상세 조회 실패 - 지원서 없음")
+    void getApplicationDetail_Fail_ApplicationNotFound() throws Exception {
+        // given
+        Long nonExistentApplicationId = 9999L;
+
+        // when & then
+        mockMvc.perform(get("/api/studies/" + testStudy.getId() + "/applications/" + nonExistentApplicationId)
+                        .with(user(new CustomUserDetails(leader.getId())))
+                        .with(csrf()))
+                .andExpect(status().isBadRequest()); // or isNotFound(), depending on your exception handling
+    }
+
 }

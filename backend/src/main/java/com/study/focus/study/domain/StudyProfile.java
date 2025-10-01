@@ -36,4 +36,12 @@ public class StudyProfile extends BaseUpdatedEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Category category;
+
+    public void update(String title, Category category, Address address, String bio, String description) {
+        this.title = title;
+        this.category = category;
+        this.address = address;
+        this.bio = bio;
+        this.description = description;
+    }
 }

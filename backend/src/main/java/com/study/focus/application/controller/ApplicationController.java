@@ -1,6 +1,7 @@
 package com.study.focus.application.controller;
 
 import com.study.focus.account.dto.CustomUserDetails;
+import com.study.focus.application.dto.GetApplicationDetailResponse;
 import com.study.focus.application.dto.GetApplicationsResponse;
 import com.study.focus.application.dto.SubmitApplicationRequest;
 import com.study.focus.application.service.ApplicationService;
@@ -45,7 +46,15 @@ public class ApplicationController {
 
     // 지원서 상세 가져오기
     @GetMapping("/{applicationId}")
-    public void getApplicationDetail(@PathVariable Long studyId, @PathVariable Long applicationId) {}
+    public ResponseEntity<GetApplicationDetailResponse> getApplicationDetail(
+            @PathVariable Long studyId,
+            @PathVariable Long applicationId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        Long requestUserId = userDetails.getUserId();
+        GetApplicationDetailResponse response = applicationService.getApplicationDetail(studyId, applicationId, requestUserId);
+        return ResponseEntity.ok(response);
+    }
 
     // 지원서 처리하기
     @PutMapping("/{applicationId}")

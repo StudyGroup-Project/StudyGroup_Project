@@ -1,9 +1,11 @@
 package com.study.focus.account.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.study.focus.account.config.jwt.TokenProvider;
 import com.study.focus.account.domain.Provider;
 import com.study.focus.account.dto.LoginResponse;
 import com.study.focus.account.dto.RegisterRequest;
+import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.service.AccountService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,6 +43,12 @@ class AuthControllerTest {
     @MockBean
     private AccountService accountService;
 
+    @MockBean
+    private TokenProvider tokenProvider;
+
+    @MockBean
+    private UserProfileRepository userProfileRepository;
+    
     // 👇 추가: JPA MappingContext를 Mock 처리 (Auditing 때문에 필요)
     @MockBean
     private JpaMetamodelMappingContext jpaMetamodelMappingContext;
