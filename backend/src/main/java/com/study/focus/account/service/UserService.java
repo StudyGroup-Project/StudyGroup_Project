@@ -14,6 +14,7 @@ import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.UserErrorCode;
+import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.util.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final S3Uploader s3Uploader;
     private final UserProfileRepository userProfileRepository;
+    private final FileRepository fileRepository;
 
     public void initProfile(Long userId, InitUserProfileRequest request) {
         User user = findUser(userId);
@@ -58,7 +60,7 @@ public class UserService {
             throw new BusinessException(UserErrorCode.FILE_UPLOAD_FAIL, e);
         }
 
-        File newFile = File.ofProfileImage(meta);
+        File newFile = fileRepository.save(File.ofProfileImage(meta));
         profile.updateProfileImage(newFile);
 
         return s3Uploader.getUrlFile(meta.getKey());

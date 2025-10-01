@@ -22,4 +22,8 @@ public class Study extends BaseCreatedEntity {
     @Column(nullable = false)
     @Builder.Default
     private RecruitStatus recruitStatus = RecruitStatus.OPEN;
+
+    public void updateMaxMemberCount(int maxMemberCount) {
+        this.maxMemberCount = maxMemberCount;
+    }
 }

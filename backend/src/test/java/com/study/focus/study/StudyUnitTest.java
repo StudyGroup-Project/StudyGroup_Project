@@ -15,6 +15,7 @@ import com.study.focus.common.util.S3Uploader;
 import com.study.focus.study.domain.*;
 import com.study.focus.study.dto.CreateStudyRequest;
 import com.study.focus.study.dto.GetStudyProfileResponse;
+import com.study.focus.study.dto.UpdateStudyProfileRequest;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyProfileRepository;
 import com.study.focus.study.repository.StudyRepository;
@@ -23,17 +24,21 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 
 import com.study.focus.study.repository.BookmarkRepository;
@@ -68,6 +73,7 @@ class StudyUnitTest {
 
     @Mock
     private FileRepository fileRepository;
+
 
     @InjectMocks
     private StudyService studyService;
@@ -317,7 +323,7 @@ class StudyUnitTest {
                 .build();
         StudyMember leaderMember = StudyMember.builder().user(User.builder().id(leaderId).trustScore(82).build()).role(StudyRole.LEADER).build();
         User leader = leaderMember.getUser();
-        File profileImage = org.mockito.Mockito.mock(File.class);
+        File profileImage = mock(File.class);
         org.mockito.Mockito.when(profileImage.getFileKey()).thenReturn(fileKey);
         UserProfile leaderProfile = UserProfile.builder().user(leader).nickname(leaderNickname).profileImage(profileImage).build();
 
@@ -421,5 +427,103 @@ class StudyUnitTest {
         assertThatThrownBy(() -> studyService.getStudyProfile(studyId, userId))
                 .isInstanceOf(BusinessException.class);
     }
+
+    @Test
+    @DisplayName("그룹 프로필 수정 - 성공")
+    void updateStudyProfile_Success() {
+        // given
+        final Long studyId = 1L;
+        final Long leaderUserId = 100L;
+        final UpdateStudyProfileRequest request = new UpdateStudyProfileRequest(
+                "새로운 스터디 제목", 20, Category.IT, "경기도", "성남시", "새로운 한 줄 소개", "새로운 상세 설명"
+        );
+
+        User leaderUser = User.builder().id(leaderUserId).build();
+        Study mockStudy = mock(Study.class); // study 객체도 Mock으로 만듭니다.
+        StudyProfile mockStudyProfile = mock(StudyProfile.class); // studyProfile 객체도 Mock으로 만듭니다.
+        StudyMember leaderMember = StudyMember.builder().user(leaderUser).study(mockStudy).role(StudyRole.LEADER).build();
+
+        given(studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER)).willReturn(Optional.of(leaderMember));
+        given(studyRepository.findById(studyId)).willReturn(Optional.of(mockStudy));
+        given(studyProfileRepository.findByStudy(mockStudy)).willReturn(Optional.of(mockStudyProfile));
+        given(studyMemberRepository.countByStudyIdAndStatus(studyId, StudyMemberStatus.JOINED)).willReturn(5L);
+
+        // when
+        assertDoesNotThrow(() -> studyService.updateStudyProfile(studyId, leaderUserId, request));
+
+        // then: 각 엔티티의 update 메서드가 정확히 1번씩 호출되었는지 검증
+        // ArgumentCaptor를 사용하여 전달된 인자를 캡처
+        ArgumentCaptor<Integer> maxMemberCaptor = ArgumentCaptor.forClass(Integer.class);
+        then(mockStudy).should().updateMaxMemberCount(maxMemberCaptor.capture());
+        assertThat(maxMemberCaptor.getValue()).isEqualTo(20);
+
+        ArgumentCaptor<String> titleCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Category> categoryCaptor = ArgumentCaptor.forClass(Category.class);
+        ArgumentCaptor<Address> addressCaptor = ArgumentCaptor.forClass(Address.class);
+        ArgumentCaptor<String> bioCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
+        then(mockStudyProfile).should().update(
+                titleCaptor.capture(), categoryCaptor.capture(), addressCaptor.capture(),
+                bioCaptor.capture(), descriptionCaptor.capture()
+        );
+        assertThat(titleCaptor.getValue()).isEqualTo("새로운 스터디 제목");
+        assertThat(categoryCaptor.getValue()).isEqualTo(Category.IT);
+        assertThat(addressCaptor.getValue().getProvince()).isEqualTo("경기도");
+        assertThat(bioCaptor.getValue()).isEqualTo("새로운 한 줄 소개");
+    }
+
+    @Test
+    @DisplayName("그룹 프로필 수정 실패 - 방장이 아닌 경우")
+    void updateStudyProfile_Fail_NotLeader() {
+        // given: 방장이 아닌 사용자가 수정을 요청하는 상황
+        final Long studyId = 1L;
+        final Long notLeaderUserId = 999L; // 요청자 ID
+        final UpdateStudyProfileRequest request = new UpdateStudyProfileRequest(
+                "제목", 10, Category.IT, "서울", "강남", "소개", "설명"
+        );
+
+        User actualLeaderUser = User.builder().id(100L).build(); // 실제 방장 ID
+        StudyMember leaderMember = StudyMember.builder().user(actualLeaderUser).role(StudyRole.LEADER).build();
+
+        given(studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER)).willReturn(Optional.of(leaderMember));
+
+        // when & then: 권한 없음 예외가 발생하는지 검증
+        assertThatThrownBy(() -> studyService.updateStudyProfile(studyId, notLeaderUserId, request))
+                .isInstanceOf(BusinessException.class);
+
+        // DB 조회나 업데이트 관련 로직이 전혀 실행되지 않았는지 확인
+        then(studyRepository).should(never()).findById(any());
+        then(studyProfileRepository).should(never()).findByStudy(any());
+    }
+
+    @Test
+    @DisplayName("그룹 프로필 수정 실패 - 최대 인원 수가 현재 인원보다 적은 경우")
+    void updateStudyProfile_Fail_MaxMemberCountTooLow() {
+        // given: 최대 인원 수를 현재 인원보다 적게 수정하려는 상황
+        final Long studyId = 1L;
+        final Long leaderUserId = 100L;
+        final UpdateStudyProfileRequest request = new UpdateStudyProfileRequest(
+                "제목", 5, Category.IT, "서울", "강남", "소개", "설명" // 5명으로 수정 요청
+        );
+
+        User leaderUser = User.builder().id(leaderUserId).build();
+        Study mockStudy = mock(Study.class);
+        StudyProfile mockStudyProfile = mock(StudyProfile.class);
+        StudyMember leaderMember = StudyMember.builder().user(leaderUser).study(mockStudy).role(StudyRole.LEADER).build();
+
+        given(studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER)).willReturn(Optional.of(leaderMember));
+        given(studyRepository.findById(studyId)).willReturn(Optional.of(mockStudy));
+        given(studyProfileRepository.findByStudy(mockStudy)).willReturn(Optional.of(mockStudyProfile));
+        given(studyMemberRepository.countByStudyIdAndStatus(studyId, StudyMemberStatus.JOINED)).willReturn(10L); // 현재 인원은 10명
+
+        // when & then: 잘못된 요청 예외가 발생하는지 검증
+        assertThatThrownBy(() -> studyService.updateStudyProfile(studyId, leaderUserId, request))
+                .isInstanceOf(BusinessException.class); // 실제 예외 클래스에 맞게 수정
+
+        // 엔티티의 update 관련 메서드가 호출되지 않았는지 확인
+        then(mockStudy).should(never()).updateMaxMemberCount(any(Integer.class));
+        then(mockStudyProfile).should(never()).update(any(), any(), any(), any(), any());
+    }
+
 
 }
