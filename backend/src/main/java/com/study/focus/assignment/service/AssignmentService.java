@@ -39,8 +39,6 @@ public class AssignmentService {
     // 과제 목록 가져오기(생성 순 내림차순 정렬)
     @Transactional
     public List<GetAssignmentsResponse> getAssignments(Long studyId, Long userId) {
-        // TODO: 과제 목록 조회
-
         if (studyId == null || userId == null) {
             throw new BusinessException(CommonErrorCode.INVALID_PARAMETER);
         }
