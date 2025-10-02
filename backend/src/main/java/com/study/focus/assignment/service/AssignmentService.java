@@ -39,8 +39,6 @@ public class AssignmentService {
     // 과제 목록 가져오기(생성 순 내림차순 정렬)
     @Transactional
     public List<GetAssignmentsResponse> getAssignments(Long studyId, Long userId) {
-        // TODO: 과제 목록 조회
-
         if (studyId == null || userId == null) {
             throw new BusinessException(CommonErrorCode.INVALID_PARAMETER);
         }
@@ -86,7 +84,6 @@ public class AssignmentService {
 
     // 과제 상세 내용 가져오기
     public GetAssignmentDetailResponse getAssignmentDetail(Long studyId, Long assignmentId, Long userId) {
-        // TODO: 과제 상세 조회
         if (studyId == null || userId == null || assignmentId == null) {
             throw new BusinessException(CommonErrorCode.INVALID_PARAMETER);
         }
@@ -137,7 +134,25 @@ public class AssignmentService {
     }
 
     // 과제 삭제하기
-    public void deleteAssignment(Long studyId, Long assignmentId) {
-        // TODO: 과제 삭제
+    @Transactional
+    public void deleteAssignment(Long studyId, Long assignmentId, Long userId) {
+        StudyMember user = studyMemberRepository.findByStudyIdAndUserId(studyId, userId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+        if(!user.getRole().equals(StudyRole.LEADER)) throw new BusinessException(UserErrorCode.URL_FORBIDDEN);
+        Assignment assignment = assignmentRepository.findByIdAndStudyId(assignmentId,studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+
+        List<Submission> submissions = submissionRepository.findAllByAssignmentId(assignmentId);
+        List<Long> submissionIds = submissions.stream().map(Submission::getId).toList();
+        List<File> submissionFiles = fileRepository.findAllBySubmissionIdIn(submissionIds);
+
+        submissionFiles.forEach(File::deleteSubmissionFile);
+        fileRepository.saveAll(submissionFiles);
+        fileRepository.flush();
+        submissionRepository.deleteAllInBatch(submissions);
+
+        List<File> assignmentFiles = fileRepository.findAllByAssignmentId(assignmentId);
+        assignmentFiles.forEach(File::deleteAssignmentFile);
+        fileRepository.saveAll(assignmentFiles);
+        fileRepository.flush();
+        assignmentRepository.delete(assignment);
     }
 }
