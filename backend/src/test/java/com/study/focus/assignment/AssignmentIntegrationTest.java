@@ -5,6 +5,7 @@ import com.study.focus.account.domain.User;
 import com.study.focus.account.repository.UserRepository;
 import com.study.focus.assignment.domain.Assignment;
 import com.study.focus.assignment.repository.AssignmentRepository;
+import com.study.focus.assignment.repository.SubmissionRepository;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.util.S3Uploader;
@@ -50,6 +51,7 @@ class AssignmentIntegrationTest {
     @Autowired private StudyMemberRepository studyMemberRepository;
     @Autowired private AssignmentRepository assignmentRepository;
     @Autowired private FileRepository fileRepository;
+    @Autowired private SubmissionRepository submissionRepository;
 
     // 외부 I/O 막기 위해 테스트에서 S3Uploader를 목으로 대체
     @MockBean private S3Uploader s3Uploader;
@@ -100,6 +102,7 @@ class AssignmentIntegrationTest {
     @AfterEach
     void tearDown() {
         fileRepository.deleteAll();
+        submissionRepository.deleteAll();
         assignmentRepository.deleteAll();
         studyMemberRepository.deleteAll();
         studyRepository.deleteAll();
@@ -626,4 +629,148 @@ class AssignmentIntegrationTest {
                 .andExpect(status().isUnauthorized()); // 스프링 시큐리티 기본 정책 가정
     }
 
+
+    @Test
+    @DisplayName("삭제 성공: 파일이 존재하고 제출물이 없는 과제 삭제 (204 No Content)")
+    void deleteAssignment_success_withAssignmentFiles_noSubmissions_it() throws Exception {
+        // given
+        var leader = studyMemberRepository.findByStudyIdAndUserId(study1.getId(), user1.getId()).orElseThrow();
+        var a = assignmentRepository.save(Assignment.builder()
+                .study(study1).creator(leader)
+                .title("del t1").description("del d1")
+                .startAt(LocalDateTime.now().minusDays(1).withNano(0))
+                .dueAt(LocalDateTime.now().plusDays(3).withNano(0))
+                .build());
+
+        // 과제 직결 파일 2개
+        var meta1 = new FileDetailDto("a.pdf", "key-a", "application/pdf", 10);
+        var meta2 = new FileDetailDto("b.png", "key-b", "image/png", 20);
+        fileRepository.save(com.study.focus.common.domain.File.ofAssignment(a, meta1));
+        fileRepository.save(com.study.focus.common.domain.File.ofAssignment(a, meta2));
+
+        // when & then
+        mockMvc.perform(delete("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId())
+                        .with(user(new CustomUserDetails(user1.getId())))
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+
+        // 과제 삭제 확인
+        Assertions.assertThat(assignmentRepository.findById(a.getId())).isEmpty();
+        // FK 해제로 인해 과제 기준 조회 시 0 기대(soft delete/연관 끊김 가정)
+        Assertions.assertThat(fileRepository.findAllByAssignmentId(a.getId())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("삭제 성공: 파일/제출물이 모두 없는 과제 삭제 (204 No Content)")
+    void deleteAssignment_success_noFiles_noSubmissions_it() throws Exception {
+        // given
+        var leader = studyMemberRepository.findByStudyIdAndUserId(study1.getId(), user1.getId()).orElseThrow();
+        var a = assignmentRepository.save(Assignment.builder()
+                .study(study1).creator(leader)
+                .title("del t2").description("del d2")
+                .startAt(LocalDateTime.now().minusDays(1).withNano(0))
+                .dueAt(LocalDateTime.now().plusDays(2).withNano(0))
+                .build());
+
+        // when & then
+        mockMvc.perform(delete("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId())
+                        .with(user(new CustomUserDetails(user1.getId())))
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+
+        Assertions.assertThat(assignmentRepository.findById(a.getId())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("삭제 성공: 제출물이 있고 파일은 없는 과제 삭제 (204 No Content)")
+    void deleteAssignment_success_withSubmissions_noFiles_it() throws Exception {
+        // given
+        var leader = studyMemberRepository.findByStudyIdAndUserId(study1.getId(), user1.getId()).orElseThrow();
+        var a = assignmentRepository.save(Assignment.builder()
+                .study(study1).creator(leader)
+                .title("del t3").description("del d3")
+                .startAt(LocalDateTime.now().minusDays(1).withNano(0))
+                .dueAt(LocalDateTime.now().plusDays(4).withNano(0))
+                .build());
+
+        // 제출물 2개 (필드명/생성자는 프로젝트 엔티티에 맞게 조정)
+        var s1 = submissionRepository.save(com.study.focus.assignment.domain.Submission.builder()
+                .assignment(a).submitter(leader).build());
+        var s2 = submissionRepository.save(com.study.focus.assignment.domain.Submission.builder()
+                .assignment(a).submitter(leader).build());
+
+        // when & then
+        mockMvc.perform(delete("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId())
+                        .with(user(new CustomUserDetails(user1.getId())))
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+
+        // 과제 삭제 + 제출물 삭제 확인
+        Assertions.assertThat(assignmentRepository.findById(a.getId())).isEmpty();
+        Assertions.assertThat(submissionRepository.findAllByAssignmentId(a.getId())).isEmpty();
+        // 과제 직결 파일 없음 가정이므로 별도 검증 불필요
+    }
+
+    @Test
+    @DisplayName("삭제 실패: 방장이 아닌 경우 (403 Forbidden)")
+    void deleteAssignment_fail_notLeader_it() throws Exception {
+        // given: study2의 리더는 user2, user1은 MEMBER
+        var leader2 = studyMemberRepository.findByStudyIdAndUserId(study2.getId(), user2.getId()).orElseThrow();
+        var a = assignmentRepository.save(Assignment.builder()
+                .study(study2).creator(leader2)
+                .title("forbidden del").description("x")
+                .startAt(LocalDateTime.now().minusDays(1).withNano(0))
+                .dueAt(LocalDateTime.now().plusDays(3).withNano(0))
+                .build());
+
+        // when & then: MEMBER(user1)로 삭제 시도
+        mockMvc.perform(delete("/api/studies/{studyId}/assignments/{assignmentId}", study2.getId(), a.getId())
+                        .with(user(new CustomUserDetails(user1.getId())))
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
+
+        // 여전히 존재
+        Assertions.assertThat(assignmentRepository.findById(a.getId())).isPresent();
+    }
+
+    @Test
+    @DisplayName("삭제 실패: 스터디 멤버가 아닌 경우 (400 Bad Request)")
+    void deleteAssignment_fail_notStudyMember_it() throws Exception {
+        // given: study1의 리더는 user1, user2는 미소속
+        var leader1 = studyMemberRepository.findByStudyIdAndUserId(study1.getId(), user1.getId()).orElseThrow();
+        var a = assignmentRepository.save(Assignment.builder()
+                .study(study1).creator(leader1)
+                .title("bad request del").description("x")
+                .startAt(LocalDateTime.now().minusDays(1).withNano(0))
+                .dueAt(LocalDateTime.now().plusDays(3).withNano(0))
+                .build());
+
+        // when & then: study1 미소속 user2로 삭제 시도
+        mockMvc.perform(delete("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId())
+                        .with(user(new CustomUserDetails(user2.getId())))
+                        .with(csrf()))
+                .andExpect(status().isBadRequest());
+
+        Assertions.assertThat(assignmentRepository.findById(a.getId())).isPresent();
+    }
+
+    @Test
+    @DisplayName("삭제 실패: 인증되지 않은 사용자 (401 Unauthorized)")
+    void deleteAssignment_fail_unauthenticated_it() throws Exception {
+        // given
+        var leader = studyMemberRepository.findByStudyIdAndUserId(study1.getId(), user1.getId()).orElseThrow();
+        var a = assignmentRepository.save(Assignment.builder()
+                .study(study1).creator(leader)
+                .title("unauth del").description("x")
+                .startAt(LocalDateTime.now().minusDays(1).withNano(0))
+                .dueAt(LocalDateTime.now().plusDays(3).withNano(0))
+                .build());
+
+        // when & then
+        mockMvc.perform(delete("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId())
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized());
+
+        Assertions.assertThat(assignmentRepository.findById(a.getId())).isPresent();
+    }
 }
