@@ -66,6 +66,9 @@ public class AssignmentController {
     }
 
     // 과제 삭제하기
-    @DeleteMapping("/{assignmentId}")
-    public void deleteAssignment(@PathVariable Long studyId, @PathVariable Long assignmentId) {}
+    public ResponseEntity<Void> deleteAssignment(@PathVariable Long studyId, @PathVariable Long assignmentId,@AuthenticationPrincipal CustomUserDetails user) {
+        Long userId = user.getUserId();
+        assignmentService.deleteAssignment(studyId,assignmentId,userId);
+        return ResponseEntity.noContent().build();
+    }
 }
