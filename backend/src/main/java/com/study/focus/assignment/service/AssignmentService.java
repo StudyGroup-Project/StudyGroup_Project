@@ -39,8 +39,6 @@ public class AssignmentService {
     // 과제 목록 가져오기(생성 순 내림차순 정렬)
     @Transactional
     public List<GetAssignmentsResponse> getAssignments(Long studyId, Long userId) {
-        // TODO: 과제 목록 조회
-
         if (studyId == null || userId == null) {
             throw new BusinessException(CommonErrorCode.INVALID_PARAMETER);
         }
@@ -49,7 +47,7 @@ public class AssignmentService {
 
         List<Assignment> assignments = assignmentRepository.findAllByStudyIdOrderByCreatedAtDesc(studyId);
 
-        return assignments.stream().map(assignment -> new GetAssignmentsResponse(assignment.getId(),assignment.getTitle() )).toList();
+        return assignments.stream().map(assignment -> new GetAssignmentsResponse(assignment.getId(), assignment.getTitle())).toList();
     }
 
     // 과제 생성하기
@@ -57,9 +55,9 @@ public class AssignmentService {
     public Long createAssignment(Long studyId, Long creatorId, CreateAssignmentRequest dto) {
         Study study = studyRepository.findById(studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
         StudyMember creator = studyMemberRepository.findByStudyIdAndUserId(studyId, creatorId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
-        if(!creator.getRole().equals(StudyRole.LEADER)) throw new BusinessException(UserErrorCode.URL_FORBIDDEN);
-        if(!dto.getDueAt().isAfter(dto.getStartAt())) throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
-        
+        if (!creator.getRole().equals(StudyRole.LEADER)) throw new BusinessException(UserErrorCode.URL_FORBIDDEN);
+        if (!dto.getDueAt().isAfter(dto.getStartAt())) throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
+
         Assignment assignment = Assignment.builder()
                 .creator(creator)
                 .startAt(dto.getStartAt())
@@ -71,14 +69,14 @@ public class AssignmentService {
 
         Assignment saveAssignment = assignmentRepository.save(assignment);
 
-        if(dto.getFiles() != null && !dto.getFiles().isEmpty()){
+        if (dto.getFiles() != null && !dto.getFiles().isEmpty()) {
             List<FileDetailDto> list = dto.getFiles().stream().map(s3Uploader::makeMetaData).toList();
-            IntStream.range(0,list.size())
-                    .forEach(index ->fileRepository.save(
-                            File.ofAssignment(assignment,list.get(index))
+            IntStream.range(0, list.size())
+                    .forEach(index -> fileRepository.save(
+                            File.ofAssignment(assignment, list.get(index))
                     ));
             List<String> keys = list.stream().map(FileDetailDto::getKey).toList();
-            s3Uploader.uploadFiles(keys,dto.getFiles());
+            s3Uploader.uploadFiles(keys, dto.getFiles());
         }
 
         return saveAssignment.getId();
@@ -86,7 +84,6 @@ public class AssignmentService {
 
     // 과제 상세 내용 가져오기
     public GetAssignmentDetailResponse getAssignmentDetail(Long studyId, Long assignmentId, Long userId) {
-        // TODO: 과제 상세 조회
         if (studyId == null || userId == null || assignmentId == null) {
             throw new BusinessException(CommonErrorCode.INVALID_PARAMETER);
         }
@@ -111,33 +108,60 @@ public class AssignmentService {
     @Transactional
     public void updateAssignment(Long studyId, Long assignmentId, Long creatorId, UpdateAssignmentRequest dto) {
         StudyMember creator = studyMemberRepository.findByStudyIdAndUserId(studyId, creatorId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
-        if(!creator.getRole().equals(StudyRole.LEADER)) throw new BusinessException(UserErrorCode.URL_FORBIDDEN);
-        Assignment assignment = assignmentRepository.findByIdAndStudyId(assignmentId,studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
-        if(!dto.getDueAt().isAfter(dto.getStartAt())) throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
+        if (!creator.getRole().equals(StudyRole.LEADER)) throw new BusinessException(UserErrorCode.URL_FORBIDDEN);
+        Assignment assignment = assignmentRepository.findByIdAndStudyId(assignmentId, studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
+        if (!dto.getDueAt().isAfter(dto.getStartAt())) throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
 
         assignment.update(dto.getTitle(), dto.getDescription(), dto.getStartAt(), dto.getDueAt());
 
-        if(dto.getDeleteFileIds() !=null&& !dto.getDeleteFileIds().isEmpty())
-        {
+        if (dto.getDeleteFileIds() != null && !dto.getDeleteFileIds().isEmpty()) {
             List<File> deleteFiles = fileRepository.findAllById(dto.getDeleteFileIds());
             deleteFiles.forEach(File::deleteAssignmentFile);
             fileRepository.saveAll(deleteFiles);
             fileRepository.flush();
         }
 
-        if(dto.getFiles() != null && !dto.getFiles().isEmpty()){
+        if (dto.getFiles() != null && !dto.getFiles().isEmpty()) {
             List<FileDetailDto> list = dto.getFiles().stream().map(s3Uploader::makeMetaData).toList();
-            IntStream.range(0,list.size())
-                    .forEach(index ->fileRepository.save(
-                            File.ofAssignment(assignment,list.get(index))
+            IntStream.range(0, list.size())
+                    .forEach(index -> fileRepository.save(
+                            File.ofAssignment(assignment, list.get(index))
                     ));
             List<String> keys = list.stream().map(FileDetailDto::getKey).toList();
-            s3Uploader.uploadFiles(keys,dto.getFiles());
+            s3Uploader.uploadFiles(keys, dto.getFiles());
         }
     }
 
-    // 과제 삭제하기
-    public void deleteAssignment(Long studyId, Long assignmentId) {
-        // TODO: 과제 삭제
+    //과제 삭제하기
+    @Transactional
+    public void deleteAssignment(Long studyId, Long assignmentId, Long userId) {
+
+        if (studyId == null || userId == null || assignmentId == null) {
+            throw new BusinessException(CommonErrorCode.INVALID_PARAMETER);
+        }
+
+        StudyMember user = studyMemberRepository.findByStudyIdAndUserId(studyId, userId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+        if (!user.getRole().equals(StudyRole.LEADER)) throw new BusinessException(UserErrorCode.URL_FORBIDDEN);
+        Assignment assignment = assignmentRepository.findByIdAndStudyId(assignmentId, studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+
+        List<Submission> submissions = submissionRepository.findAllByAssignmentId(assignmentId);
+        List<Long> submissionIds = submissions.stream().map(Submission::getId).toList();
+
+        if (!submissionIds.isEmpty()) {
+            List<File> submissionFiles = fileRepository.findAllBySubmissionIdIn(submissionIds);
+            if (!submissionFiles.isEmpty()) {
+                submissionFiles.forEach(File::deleteSubmissionFile);
+                fileRepository.saveAll(submissionFiles);
+            }
+            submissionRepository.deleteAll(submissions);
+        }
+
+        List<File> assignmentFiles = fileRepository.findAllByAssignmentId(assignmentId);
+        if (!assignmentFiles.isEmpty()) {
+            assignmentFiles.forEach(File::deleteAssignmentFile);
+            fileRepository.saveAll(assignmentFiles);
+        }
+
+        assignmentRepository.delete(assignment);
     }
 }

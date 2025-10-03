@@ -720,4 +720,149 @@ class AssignmentUnitTest {
         then(submissionRepository).should(never()).findSubmissionList(any());
     }
 
+    /* 과제 삭제 기능 test */
+
+    @DisplayName("삭제 성공: 파일이 존재하고 제출물이 없는 과제 삭제")
+    @Test
+    void deleteAssignment_success_withAssignmentFiles_noSubmissions() {
+        // given
+        Long studyId = 1L, assignmentId = 10L, userId = 100L;
+
+        Study study = Study.builder().id(studyId).build();
+        StudyMember leader = StudyMember.builder().study(study).role(StudyRole.LEADER).build();
+        Assignment assignment = Assignment.builder().id(assignmentId).study(study).creator(leader).build();
+
+        com.study.focus.common.domain.File f1 = mock(com.study.focus.common.domain.File.class);
+        com.study.focus.common.domain.File f2 = mock(com.study.focus.common.domain.File.class);
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
+        given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
+
+        // 제출물 없음
+        given(submissionRepository.findAllByAssignmentId(assignmentId)).willReturn(List.of());
+
+        // 과제 직결 파일 존재
+        given(fileRepository.findAllByAssignmentId(assignmentId)).willReturn(List.of(f1, f2));
+
+        // when
+        assignmentService.deleteAssignment(studyId, assignmentId, userId);
+
+        // then
+        then(submissionRepository).should(times(1)).findAllByAssignmentId(assignmentId);
+        then(fileRepository).should(times(1)).findAllByAssignmentId(assignmentId);
+        verify(f1, times(1)).deleteAssignmentFile();
+        verify(f2, times(1)).deleteAssignmentFile();
+        then(fileRepository).should(times(1)).saveAll(anyList());
+        then(assignmentRepository).should(times(1)).delete(assignment);
+    }
+
+    @DisplayName("삭제 성공: 파일이 존재하지 않고 제출물도 없는 과제 삭제")
+    @Test
+    void deleteAssignment_success_noFiles_noSubmissions() {
+        // given
+        Long studyId = 1L, assignmentId = 10L, userId = 100L;
+
+        Study study = Study.builder().id(studyId).build();
+        StudyMember leader = StudyMember.builder().study(study).role(StudyRole.LEADER).build();
+        Assignment assignment = Assignment.builder().id(assignmentId).study(study).creator(leader).build();
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
+        given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
+
+        given(submissionRepository.findAllByAssignmentId(assignmentId)).willReturn(List.of());
+        given(fileRepository.findAllByAssignmentId(assignmentId)).willReturn(List.of());
+
+        // when
+        assignmentService.deleteAssignment(studyId, assignmentId, userId);
+
+        // then
+        then(fileRepository).should(times(1)).findAllByAssignmentId(assignmentId);
+        then(fileRepository).should(never()).save(any());
+        then(fileRepository).should(never()).saveAll(anyList());
+        then(submissionRepository).should(times(1)).findAllByAssignmentId(assignmentId);
+        then(submissionRepository).should(never()).deleteAllInBatch(anyList());
+        then(assignmentRepository).should(times(1)).delete(assignment);
+    }
+
+    @DisplayName("삭제 성공: 파일이 존재하지 않고 제출물이 있는 과제 삭제")
+    @Test
+    void deleteAssignment_success_withSubmissions_noFiles() {
+        // given
+        Long studyId = 1L, assignmentId = 10L, userId = 100L;
+
+        Study study = Study.builder().id(studyId).build();
+        StudyMember leader = StudyMember.builder().study(study).role(StudyRole.LEADER).build();
+        Assignment assignment = Assignment.builder().id(assignmentId).study(study).creator(leader).build();
+
+        // 제출물 2개(mock) — ID 스텁
+        com.study.focus.assignment.domain.Submission s1 = mock(com.study.focus.assignment.domain.Submission.class);
+        com.study.focus.assignment.domain.Submission s2 = mock(com.study.focus.assignment.domain.Submission.class);
+        when(s1.getId()).thenReturn(201L);
+        when(s2.getId()).thenReturn(202L);
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
+        given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
+
+        given(submissionRepository.findAllByAssignmentId(assignmentId)).willReturn(List.of(s1, s2));
+
+        // 제출물에 매달린 파일은 없음
+        given(fileRepository.findAllBySubmissionIdIn(List.of(201L, 202L))).willReturn(List.of());
+        // 과제 직결 파일도 없음
+        given(fileRepository.findAllByAssignmentId(assignmentId)).willReturn(List.of());
+
+        // when
+        assignmentService.deleteAssignment(studyId, assignmentId, userId);
+
+        // then
+        then(fileRepository).should(times(1)).findAllBySubmissionIdIn(List.of(201L, 202L));
+        then(fileRepository).should(never()).saveAll(anyList());
+        then(submissionRepository).should(times(1)).deleteAll(List.of(s1, s2));
+        then(assignmentRepository).should(times(1)).delete(assignment);
+    }
+
+    @DisplayName("삭제 실패: studyId가 null")
+    @Test
+    void deleteAssignment_fail_nullStudyId() {
+        Long assignmentId = 10L, userId = 100L;
+
+        assertThatThrownBy(() -> assignmentService.deleteAssignment(null, assignmentId, userId))
+                .isInstanceOf(BusinessException.class);
+
+        then(studyMemberRepository).should(never()).findByStudyIdAndUserId(any(), any());
+        then(assignmentRepository).should(never()).findByIdAndStudyId(any(), any());
+        then(submissionRepository).should(never()).findAllByAssignmentId(any());
+    }
+
+    @DisplayName("삭제 실패: userId가 null")
+    @Test
+    void deleteAssignment_fail_nullUserId() {
+        Long studyId = 1L, assignmentId = 10L;
+
+        assertThatThrownBy(() -> assignmentService.deleteAssignment(studyId, assignmentId, null))
+                .isInstanceOf(BusinessException.class);
+
+        then(studyMemberRepository).should(never()).findByStudyIdAndUserId(any(), any());
+        then(assignmentRepository).should(never()).findByIdAndStudyId(any(), any());
+        then(submissionRepository).should(never()).findAllByAssignmentId(any());
+    }
+
+    @DisplayName("삭제 실패: 방장이 아닌 경우")
+    @Test
+    void deleteAssignment_fail_notLeader() {
+        // given
+        Long studyId = 1L, assignmentId = 10L, userId = 100L;
+
+        Study study = Study.builder().id(studyId).build();
+        StudyMember member = StudyMember.builder().study(study).role(StudyRole.MEMBER).build();
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(member));
+
+        // then
+        assertThatThrownBy(() -> assignmentService.deleteAssignment(studyId, assignmentId, userId))
+                .isInstanceOf(BusinessException.class);
+
+        then(assignmentRepository).should(never()).findByIdAndStudyId(any(), any());
+        then(submissionRepository).should(never()).findAllByAssignmentId(any());
+        then(fileRepository).should(never()).findAllByAssignmentId(any());
+    }
 }
