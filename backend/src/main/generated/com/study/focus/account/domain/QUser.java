@@ -1,0 +1,48 @@
+package com.study.focus.account.domain;
+
+import static com.querydsl.core.types.PathMetadataFactory.*;
+
+import com.querydsl.core.types.dsl.*;
+
+import com.querydsl.core.types.PathMetadata;
+import javax.annotation.processing.Generated;
+import com.querydsl.core.types.Path;
+
+
+/**
+ * QUser is a Querydsl query type for User
+ */
+@Generated("com.querydsl.codegen.DefaultEntitySerializer")
+public class QUser extends EntityPathBase<User> {
+
+    private static final long serialVersionUID = 1404640812L;
+
+    public static final QUser user = new QUser("user");
+
+    public final com.study.focus.common.domain.QBaseCreatedEntity _super = new com.study.focus.common.domain.QBaseCreatedEntity(this);
+
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
+
+    public final NumberPath<Long> id = createNumber("id", Long.class);
+
+    public final DateTimePath<java.time.LocalDateTime> lastLoginAt = createDateTime("lastLoginAt", java.time.LocalDateTime.class);
+
+    public final EnumPath<LoginType> loginType = createEnum("loginType", LoginType.class);
+
+    public final NumberPath<Long> trustScore = createNumber("trustScore", Long.class);
+
+    public QUser(String variable) {
+        super(User.class, forVariable(variable));
+    }
+
+    public QUser(Path<? extends User> path) {
+        super(path.getType(), path.getMetadata());
+    }
+
+    public QUser(PathMetadata metadata) {
+        super(User.class, metadata);
+    }
+
+}
+
