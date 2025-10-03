@@ -69,7 +69,7 @@ class ResourceServiceTest {
     @BeforeEach
     void setUp(){
         groupService = new GroupService(studyMemberRepository);
-        resourceService = new ResourceService(resourceRepository,groupService,userService);
+        resourceService = new ResourceService(resourceRepository,groupService,userService,fileRepository,s3Uploader);
     }
 
     User testUser = User.builder().id(1L). trustScore(30L).lastLoginAt(LocalDateTime.now()).build();
@@ -170,10 +170,13 @@ class ResourceServiceTest {
 
         given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId))
                 .willReturn(Optional.of(teststudyMember));
-        given(resourceRepository.findById(resourceId))
+
+        given(resourceRepository.findByIdAndStudyId(resourceId,studyId  ))
                 .willReturn(Optional.of(resource));
+
         given(userService.getMyProfile(any()))
                 .willReturn(mockProfile);
+
         given(fileRepository.findAllByResource_Id(resourceId))
                 .willReturn(List.of(file));
         given(s3Uploader.getUrlFile("fileKey"))
@@ -182,21 +185,55 @@ class ResourceServiceTest {
         // when
         GetResourceDetailResponse result = resourceService.getResourceDetail(studyId, resourceId, userId);
 
-        // then
-        /*
+        //then
         Assertions.assertThat(result).isNotNull();
-        Assertions.assertThat(result.getTitle()).isEqualTo("자료 제목");
-        Assertions.assertThat(result.getDescription()).isEqualTo("자료 설명");
-        Assertions.assertThat(result.getUserName()).isEqualTo("authorNick");
-        Assertions.assertThat(result.getProfileImageUrl()).isEqualTo("profileImg.png");
+        Assertions.assertThat(result.getTitle()).isEqualTo(resource.getTitle());
+        Assertions.assertThat(result.getContent()).isEqualTo(resource.getDescription());
+        Assertions.assertThat(result.getAuthor()    ).isEqualTo(mockProfile.getNickname() );
+        Assertions.assertThat(result.getProfileUrl()).isNull();
         Assertions.assertThat(result.getFiles()).hasSize(1);
 
-        ResourceDetailFileDto fileDto = result.getFiles().get(0);
-        Assertions.assertThat(fileDto.getFileName()).isEqualTo("sample.txt");
-        Assertions.assertThat(fileDto.getFileUrl()).isEqualTo("https://s3.bucket/fileKey");
-
-         */
     }
+
+    @Test
+    @DisplayName("자료 상세 가져오기 - 실패: 스터디 멤버가 아닌 경우 ")
+    void getResourceDetail_fail_isNotStudyMember(){
+        // given
+        Long userId = 1L;
+        Long studyId = 1L;
+        Long resourceId = 100L;
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId))
+                .willReturn(Optional.empty());
+
+        // when & then
+        Assertions.assertThatThrownBy(() -> {
+            resourceService.getResourceDetail(studyId, resourceId, userId);
+        }).isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    @DisplayName("자료 상세 가져오기 - 실패: 자료가 없는 경우 ")
+    void getResourceDetail_fail_resourceNotFound(){
+        // given
+        Long userId = 1L;
+        Long studyId = 1L;
+        Long resourceId = 100L;
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId))
+                .willReturn(Optional.of(teststudyMember));
+
+        given(resourceRepository.findByIdAndStudyId(resourceId,studyId))
+                .willReturn(Optional.empty());
+
+
+        // when && then
+        Assertions.assertThatThrownBy(() -> {
+            resourceService.getResourceDetail(studyId, resourceId, userId);
+        }).isInstanceOf(BusinessException.class);
+
+    }
+
 
 
 

@@ -9,6 +9,9 @@ import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.repository.UserRepository;
 import com.study.focus.common.domain.Address;
 import com.study.focus.common.domain.Category;
+import com.study.focus.common.domain.File;
+import com.study.focus.common.dto.FileDetailDto;
+import com.study.focus.common.repository.FileRepository;
 import com.study.focus.resource.domain.Resource;
 import com.study.focus.resource.repository.ResourceRepository;
 import com.study.focus.study.domain.*;
@@ -23,6 +26,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -52,10 +56,15 @@ public class ResourceControllerTest {
     private ResourceRepository resourceRepository;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private FileRepository fileRepository;
 
     private User user;
     private Study study;
     private StudyMember studyMember;
+    private Resource resource1;
+
+
 
     @BeforeEach
     void setUp() {
@@ -86,16 +95,20 @@ public class ResourceControllerTest {
                 .exitedAt(LocalDateTime.now().plusMonths(1))
                 .build());
 
-        resourceRepository.save(Resource.builder()
+        resource1 = resourceRepository.save(Resource.builder()
                 .study(study)
                 .author(studyMember)
                 .title("자료1")
                 .description("내용1")
                 .build());
+
+        fileRepository.save(File.ofResource(resource1, FileDetailDto.builder().originalFileName("fileName.txt")
+                .key("fileKey").contentType("txt").fileSize(10L).build()));
     }
 
     @AfterEach
     void after() {
+        fileRepository.deleteAll();
         resourceRepository.deleteAll();
         studyMemberRepository.deleteAll();
         studyRepository.deleteAll();
@@ -104,7 +117,7 @@ public class ResourceControllerTest {
     }
 
     @Test
-    @DisplayName("성공: 자료 목록 조회")
+    @DisplayName("자료 목록 조회- 성공")
     void getResources_success() throws Exception {
         mockMvc.perform(get("/api/studies/" + study.getId() + "/resources")
                         .with(user(new CustomUserDetails(user.getId())))
@@ -114,7 +127,7 @@ public class ResourceControllerTest {
     }
 
     @Test
-    @DisplayName("실패: 스터디 멤버가 아닌 경우")
+    @DisplayName("자료 목록 조회- 실패: 스터디 멤버가 아닌 경우")
     void getResources_fail_notStudyMember() throws Exception {
         User anotherUser = userRepository.save(User.builder()
                 .trustScore(10L)
@@ -125,6 +138,49 @@ public class ResourceControllerTest {
                         .with(user(new CustomUserDetails(anotherUser.getId()))))
                 .andExpect(status().isBadRequest());
     }
+
+
+    @Test
+    @DisplayName("자료 상세 조회 - 성공")
+    void getResourceDetail_success() throws Exception {
+        //when & then
+        mockMvc.perform(get("/api/studies/" + study.getId() + "/resources" +"/"+resource1.getId())
+                        .with(user(new CustomUserDetails(user.getId())))
+                        .with(csrf())
+                )
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.files.length()").value(1))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(resource1.getTitle()));
+
+    }
+    @Test
+    @DisplayName("자료 상세 가져오기 - 실패: 스터디 멤버가 아닌 경우 ")
+    void getResourceDetail_fail_isNotStudyMember() throws Exception
+    {
+        //given
+        User notStudyMember = userRepository.save(User.builder().trustScore(30L).build());
+
+
+        //when & then
+        mockMvc.perform(get("/api/studies/" + study.getId() + "/resources" +"/"+resource1.getId())
+                        .with(user(new CustomUserDetails(notStudyMember.getId())))
+                        .with(csrf())
+                )
+                .andExpect(status().isBadRequest());
+
+    }
+
+    @Test
+    @DisplayName("자료 상세 가져오기 - 실패: 자료가 없는 경우 ")
+    void getResourceDetail_fail_resourceNotFound() throws Exception {
+        //when & then
+        mockMvc.perform(get("/api/studies/" + study.getId() + "/resources" +"/"+999999L)
+                        .with(user(new CustomUserDetails(user.getId())))
+                        .with(csrf())
+                )
+                .andExpect(status().isBadRequest());
+    }
+
 
 
 }
