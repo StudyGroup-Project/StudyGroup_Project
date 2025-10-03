@@ -20,10 +20,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
 @SpringBootTest
+@Transactional
 @ActiveProfiles("test")
 @Import(S3TestConfig.class)
 class FileCleanupSchedulerTest {
