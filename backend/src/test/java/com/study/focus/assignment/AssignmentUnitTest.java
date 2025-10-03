@@ -816,7 +816,7 @@ class AssignmentUnitTest {
         // then
         then(fileRepository).should(times(1)).findAllBySubmissionIdIn(List.of(201L, 202L));
         then(fileRepository).should(never()).saveAll(anyList());
-        then(submissionRepository).should(times(1)).deleteAllInBatch(List.of(s1, s2));
+        then(submissionRepository).should(times(1)).deleteAll(List.of(s1, s2));
         then(assignmentRepository).should(times(1)).delete(assignment);
     }
 
