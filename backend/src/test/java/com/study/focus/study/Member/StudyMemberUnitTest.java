@@ -2,8 +2,11 @@ package com.study.focus.study.Member;
 
 import com.study.focus.account.domain.User;
 import com.study.focus.common.exception.BusinessException;
+import com.study.focus.common.exception.CommonErrorCode;
+import com.study.focus.common.exception.UserErrorCode;
 import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
+import com.study.focus.study.domain.StudyMemberStatus;
 import com.study.focus.study.domain.StudyRole;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.service.StudyMemberService;
@@ -22,6 +25,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 
 @ExtendWith(MockitoExtension.class)
 public class StudyMemberUnitTest {
@@ -32,10 +36,11 @@ public class StudyMemberUnitTest {
     @Mock
     private StudyMemberRepository studyMemberRepository;
 
+
     @Test
     @DisplayName("그룹 인원 추방 - 성공")
     void expelMember_Success() {
-        // given: 방장이 멤버를 추방하는 정상적인 상황
+        // given
         final Long studyId = 1L;
         final Long leaderId = 100L;
         final Long memberId = 200L;
@@ -44,18 +49,21 @@ public class StudyMemberUnitTest {
         User memberToExpel = User.builder().id(memberId).build();
         Study study = Study.builder().id(studyId).build();
 
-        StudyMember leaderMember = StudyMember.builder().user(leader).study(study).role(StudyRole.LEADER).build();
-        StudyMember targetMember = StudyMember.builder().user(memberToExpel).study(study).role(StudyRole.MEMBER).build();
+        StudyMember leaderMember = StudyMember.builder().user(leader).study(study).role(StudyRole.LEADER).status(StudyMemberStatus.JOINED).build();
+        StudyMember targetMember = spy(StudyMember.builder().user(memberToExpel).study(study).role(StudyRole.MEMBER).status(StudyMemberStatus.JOINED).build());
 
-        given(studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER)).willReturn(Optional.of(leaderMember));
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, memberId)).willReturn(Optional.of(targetMember));
+        // [수정] 방장 권한 확인 시, 활동 중인(JOINED) 방장인지 확인
+        given(studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER))
+                .willReturn(Optional.of(leaderMember));
+        // [수정] 추방 대상이 활동 중인(JOINED) 멤버인지 확인
+        given(studyMemberRepository.findByStudyIdAndUserIdAndStatus(studyId, memberId, StudyMemberStatus.JOINED))
+                .willReturn(Optional.of(targetMember));
 
-        // when: 서비스 메서드 호출
-        assertThatCode(() -> studyMemberService.expelMember(studyId, memberId, leaderId))
-                .doesNotThrowAnyException();
+        // when
+        studyMemberService.expelMember(studyId, memberId, leaderId);
 
-        // then: delete 메서드가 정확히 한 번 호출되었는지 검증
-        then(studyMemberRepository).should().delete(targetMember);
+        // then
+        then(targetMember).should().updateStatus(StudyMemberStatus.BANNED);
     }
 
     @Test
@@ -63,10 +71,11 @@ public class StudyMemberUnitTest {
     void expelMember_Fail_NotLeader() {
         // given: 방장이 아닌 일반 멤버가 추방을 시도하는 상황
         final Long studyId = 1L;
-        final Long notLeaderId = 300L; // 요청자
-        final Long memberId = 200L;   // 추방 대상
+        final Long leaderId = 100L;
+        final Long notLeaderId = 300L;
+        final Long memberId = 200L;
 
-        User leader = User.builder().id(100L).build();
+        User leader = User.builder().id(leaderId).build();
         Study study = Study.builder().id(studyId).build();
         StudyMember leaderMember = StudyMember.builder().user(leader).study(study).role(StudyRole.LEADER).build();
 
@@ -74,10 +83,8 @@ public class StudyMemberUnitTest {
 
         // when & then: 권한 없음 예외(BusinessException)가 발생하는지 검증
         assertThatThrownBy(() -> studyMemberService.expelMember(studyId, memberId, notLeaderId))
-                .isInstanceOf(BusinessException.class);
-
-        // delete 메서드가 호출되지 않았는지 확인
-        then(studyMemberRepository).should(never()).delete(any(StudyMember.class));
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", UserErrorCode.URL_FORBIDDEN);
     }
 
     @Test
@@ -95,9 +102,8 @@ public class StudyMemberUnitTest {
 
         // when & then: 잘못된 요청 예외(BusinessException)가 발생하는지 검증
         assertThatThrownBy(() -> studyMemberService.expelMember(studyId, leaderId, leaderId))
-                .isInstanceOf(BusinessException.class);
-
-        then(studyMemberRepository).should(never()).delete(any(StudyMember.class));
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", CommonErrorCode.INVALID_REQUEST);
     }
 
     @Test
@@ -113,14 +119,68 @@ public class StudyMemberUnitTest {
         StudyMember leaderMember = StudyMember.builder().user(leader).study(study).role(StudyRole.LEADER).build();
 
         given(studyMemberRepository.findByStudyIdAndRole(studyId, StudyRole.LEADER)).willReturn(Optional.of(leaderMember));
-        // findByStudyIdAndUserId 호출 시, 비어있는 Optional을 반환하도록 설정
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, notMemberId)).willReturn(Optional.empty());
+        given(studyMemberRepository.findByStudyIdAndUserIdAndStatus(studyId, notMemberId, StudyMemberStatus.JOINED )).willReturn(Optional.empty());
 
         // when & then: 잘못된 파라미터 예외(BusinessException)가 발생하는지 검증
         assertThatThrownBy(() -> studyMemberService.expelMember(studyId, notMemberId, leaderId))
-                .isInstanceOf(BusinessException.class);
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", CommonErrorCode.INVALID_PARAMETER);
+    }
 
-        then(studyMemberRepository).should(never()).delete(any(StudyMember.class));
+    // --- 그룹 탈퇴 테스트 ---
+
+    @Test
+    @DisplayName("그룹 탈퇴 - 성공")
+    void leaveStudy_Success() {
+        // given: 일반 멤버가 탈퇴를 요청하는 정상적인 상황
+        final Long studyId = 1L;
+        final Long memberId = 200L;
+
+        User member = User.builder().id(memberId).build();
+        Study study = Study.builder().id(studyId).build();
+        StudyMember targetMember = spy(StudyMember.builder().user(member).study(study).role(StudyRole.MEMBER).build());
+
+        given(studyMemberRepository.findByStudyIdAndUserIdAndStatus(studyId, memberId,StudyMemberStatus.JOINED)).willReturn(Optional.of(targetMember));
+
+        // when
+        studyMemberService.leaveStudy(studyId, memberId);
+
+        // then: 대상 멤버의 상태가 'LEFT'로 변경되는지 검증
+        then(targetMember).should().updateStatus(StudyMemberStatus.LEFT);
+    }
+
+    @Test
+    @DisplayName("그룹 탈퇴 실패 - 방장이 탈퇴를 시도하는 경우")
+    void leaveStudy_Fail_LeaderCannotLeave() {
+        // given: 방장이 탈퇴를 시도하는 상황
+        final Long studyId = 1L;
+        final Long leaderId = 100L;
+
+        User leader = User.builder().id(leaderId).build();
+        Study study = Study.builder().id(studyId).build();
+        StudyMember leaderMember = StudyMember.builder().user(leader).study(study).role(StudyRole.LEADER).build();
+
+        given(studyMemberRepository.findByStudyIdAndUserIdAndStatus(studyId, leaderId, StudyMemberStatus.JOINED)).willReturn(Optional.of(leaderMember));
+
+        // when & then: 잘못된 요청 예외(BusinessException)가 발생하는지 검증
+        assertThatThrownBy(() -> studyMemberService.leaveStudy(studyId, leaderId))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", CommonErrorCode.INVALID_REQUEST);
+    }
+
+    @Test
+    @DisplayName("그룹 탈퇴 실패 - 멤버가 아닌 사용자가 탈퇴를 시도하는 경우")
+    void leaveStudy_Fail_NotAMember() {
+        // given: 스터디 멤버가 아닌 사용자가 탈퇴를 시도하는 상황
+        final Long studyId = 1L;
+        final Long notMemberId = 999L;
+
+        given(studyMemberRepository.findByStudyIdAndUserIdAndStatus(studyId, notMemberId, StudyMemberStatus.JOINED)).willReturn(Optional.empty());
+
+        // when & then: 잘못된 파라미터 예외(BusinessException)가 발생하는지 검증
+        assertThatThrownBy(() -> studyMemberService.leaveStudy(studyId, notMemberId))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", CommonErrorCode.INVALID_PARAMETER);
     }
 
 }

@@ -120,66 +120,81 @@ public class StudyMemberIntegrationTest {
     @Test
     @DisplayName("그룹 인원 추방 - 성공")
     void expelMember_Success() throws Exception {
-        // given: setUp에서 방장(leader)과 추방될 멤버(member)가 이미 스터디에 속해 있음
+        // given
         long initialMemberCount = studyMemberRepository.count();
 
-        // when: 방장 권한으로 멤버 추방 API 호출
+        // when
         mockMvc.perform(delete("/api/studies/{studyId}/members/{userId}", testStudy.getId(), member.getId())
-                        .with(user(new CustomUserDetails(leader.getId())))
-                        .with(csrf()))
-                .andExpect(status().isOk());
+                        .with(user(new CustomUserDetails(leader.getId()))).with(csrf()))
+                .andExpect(status().isNoContent());
 
-        // then: DB에서 멤버가 실제로 삭제되었는지 확인
-        assertThat(studyMemberRepository.count()).isEqualTo(initialMemberCount - 1);
-        assertThat(studyMemberRepository.findByStudyIdAndUserId(testStudy.getId(), member.getId())).isNotPresent();
+        // then
+        StudyMember expelledMember = studyMemberRepository.findByStudyIdAndUserId(testStudy.getId(), member.getId())
+                .orElseThrow(() -> new AssertionError("멤버가 삭제되면 안됩니다."));
+
+        assertThat(studyMemberRepository.count()).isEqualTo(initialMemberCount);
+        assertThat(expelledMember.getStatus()).isEqualTo(StudyMemberStatus.BANNED);
     }
 
     @Test
     @DisplayName("그룹 인원 추방 실패 - 방장이 아닌 경우")
     void expelMember_Fail_NotLeader() throws Exception {
-        // given: 방장이 아닌 일반 멤버(member)가 다른 멤버(leader)를 추방하려 시도
-        long initialMemberCount = studyMemberRepository.count();
-
-        // when: 일반 멤버 권한으로 추방 API 호출
         mockMvc.perform(delete("/api/studies/{studyId}/members/{userId}", testStudy.getId(), leader.getId())
-                        .with(user(new CustomUserDetails(member.getId()))) // 방장이 아닌 사용자로 인증
-                        .with(csrf()))
-                .andExpect(status().isForbidden()); // then: 권한 없음(403) 응답을 기대
-
-        // then: 멤버 수가 변하지 않았는지 확인
-        assertThat(studyMemberRepository.count()).isEqualTo(initialMemberCount);
+                        .with(user(new CustomUserDetails(member.getId()))).with(csrf()))
+                .andExpect(status().isForbidden());
     }
 
     @Test
     @DisplayName("그룹 인원 추방 실패 - 자기 자신을 추방하는 경우")
     void expelMember_Fail_SelfExpulsion() throws Exception {
-        // given: 방장이 자기 자신을 추방 대상으로 지정
-        long initialMemberCount = studyMemberRepository.count();
-
-        // when: 자기 자신을 추방하는 API 호출
         mockMvc.perform(delete("/api/studies/{studyId}/members/{userId}", testStudy.getId(), leader.getId())
-                        .with(user(new CustomUserDetails(leader.getId())))
-                        .with(csrf()))
-                .andExpect(status().isBadRequest()); // then: 잘못된 요청(400) 응답을 기대
-
-        // then: 멤버 수가 변하지 않았는지 확인
-        assertThat(studyMemberRepository.count()).isEqualTo(initialMemberCount);
+                        .with(user(new CustomUserDetails(leader.getId()))).with(csrf()))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("그룹 인원 추방 실패 - 대상이 그룹 멤버가 아닌 경우")
     void expelMember_Fail_TargetNotMember() throws Exception {
-        // given: 스터디에 속하지 않은 'testUser'를 추방 대상으로 지정
+        mockMvc.perform(delete("/api/studies/{studyId}/members/{userId}", testStudy.getId(), testUser.getId())
+                        .with(user(new CustomUserDetails(leader.getId()))).with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    // --- 그룹 탈퇴 (leaveStudy) 테스트 ---
+
+    @Test
+    @DisplayName("그룹 탈퇴 - 성공")
+    void leaveStudy_Success() throws Exception {
+        // given
         long initialMemberCount = studyMemberRepository.count();
 
-        // when: 그룹 멤버가 아닌 유저를 추방하는 API 호출
-        mockMvc.perform(delete("/api/studies/{studyId}/members/{userId}", testStudy.getId(), testUser.getId())
-                        .with(user(new CustomUserDetails(leader.getId())))
-                        .with(csrf()))
-                .andExpect(status().isBadRequest()); // then: 잘못된 파라미터(400) 응답을 기대
+        // when
+        mockMvc.perform(delete("/api/studies/{studyId}/members/me", testStudy.getId())
+                        .with(user(new CustomUserDetails(member.getId()))).with(csrf()))
+                .andExpect(status().isNoContent());
 
-        // then: 멤버 수가 변하지 않았는지 확인
+        // then
+        StudyMember leftMember = studyMemberRepository.findByStudyIdAndUserId(testStudy.getId(), member.getId())
+                .orElseThrow(() -> new AssertionError("멤버가 삭제되면 안됩니다."));
+
         assertThat(studyMemberRepository.count()).isEqualTo(initialMemberCount);
+        assertThat(leftMember.getStatus()).isEqualTo(StudyMemberStatus.LEFT);
+    }
+
+    @Test
+    @DisplayName("그룹 탈퇴 실패 - 방장은 탈퇴할 수 없음")
+    void leaveStudy_Fail_LeaderCannotLeave() throws Exception {
+        mockMvc.perform(delete("/api/studies/{studyId}/members/me", testStudy.getId())
+                        .with(user(new CustomUserDetails(leader.getId()))).with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("그룹 탈퇴 실패 - 멤버가 아닌 사용자의 요청")
+    void leaveStudy_Fail_NotAMember() throws Exception {
+        mockMvc.perform(delete("/api/studies/{studyId}/members/me", testStudy.getId())
+                        .with(user(new CustomUserDetails(testUser.getId()))).with(csrf()))
+                .andExpect(status().isBadRequest());
     }
 
 
