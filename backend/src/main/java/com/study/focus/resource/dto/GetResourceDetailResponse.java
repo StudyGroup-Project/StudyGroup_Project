@@ -15,9 +15,9 @@ import java.util.List;
 @Setter
 public class GetResourceDetailResponse {
     private String title;
+    private String content;
     private String author;
     private String profileUrl;
     private LocalDateTime createdAt;
-    private StringContent content;
     private List<ResourceDetailFileDto> files;
 }

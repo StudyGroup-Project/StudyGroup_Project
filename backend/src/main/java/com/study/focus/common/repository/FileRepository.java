@@ -12,6 +12,8 @@ public interface FileRepository extends JpaRepository<File, Long> {
 
     List<File>findAllByAnnouncement_Id(Long announcement_id);
 
+    List<File>findAllByResource_Id(Long resource_id);
+
 
 
 }

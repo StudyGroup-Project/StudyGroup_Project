@@ -38,13 +38,13 @@ public class ResourceController {
 
     // 자료 상세 데이터 가져오기
     @GetMapping("/{resourceId}")
-    public ResponseEntity<List<GetResourceDetailResponse>> getResourceDetail(@PathVariable Long studyId, @PathVariable Long resourceId,
+    public ResponseEntity<GetResourceDetailResponse> getResourceDetail(@PathVariable Long studyId, @PathVariable Long resourceId,
                                                                              @AuthenticationPrincipal CustomUserDetails user)
     {
         log.info("Get ResourceDetail for studyId: {} for resourceId: {}",studyId,resourceId);
         Long userId = user.getUserId();
-        List<GetResourceDetailResponse> result = resourceService.getResourceDetail(studyId, resourceId, userId);
-       return ResponseEntity.ok(result);
+        GetResourceDetailResponse result = resourceService.getResourceDetail(studyId, resourceId, userId);
+        return ResponseEntity.ok(result);
     }
 
     // 자료 수정

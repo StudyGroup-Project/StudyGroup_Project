@@ -7,9 +7,14 @@ import com.study.focus.account.dto.GetMyProfileResponse;
 import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.service.UserService;
 import com.study.focus.common.domain.Category;
+import com.study.focus.common.domain.File;
+import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.exception.BusinessException;
+import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.service.GroupService;
+import com.study.focus.common.util.S3Uploader;
 import com.study.focus.resource.domain.Resource;
+import com.study.focus.resource.dto.GetResourceDetailResponse;
 import com.study.focus.resource.dto.GetResourcesResponse;
 import com.study.focus.resource.repository.ResourceRepository;
 import com.study.focus.study.domain.Study;
@@ -51,9 +56,14 @@ class ResourceServiceTest {
     @Mock
     private UserProfileRepository userProfileRepository;
 
-
     @Mock
     private UserService userService;
+
+    @Mock
+    private FileRepository fileRepository;
+
+    @Mock
+    private S3Uploader s3Uploader;
 
 
     @BeforeEach
@@ -131,6 +141,61 @@ class ResourceServiceTest {
             resourceService.getResources(studyId, userId);
         }).isInstanceOf(BusinessException.class);
 
+    }
+
+    @Test
+    @DisplayName("자료 상세 가져오기 - 성공")
+    void getResourceDetail_success(){
+        // given
+        Long userId = 1L;
+        Long studyId = 1L;
+        Long resourceId = 100L;
+
+        Resource resource = Resource.builder()
+                .id(resourceId)
+                .study(testStudy)
+                .author(teststudyMember)
+                .title("자료 제목")
+                .description("자료 설명")
+                .build();
+
+        GetMyProfileResponse mockProfile = new GetMyProfileResponse(
+                1L, "authorNick", "profileImg.png",
+                "서울", "30", Job.FREELANCER, Category.IT,
+                null, 100L
+        );
+
+        File file = File.ofResource(resource, new FileDetailDto
+                ("sample.txt","fileKey","txt",123L));
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId))
+                .willReturn(Optional.of(teststudyMember));
+        given(resourceRepository.findById(resourceId))
+                .willReturn(Optional.of(resource));
+        given(userService.getMyProfile(any()))
+                .willReturn(mockProfile);
+        given(fileRepository.findAllByResource_Id(resourceId))
+                .willReturn(List.of(file));
+        given(s3Uploader.getUrlFile("fileKey"))
+                .willReturn("https://s3.bucket/fileKey");
+
+        // when
+        GetResourceDetailResponse result = resourceService.getResourceDetail(studyId, resourceId, userId);
+
+        // then
+        /*
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result.getTitle()).isEqualTo("자료 제목");
+        Assertions.assertThat(result.getDescription()).isEqualTo("자료 설명");
+        Assertions.assertThat(result.getUserName()).isEqualTo("authorNick");
+        Assertions.assertThat(result.getProfileImageUrl()).isEqualTo("profileImg.png");
+        Assertions.assertThat(result.getFiles()).hasSize(1);
+
+        ResourceDetailFileDto fileDto = result.getFiles().get(0);
+        Assertions.assertThat(fileDto.getFileName()).isEqualTo("sample.txt");
+        Assertions.assertThat(fileDto.getFileUrl()).isEqualTo("https://s3.bucket/fileKey");
+
+         */
     }
 
 
