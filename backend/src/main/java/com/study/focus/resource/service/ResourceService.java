@@ -7,6 +7,7 @@ import com.study.focus.announcement.dto.GetAnnouncementsResponse;
 import com.study.focus.announcement.service.AnnouncementService;
 import com.study.focus.common.service.GroupService;
 import com.study.focus.resource.domain.Resource;
+import com.study.focus.resource.dto.GetResourceDetailResponse;
 import com.study.focus.resource.dto.GetResourcesResponse;
 import com.study.focus.resource.repository.ResourceRepository;
 import com.study.focus.study.domain.StudyMember;
@@ -47,8 +48,10 @@ public class ResourceService {
     }
 
     // 자료 상세 데이터 가져오기
-    public void getResourceDetail(Long studyId, Long resourceId) {
+    public List<GetResourceDetailResponse> getResourceDetail(Long studyId, Long resourceId,Long userId) {
         // TODO: 자료 상세 조회
+
+        return null;
     }
 
     // 자료 수정

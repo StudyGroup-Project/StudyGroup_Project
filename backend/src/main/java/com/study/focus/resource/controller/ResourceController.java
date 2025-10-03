@@ -2,6 +2,7 @@ package com.study.focus.resource.controller;
 
 import com.study.focus.account.dto.CustomUserDetails;
 import com.study.focus.announcement.dto.GetAnnouncementsResponse;
+import com.study.focus.resource.dto.GetResourceDetailResponse;
 import com.study.focus.resource.dto.GetResourcesResponse;
 import com.study.focus.resource.service.ResourceService;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +38,14 @@ public class ResourceController {
 
     // 자료 상세 데이터 가져오기
     @GetMapping("/{resourceId}")
-    public void getResourceDetail(@PathVariable Long studyId, @PathVariable Long resourceId) {}
+    public ResponseEntity<List<GetResourceDetailResponse>> getResourceDetail(@PathVariable Long studyId, @PathVariable Long resourceId,
+                                                                             @AuthenticationPrincipal CustomUserDetails user)
+    {
+        log.info("Get ResourceDetail for studyId: {} for resourceId: {}",studyId,resourceId);
+        Long userId = user.getUserId();
+        List<GetResourceDetailResponse> result = resourceService.getResourceDetail(studyId, resourceId, userId);
+       return ResponseEntity.ok(result);
+    }
 
     // 자료 수정
     @PutMapping("/{resourceId}")
