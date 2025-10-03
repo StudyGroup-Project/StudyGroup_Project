@@ -7,6 +7,7 @@ public class UrlUtil {
     // ⭐️ 공통화된 리다이렉트 기본 경로 상수
     // 일반 로그인과 OAuth 로그인이 최종 리다이렉트되는 프론트엔드 URL입니다.
     public static final String FRONTEND_BASE_URL = "http://localhost:5173";
+    public static final String BACKEND_BASE_URL = "http://localhost:8080";
     // 프론트 배포 완료시 변경 + 환경변수 설정
     // public static final String REDIRECT_PATH = System.getenv("FRONTEND_REDIRECT_URL");
 

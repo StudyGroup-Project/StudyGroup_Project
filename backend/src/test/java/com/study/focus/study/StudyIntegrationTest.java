@@ -27,7 +27,6 @@ import com.study.focus.study.repository.BookmarkRepository;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyProfileRepository;
 import com.study.focus.study.repository.StudyRepository;
-import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

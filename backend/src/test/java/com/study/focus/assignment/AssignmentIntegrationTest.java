@@ -561,7 +561,7 @@ class AssignmentIntegrationTest {
 
         // when & then
         mockMvc.perform(get("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId())
-                        .with(user(new com.study.focus.account.dto.CustomUserDetails(user1.getId()))))
+                        .with(user(new CustomUserDetails(user1.getId()))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(a.getId()))
                 .andExpect(jsonPath("$.title").value("detail t"))
@@ -587,7 +587,7 @@ class AssignmentIntegrationTest {
 
         // when & then
         mockMvc.perform(get("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId())
-                        .with(user(new com.study.focus.account.dto.CustomUserDetails(user1.getId()))))
+                        .with(user(new CustomUserDetails(user1.getId()))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(a.getId()))
                 .andExpect(jsonPath("$.files.length()").value(0))
@@ -609,7 +609,7 @@ class AssignmentIntegrationTest {
 
         // when & then
         mockMvc.perform(get("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId())
-                        .with(user(new com.study.focus.account.dto.CustomUserDetails(user2.getId())))) // study1 미소속
+                        .with(user(new CustomUserDetails(user2.getId())))) // study1 미소속
                 .andExpect(status().isBadRequest());
     }
 

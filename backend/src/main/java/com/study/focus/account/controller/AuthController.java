@@ -63,7 +63,7 @@ public class AuthController {
         boolean profileExists = userProfileRepository.findByUserId(userId).isPresent();
 
         String targetUrl = UrlUtil.createRedirectUrl(
-                UrlUtil.FRONTEND_BASE_URL,
+                UrlUtil.BACKEND_BASE_URL,
                 UrlUtil.HOME_PATH,
                 UrlUtil.PROFILE_SETUP_PATH,
                 accessToken,

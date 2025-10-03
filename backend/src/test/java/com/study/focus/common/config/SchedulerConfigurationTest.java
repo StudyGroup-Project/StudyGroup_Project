@@ -8,7 +8,6 @@ import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.util.S3Uploader;
-import com.study.focus.config.S3TestConfig;
 import com.study.focus.study.domain.*;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;

@@ -19,6 +19,10 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember,Long> {
 
    boolean existsByStudyIdAndUserIdAndStatus(Long studyId, Long userId, StudyMemberStatus status);
 
+    Optional<StudyMember> findByStudyIdAndUserIdAndStatus(Long studyId,
+                                                            Long userId,
+                                                            StudyMemberStatus status);
+
     /**
      * 방장의 trustScore 기준 내림차순 상위 10개 스터디 프로필 조회
      */
