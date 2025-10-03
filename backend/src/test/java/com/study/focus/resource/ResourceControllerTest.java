@@ -17,6 +17,7 @@ import com.study.focus.resource.repository.ResourceRepository;
 import com.study.focus.study.domain.*;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,6 +25,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -35,6 +38,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -181,6 +185,60 @@ public class ResourceControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    @DisplayName("자료 생성 - 성공: 파일 포함")
+    void createResource_withFile_success() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "files", "hello.txt", "text/plain", "HelloWorld".getBytes());
+
+        long beforeResourceCount = resourceRepository.findAll().size();
+        long beforeFileCount = fileRepository.findAll().size();
+
+        mockMvc.perform(multipart("/api/studies/" + study.getId() + "/resources")
+                        .file(file)
+                        .param("title", "새 자료 제목")
+                        .param("content", "새 자료 내용")
+                        .contentType(MediaType.MULTIPART_FORM_DATA)
+                        .with(user(new CustomUserDetails(user.getId())))
+                        .with(csrf()))
+                .andExpect(status().isCreated());
+
+        Assertions.assertThat(resourceRepository.findAll().size()).isEqualTo(beforeResourceCount + 1);
+        Assertions.assertThat(fileRepository.findAll().size()).isEqualTo(beforeFileCount+1);
+    }
+
+    @Test
+    @DisplayName("자료 생성 - 성공: 파일 제외 ")
+    void createResource_withOutFile_success() throws Exception {
+
+
+        long beforeResourceCount = resourceRepository.findAll().size();
+        long beforeFileCount = fileRepository.findAll().size();
+
+        mockMvc.perform(multipart("/api/studies/" + study.getId() + "/resources")
+                        .param("title", "새 자료 제목")
+                        .param("content", "새 자료 내용")
+                        .contentType(MediaType.MULTIPART_FORM_DATA)
+                        .with(user(new CustomUserDetails(user.getId())))
+                        .with(csrf()))
+                        .andExpect(status().isCreated());
+
+        Assertions.assertThat(resourceRepository.findAll().size()).isEqualTo(beforeResourceCount + 1);
+        Assertions.assertThat(fileRepository.findAll().size()).isEqualTo(beforeFileCount);
+    }
+
+    @Test
+    @DisplayName("자료 생성 - 실패: 스터디 멤버가 아닌 경우")
+    void createResource_fail_notMember() throws Exception {
+
+        mockMvc.perform(multipart("/api/studies/" + study.getId() + "/resources")
+                        .param("title", "제목")
+                        .param("content", "내용")
+                        .contentType(MediaType.MULTIPART_FORM_DATA)
+                        .with(user(new CustomUserDetails(9999L)))
+                        .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
 
 
 }

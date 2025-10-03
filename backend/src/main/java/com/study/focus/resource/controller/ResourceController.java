@@ -2,11 +2,15 @@ package com.study.focus.resource.controller;
 
 import com.study.focus.account.dto.CustomUserDetails;
 import com.study.focus.announcement.dto.GetAnnouncementsResponse;
+import com.study.focus.resource.dto.CreateResourceRequest;
 import com.study.focus.resource.dto.GetResourceDetailResponse;
 import com.study.focus.resource.dto.GetResourcesResponse;
 import com.study.focus.resource.service.ResourceService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -33,8 +37,16 @@ public class ResourceController {
     }
 
     // 자료 생성
-    @PostMapping
-    public void createResource(@PathVariable Long studyId) {}
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> createResource(@PathVariable Long studyId, @AuthenticationPrincipal CustomUserDetails user
+                               , @Valid @ModelAttribute CreateResourceRequest resourceRequest
+                               )
+    {
+        log.info("Create Resource for studyId: {} for userId: {}",studyId,user.getUserId());
+        Long userId = user.getUserId();
+        resourceService.createResource(studyId,userId,resourceRequest);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
 
     // 자료 상세 데이터 가져오기
     @GetMapping("/{resourceId}")

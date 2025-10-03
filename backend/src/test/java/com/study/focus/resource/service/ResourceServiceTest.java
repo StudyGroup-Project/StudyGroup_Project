@@ -6,6 +6,7 @@ import com.study.focus.account.domain.UserProfile;
 import com.study.focus.account.dto.GetMyProfileResponse;
 import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.service.UserService;
+import com.study.focus.announcement.domain.Announcement;
 import com.study.focus.common.domain.Category;
 import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
@@ -14,6 +15,7 @@ import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.service.GroupService;
 import com.study.focus.common.util.S3Uploader;
 import com.study.focus.resource.domain.Resource;
+import com.study.focus.resource.dto.CreateResourceRequest;
 import com.study.focus.resource.dto.GetResourceDetailResponse;
 import com.study.focus.resource.dto.GetResourcesResponse;
 import com.study.focus.resource.repository.ResourceRepository;
@@ -27,7 +29,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.internal.matchers.Any;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -36,6 +40,8 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -236,6 +242,77 @@ class ResourceServiceTest {
 
 
 
+    @Test
+    @DisplayName("자료 생성 성공 - 파일 없는 경우")
+    void createResource_success_withoutFiles() {
+        // given
+        Long studyId = 1L;
+        Long userId = 1L;
 
+        CreateResourceRequest request = new CreateResourceRequest("자료제목", "자료내용", List.of());
+        Resource resource = Resource.builder().author(teststudyMember).study(testStudy).title("title").description("desc").build();
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId))
+                .willReturn(Optional.of(teststudyMember));
+        given(resourceRepository.save(any(Resource.class)))
+                .willReturn(resource);
+
+        // when
+        resourceService.createResource(studyId, userId, request);
+
+        // then
+        then(resourceRepository).should(times(1)).save(any(Resource.class));
+        then(fileRepository).should(times(0)).save(any(File.class));
+    }
+
+    @Test
+    @DisplayName("자료 생성 성공 - 파일 있는 경우")
+    void createResource_success_withFiles() {
+        // given
+        Long studyId = 1L;
+        Long userId = 1L;
+
+        MultipartFile mockFile = mock(MultipartFile.class);
+        List<MultipartFile> files = List.of(mockFile);
+
+
+        CreateResourceRequest request = new CreateResourceRequest("자료제목", "자료내용", files);
+        Resource resource = Resource.builder().author(teststudyMember).
+                study(testStudy).title("title").description("desc").build();
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId))
+                .willReturn(Optional.of(teststudyMember));
+        given(resourceRepository.save(any(Resource.class)))
+                .willReturn(resource);
+
+        FileDetailDto fileDetailDto = new FileDetailDto("file.txt", "fileKey", "txt", 10L);
+        given(s3Uploader.makeMetaData(mockFile)).willReturn(fileDetailDto);
+
+        // when
+        resourceService.createResource(studyId, userId, request);
+
+        // then
+        then(resourceRepository).should(times(1)).save(any(Resource.class));
+        then(fileRepository).should(times(1)).save(any(File.class));
+        then(s3Uploader).should(times(1)).uploadFiles(List.of(fileDetailDto
+                        .getKey()), files);
+    }
+
+    @Test
+    @DisplayName("자료 생성 실패 - 스터디 멤버가 아닌 경우")
+    void createResource_fail_notMember() {
+        // given
+        Long studyId = 1L;
+        Long userId = 1L;
+        CreateResourceRequest request = new CreateResourceRequest("제목", "내용", List.of());
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId))
+                .willReturn(Optional.empty());
+
+        // when & then
+        Assertions.assertThatThrownBy(() ->
+                resourceService.createResource(studyId, userId, request)
+        ).isInstanceOf(RuntimeException.class);
+    }
 
 }

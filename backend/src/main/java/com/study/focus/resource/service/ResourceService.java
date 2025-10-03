@@ -3,9 +3,11 @@ package com.study.focus.resource.service;
 import com.study.focus.account.dto.GetMyProfileResponse;
 import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.service.UserService;
+import com.study.focus.announcement.domain.Announcement;
 import com.study.focus.announcement.dto.GetAnnouncementsResponse;
 import com.study.focus.announcement.service.AnnouncementService;
 import com.study.focus.common.domain.File;
+import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
 import com.study.focus.common.exception.UserErrorCode;
@@ -13,6 +15,7 @@ import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.service.GroupService;
 import com.study.focus.common.util.S3Uploader;
 import com.study.focus.resource.domain.Resource;
+import com.study.focus.resource.dto.CreateResourceRequest;
 import com.study.focus.resource.dto.GetResourceDetailResponse;
 import com.study.focus.resource.dto.GetResourcesResponse;
 import com.study.focus.resource.dto.ResourceDetailFileDto;
@@ -20,8 +23,10 @@ import com.study.focus.resource.repository.ResourceRepository;
 import com.study.focus.study.domain.StudyMember;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -54,8 +59,22 @@ public class ResourceService {
     }
 
     // 자료 생성
-    public void createResource(Long studyId) {
-        // TODO: 자료 생성
+    public void createResource(Long studyId, Long userId, CreateResourceRequest  resourceRequest) {
+        //멤버 검증
+        StudyMember studyMember = groupService.memberValidation(studyId, userId);
+
+        //자료 생성
+        Resource newResource = resourceRepository.save(
+                Resource.builder().author(studyMember).study(studyMember.getStudy()).title(resourceRequest.getTitle())
+                .description(resourceRequest.getContent()).build());
+
+        //파일이 있는 경우
+        if(resourceRequest.getFiles() !=null && !resourceRequest.getFiles().isEmpty())
+        {
+            List<MultipartFile> files = resourceRequest.getFiles();
+            List<FileDetailDto> fileDetailDtoList = files.stream().map(s3Uploader::makeMetaData).toList();
+            fileUploadDbAndS3(files,fileDetailDtoList,newResource);
+        }
     }
 
     // 자료 상세 데이터 가져오기
@@ -90,5 +109,18 @@ public class ResourceService {
     private Resource findResource(Long studyId, Long resourceId) {
         return resourceRepository.findByIdAndStudyId(resourceId, studyId).orElseThrow(
                 () -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+    }
+
+
+    //파일 데이터 DB 및 S3에 반영
+    private void fileUploadDbAndS3(List<MultipartFile> files, List<FileDetailDto> list, Resource resource) {
+        //파일 데이터 db 저장
+        IntStream.range(0, list.size())
+                .forEach(index ->fileRepository.save(
+                        File.ofResource(resource, list.get(index))
+                ));
+        //파일 데이터 s3에 업로드
+        List<String> keys = list.stream().map(FileDetailDto::getKey).toList();
+        s3Uploader.uploadFiles(keys, files);
     }
 }
