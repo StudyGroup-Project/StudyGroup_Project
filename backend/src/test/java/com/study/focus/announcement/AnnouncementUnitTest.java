@@ -13,6 +13,7 @@ import com.study.focus.announcement.dto.GetAnnouncementsResponse;
 import com.study.focus.announcement.repository.AnnouncementRepository;
 import com.study.focus.announcement.repository.CommentRepository;
 import com.study.focus.announcement.service.AnnouncementService;
+import com.study.focus.common.service.GroupService;
 import com.study.focus.common.domain.Category;
 import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
@@ -25,6 +26,7 @@ import com.study.focus.study.domain.StudyMember;
 import com.study.focus.study.domain.StudyRole;
 import com.study.focus.study.repository.StudyMemberRepository;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -61,11 +63,14 @@ class AnnouncementUnitTest {
     private FileRepository fileRepository;
 
     @InjectMocks
+    private GroupService groupService;
+
+    @InjectMocks
     private AnnouncementService announcementService;
+
 
     @Mock
     private CommentRepository commentRepository;
-
 
     @Mock
     private S3Uploader s3uploader;
@@ -73,6 +78,16 @@ class AnnouncementUnitTest {
 
     @Mock
     private UserService userService;
+
+
+    @BeforeEach
+    void setUp() {
+        groupService = new GroupService(studyMemberRepository);
+        announcementService = new AnnouncementService(
+                announcementRepo,fileRepository
+                ,s3uploader,commentRepository,userService,groupService
+        );
+    }
 
 
 

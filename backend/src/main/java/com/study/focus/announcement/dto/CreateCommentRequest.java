@@ -9,6 +9,5 @@ import lombok.Setter;
 @Setter
 @Builder
 public class CreateCommentRequest {
-
     String content;
 }

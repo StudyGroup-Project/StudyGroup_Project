@@ -7,17 +7,15 @@ import com.study.focus.announcement.domain.Comment;
 import com.study.focus.announcement.dto.*;
 import com.study.focus.announcement.repository.AnnouncementRepository;
 import com.study.focus.announcement.repository.CommentRepository;
+import com.study.focus.common.service.GroupService;
 import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
-import com.study.focus.common.exception.UserErrorCode;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.util.S3Uploader;
 import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
-import com.study.focus.study.domain.StudyRole;
-import com.study.focus.study.repository.StudyMemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
@@ -34,15 +32,16 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class AnnouncementService {
     private final AnnouncementRepository announcementRepository;
-    private  final StudyMemberRepository studyMemberRepository;
     private  final FileRepository fileRepository;
     private  final S3Uploader s3Uploader;
     private  final CommentRepository commentRepository;
     private final UserService userService;
+    private  final GroupService groupService;
+
     //ID를 통해 StudyId에 userId가 포함되는지 확인하여 그룹 내 유효성 검증
     public List<GetAnnouncementsResponse> findAllSummaries(Long studyId, Long userId)
     {
-        memberValidation(studyId, userId);
+        groupService.memberValidation(studyId,userId);
         List<Announcement> resultList = announcementRepository.findAllByStudyId(studyId);
         return  resultList.stream().map(a -> {
             return new GetAnnouncementsResponse(a.getId(), a.getTitle(), a.getCreatedAt());
@@ -54,8 +53,8 @@ public class AnnouncementService {
     @Transactional
     public Long createAnnouncement(Long studyId, Long userId, String title, String content, List<MultipartFile> files)
     {
-        StudyMember userStudyMember = memberValidation(studyId, userId);
-        isLeader(userStudyMember);
+        StudyMember userStudyMember = groupService.memberValidation(studyId,userId);
+        groupService.isLeader(userStudyMember);
 
         Study study = userStudyMember.getStudy();
         Announcement announcement = Announcement.builder().
@@ -76,8 +75,8 @@ public class AnnouncementService {
     @Transactional
     public void deleteAnnouncement(Long studyId, Long userId, Long announcementId) {
         //검증
-        StudyMember userStudyMember = memberValidation(studyId, userId);
-        isLeader(userStudyMember);
+        StudyMember userStudyMember = groupService.memberValidation(studyId,userId);
+        groupService.isLeader(userStudyMember);
         Announcement findAnnouncement = validationAnnouncement(announcementId, studyId, userStudyMember.getId());
 
 
@@ -102,9 +101,9 @@ public class AnnouncementService {
     public void updateAnnouncement(Long studyId, Long announcementId, Long userId, AnnouncementUpdateDto updateDto) {
         //검증
         //1. 스터디 멤버 검증
-        StudyMember userStudyMember = memberValidation(studyId, userId);
+        StudyMember userStudyMember = groupService.memberValidation(studyId,userId);
         //2. 방장 검증
-        isLeader(userStudyMember);
+        groupService.isLeader(userStudyMember);
         //3. 공지 검증
         Announcement oldAnnouncement = validationAnnouncement(announcementId, studyId, userStudyMember.getId());
         //4. 내용 업데이트
@@ -128,7 +127,7 @@ public class AnnouncementService {
     //공지 상세 데이터 가져오기
     public GetAnnouncementDetailResponse getAnnouncementDetail(Long studyId, Long announcementId, Long userId) {
         // 멤버 검증
-        memberValidation(studyId, userId);
+        groupService.memberValidation(studyId,userId);
 
         //공지 가져오기
         Announcement announcement = findAnnouncement(studyId, announcementId);
@@ -157,7 +156,7 @@ public class AnnouncementService {
     public void addComment(Long studyId, Long announcementId,Long userId,
                            CreateCommentRequest commentRequest) {
         //1. 스터디 멤버 검증
-        StudyMember userStudyMember = memberValidation(studyId, userId);
+        StudyMember userStudyMember = groupService.memberValidation(studyId,userId);
 
         //2.공지 가져오기
         Announcement announcement = findAnnouncement(studyId, announcementId);
@@ -223,29 +222,5 @@ public class AnnouncementService {
         Optional<Announcement> announcement = announcementRepository.findByIdAndStudy_IdAndAuthor_Id(announcementId, studyId,authorId);
         return announcement.orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
     }
-
-
-
-
-
-    private static void isLeader(StudyMember userStudyMember) {
-        if(!userStudyMember.getRole().equals(StudyRole.LEADER))
-        {
-            throw new BusinessException(UserErrorCode.URL_FORBIDDEN);
-        }
-    }
-
-
-
-
-
-    //인터셉터 및 Aop 반영 시 수정 필요
-    private StudyMember memberValidation(Long studyId, Long userId) {
-        if(studyId == null || userId == null) {throw new BusinessException(CommonErrorCode.INVALID_REQUEST);}
-        return studyMemberRepository.findByStudyIdAndUserId(studyId, userId).
-                orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
-    }
-
-
 
 }
