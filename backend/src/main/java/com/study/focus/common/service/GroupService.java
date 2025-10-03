@@ -1,4 +1,4 @@
-package com.study.focus.common;
+package com.study.focus.common.service;
 
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
