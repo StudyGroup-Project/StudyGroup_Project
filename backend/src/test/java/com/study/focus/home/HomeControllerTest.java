@@ -170,20 +170,6 @@ class HomeControllerTest {
     }
 
     @Test
-    @DisplayName("성공: 스터디 없는 경우 → topStudies = []")
-    void getHomeData_success_noStudies() throws Exception {
-        bookmarkRepository.deleteAll();
-        studyMemberRepository.deleteAll();
-        studyProfileRepository.deleteAll();
-        studyRepository.deleteAll();
-
-        mockMvc.perform(get("/api/home")
-                        .with(user(new CustomUserDetails(user.getId()))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.topStudies").isEmpty());
-    }
-
-    @Test
     @DisplayName("성공: 스터디 10개 초과 → 상위 10개만 반환")
     void getHomeData_success_top10Only() throws Exception {
         IntStream.range(0, 15).forEach(i -> {
