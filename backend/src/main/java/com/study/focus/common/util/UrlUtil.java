@@ -22,7 +22,8 @@ public class UrlUtil {
             String baseUrl,
             String homePath,
             String profileSetupPath,
-            String token,
+            String accessToken,
+            String refreshToken,
             boolean profileExists) {
 
         String path;
@@ -34,7 +35,8 @@ public class UrlUtil {
         }
 
         return UriComponentsBuilder.fromHttpUrl(baseUrl + path)
-                .queryParam("token", token)
+                .queryParam("accessToken", accessToken)
+                .queryParam("refreshToken", refreshToken)
                 .build()
                 .toUriString();
     }

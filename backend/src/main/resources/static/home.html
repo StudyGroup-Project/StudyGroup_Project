@@ -51,7 +51,7 @@
 <script>
 	// ✅ 쿼리스트링에서 AccessToken 추출 (OAuth SuccessHandler가 붙여준 값)
 	const params = new URLSearchParams(window.location.search);
-	let accessToken = params.get("token");
+	let accessToken = params.get("accessToken");
 
 	// ✅ 토큰 갱신
 	async function refreshAccessToken() {

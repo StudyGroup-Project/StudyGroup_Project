@@ -55,6 +55,7 @@ public class AuthController {
                       HttpServletRequest request) throws IOException {
         LoginResponse loginResponse = accountService.login(new LoginRequest(loginId, password));
         String accessToken = loginResponse.getAccessToken();
+        String refreshToken = loginResponse.getRefreshToken();
 
         addRefreshTokenToCookie(request, response, loginResponse.getRefreshToken());
 
@@ -66,6 +67,7 @@ public class AuthController {
                 UrlUtil.HOME_PATH,
                 UrlUtil.PROFILE_SETUP_PATH,
                 accessToken,
+                refreshToken,
                 profileExists
         );
 

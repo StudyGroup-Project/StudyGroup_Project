@@ -46,6 +46,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         LoginResponse loginResponse = accountService.oauthLogin(provider, providerUserId);
         String accessToken = loginResponse.getAccessToken();
+        String refreshToken = loginResponse.getRefreshToken();
 
         addRefreshTokenToCookie(request, response, loginResponse.getRefreshToken());
 
@@ -58,6 +59,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 UrlUtil.HOME_PATH,
                 UrlUtil.PROFILE_SETUP_PATH,
                 accessToken,
+                refreshToken,
                 profileExists
         );
 
