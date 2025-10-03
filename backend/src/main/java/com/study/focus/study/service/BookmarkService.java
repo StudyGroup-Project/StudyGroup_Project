@@ -23,11 +23,6 @@ public class BookmarkService {
     private final UserRepository userRepository;
     private final StudyRepository studyRepository;
 
-    // 내 찜 목록 가져오기
-    public void getBookmarks(Long userId) {
-        // TODO: 내가 찜한 스터디 목록 조회
-    }
-
     // 스터디 그룹 찜하기
     public void addBookmark(Long userId, Long studyId) {
 

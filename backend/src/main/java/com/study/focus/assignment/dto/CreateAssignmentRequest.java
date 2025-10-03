@@ -1,5 +1,7 @@
 package com.study.focus.assignment.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,13 +15,19 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class CreateAssignmentRequest {
+    @NotBlank
     String title;
+
+    @NotBlank
     String description;
+
     List<MultipartFile> files;
 
+    @NotNull
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     LocalDateTime startAt;
 
+    @NotNull
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     LocalDateTime dueAt;
 }
