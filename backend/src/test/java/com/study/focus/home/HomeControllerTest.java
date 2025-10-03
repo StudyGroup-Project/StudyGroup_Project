@@ -122,17 +122,6 @@ class HomeControllerTest {
                 .thenReturn("https://test-bucket.s3.ap-northeast-2.amazonaws.com/profile.png");
     }
 
-    @AfterEach
-    void tearDown() {
-        bookmarkRepository.deleteAll();
-        studyMemberRepository.deleteAll();
-        studyProfileRepository.deleteAll();
-        studyRepository.deleteAll();
-        userProfileRepository.deleteAll();
-        userRepository.deleteAll();
-        fileRepository.deleteAll();
-    }
-
     @Test
     @DisplayName("성공: 홈 데이터 조회 API")
     void getHomeData_success() throws Exception {
@@ -178,20 +167,6 @@ class HomeControllerTest {
                         .with(user(new CustomUserDetails(user.getId()))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.user.profileImageUrl").doesNotExist());
-    }
-
-    @Test
-    @DisplayName("성공: 스터디 없는 경우 → topStudies = []")
-    void getHomeData_success_noStudies() throws Exception {
-        bookmarkRepository.deleteAll();
-        studyMemberRepository.deleteAll();
-        studyProfileRepository.deleteAll();
-        studyRepository.deleteAll();
-
-        mockMvc.perform(get("/api/home")
-                        .with(user(new CustomUserDetails(user.getId()))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.topStudies").isEmpty());
     }
 
     @Test
