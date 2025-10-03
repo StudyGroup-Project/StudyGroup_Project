@@ -4,15 +4,28 @@ import com.study.focus.account.domain.User;
 import com.study.focus.account.domain.UserProfile;
 import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.repository.UserRepository;
+import com.study.focus.announcement.domain.Announcement;
+import com.study.focus.announcement.repository.AnnouncementRepository;
+import com.study.focus.announcement.repository.CommentRepository;
 import com.study.focus.application.domain.Application;
 import com.study.focus.application.domain.ApplicationStatus;
 import com.study.focus.application.repository.ApplicationRepository;
+import com.study.focus.assignment.domain.Assignment;
+import com.study.focus.assignment.repository.AssignmentRepository;
+import com.study.focus.assignment.repository.FeedbackRepository;
+import com.study.focus.assignment.repository.SubmissionRepository;
+import com.study.focus.chat.repository.ChatMessageRepository;
 import com.study.focus.common.domain.Address;
 import com.study.focus.common.dto.StudyDto;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
 import com.study.focus.common.exception.UserErrorCode;
+import com.study.focus.common.repository.FileRepository;
+import com.study.focus.common.service.FileService;
 import com.study.focus.common.util.S3Uploader;
+import com.study.focus.notification.repository.NotificationRepository;
+import com.study.focus.resource.domain.Resource;
+import com.study.focus.resource.repository.ResourceRepository;
 import com.study.focus.study.domain.*;
 import com.study.focus.study.dto.*;
 import com.study.focus.study.repository.BookmarkRepository;
@@ -30,17 +43,30 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class StudyService {
+    private final FileService fileService;
     private final StudyRepository studyRepository;
     private final StudyProfileRepository studyProfileRepository;
     private final StudyMemberRepository studyMemberRepository;
     private final UserRepository userRepository;
     private final ApplicationRepository applicationRepository;
     private final UserProfileRepository userProfileRepository;
+    private final BookmarkRepository bookmarkRepository;
     private final S3Uploader s3Uploader;
+
+    private final AnnouncementRepository announcementRepository;
+    private final CommentRepository commentRepository;
+    private final AssignmentRepository assignmentRepository;
+    private final FeedbackRepository feedbackRepository;
+    private final SubmissionRepository submissionRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final NotificationRepository notificationRepository;
+    private final ResourceRepository resourceRepository;
 
     // 스터디 그룹 생성
     public Long createStudy(Long userId, CreateStudyRequest createStudyRequest ) {
@@ -187,7 +213,50 @@ public class StudyService {
     }
 
     // 그룹 삭제
-    public void deleteStudy(Long studyId) {
-        // TODO: 스터디 삭제
+    @Transactional
+    public void deleteStudy(Long studyId, Long requestUserId) {
+        //방장 권한
+        StudyMember leaderMember = studyMemberRepository.findByStudyIdAndRoleAndStatus(studyId, StudyRole.LEADER, StudyMemberStatus.JOINED)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+
+        if(!leaderMember.getUser().getId().equals(requestUserId)){
+            throw new BusinessException(UserErrorCode.URL_FORBIDDEN);
+        }
+
+        // 스터디에 속한 모든 자식 엔티티 조회
+        List<Announcement> announcements = announcementRepository.findAllByStudyId(studyId);
+        List<Assignment> assignments = assignmentRepository.findAllByStudyId(studyId);
+        List<Resource> resources = resourceRepository.findAllByStudyId(studyId);
+
+        // 각 엔티티의 파일들을 삭제하도록 fileservice에 위임.
+        announcements.forEach(an -> fileService.deleteFilesByAnnouncementId(an.getId()));
+
+        assignments.forEach(as -> {
+            //과제 + 제출물 전부 삭제
+            List<Long> submissionIds = submissionRepository.findIdsByAssignmentId(as.getId());
+            fileService.deleteFilesBySubmissionIds(submissionIds);
+            fileService.deleteFilesByAssignmentId(as.getId());
+        });
+
+        // 자료 삭제
+        resources.forEach(r -> fileService.deleteFilesByResourceId(r.getId()));
+
+        commentRepository.deleteAllByAnnouncement_Study_Id(studyId);
+        feedbackRepository.deleteAllBySubmission_Assignment_Study_Id(studyId);
+        submissionRepository.deleteAllByAssignment_Study_Id(studyId);
+
+        announcementRepository.deleteAllByStudy_Id(studyId);
+        assignmentRepository.deleteAllByStudy_Id(studyId);
+
+        applicationRepository.deleteAllByStudy_Id(studyId);
+        bookmarkRepository.deleteAllByStudy_Id(studyId);
+        chatMessageRepository.deleteAllByStudy_Id(studyId);
+        notificationRepository.deleteAllByStudy_Id(studyId);
+        studyMemberRepository.deleteAllByStudy_Id(studyId);
+        studyProfileRepository.deleteByStudy_Id(studyId);
+        resourceRepository.deleteAllByStudy_Id(studyId);
+
+        studyRepository.deleteById(studyId);
+
     }
 }

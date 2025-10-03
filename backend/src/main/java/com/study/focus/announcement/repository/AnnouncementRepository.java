@@ -12,4 +12,6 @@ public interface AnnouncementRepository extends JpaRepository<Announcement, Long
     List<Announcement> findAllByStudyId(Long study_id);
     Optional<Announcement> findByIdAndStudy_IdAndAuthor_Id(Long id, Long study_id, Long author_id);
     Optional<Announcement> findByIdAndStudyId(Long announcementId, Long studyId);
+
+    void deleteAllByStudy_Id(Long studyId);
 }

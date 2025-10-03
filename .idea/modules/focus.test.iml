@@ -19,6 +19,7 @@
       <sourceFolder url="file://$MODULE_DIR$/../../backend/src/test/java" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/../../backend/src/test/resources" type="java-test-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../backend/src/test/resources" type="java-test-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/../../backend/src/test/resources" type="java-test-resource" />
     </content>
     <orderEntry type="jdk" jdkName="ms-17" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />

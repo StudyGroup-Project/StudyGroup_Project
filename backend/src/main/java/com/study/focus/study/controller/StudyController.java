@@ -62,5 +62,10 @@ public class StudyController {
 
     // 그룹 삭제
     @DeleteMapping("/{studyId}")
-    public void deleteStudy(@PathVariable Long studyId) {}
+    public ResponseEntity<Void> deleteStudy(@PathVariable Long studyId,
+                                            @AuthenticationPrincipal CustomUserDetails user) {
+        Long requestUserId = user.getUserId();
+        studyService.deleteStudy(studyId, requestUserId);
+        return ResponseEntity.noContent().build();
+    }
 }

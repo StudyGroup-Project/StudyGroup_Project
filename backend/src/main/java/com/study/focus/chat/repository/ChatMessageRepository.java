@@ -4,4 +4,5 @@ import com.study.focus.chat.domain.ChatMessage;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
+    void deleteAllByStudy_Id(Long studyId);
 }
