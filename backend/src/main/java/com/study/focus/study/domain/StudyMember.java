@@ -43,4 +43,8 @@ public class StudyMember extends BaseCreatedEntity {
 
     @Column(nullable = true)
     private LocalDateTime exitedAt;
+
+    public void updateStatus(StudyMemberStatus newStatus) {
+        this.status = newStatus;
+    }
 }

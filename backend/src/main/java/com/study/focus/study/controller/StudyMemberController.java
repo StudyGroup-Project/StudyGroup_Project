@@ -23,7 +23,14 @@ public class StudyMemberController {
 
     // 그룹 탈퇴
     @DeleteMapping("/me")
-    public void leaveStudy(@PathVariable Long studyId) {}
+    public ResponseEntity<Void> leaveStudy(@PathVariable Long studyId,
+                                           @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        Long requestUserId = userDetails.getUserId();
+        studyMemberService.leaveStudy(studyId, requestUserId);
+
+        return ResponseEntity.noContent().build();
+    }
 
     // 그룹 인원 추방하기 (방장)
     @DeleteMapping("/{userId}")
@@ -33,6 +40,6 @@ public class StudyMemberController {
         Long requestUserId = userDetails.getUserId();
         studyMemberService.expelMember(studyId, userId, requestUserId);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 }
