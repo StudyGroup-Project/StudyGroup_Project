@@ -12,6 +12,11 @@ public class PageController {
         return "forward:/home.html";
     }
 
+    @GetMapping("/profile")
+    public String profile() {
+        return "forward:/profile.html";
+    }
+
     @GetMapping("/login")
     public String login() {
         return "forward:/login.html";

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<meta charset="UTF-8">
+	<title>스터디 그룹 생성</title>
+	<style>
+		body { font-family: Arial, sans-serif; padding: 20px; background-color: #f8f9fa; }
+		.container { max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+		h2 { text-align: center; margin-bottom: 30px; }
+		form { display: grid; grid-template-columns: 120px 1fr; gap: 12px; align-items: center; }
+		label { text-align: right; font-weight: bold; color: #495057; }
+		input, select, textarea { padding: 10px; font-size: 14px; border: 1px solid #ced4da; border-radius: 4px; width: 100%; box-sizing: border-box; }
+		.button-group { grid-column: 1 / -1; display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+		button { padding: 10px 25px; border: none; border-radius: 5px; color: white; cursor: pointer; font-size: 15px; transition: background-color 0.2s; }
+		#create-btn { background-color: #007bff; }
+		#create-btn:hover { background-color: #0056b3; }
+		#back-btn { background-color: #6c757d; }
+		#back-btn:hover { background-color: #5a6268; }
+		#result { margin-top: 20px; padding: 15px; border-radius: 5px; text-align: center; font-weight: bold; }
+		.success { background-color: #d4edda; color: #155724; }
+		.error { background-color: #f8d7da; color: #721c24; }
+	</style>
+</head>
+<body>
+
+<div class="container">
+	<h2>새 스터디 그룹 생성</h2>
+	<form id="createStudyForm">
+		<label for="title">스터디 제목:</label>
+		<input type="text" id="title" required>
+		
+		<label for="maxMemberCount">최대 인원:</label>
+		<input type="number" id="maxMemberCount" value="8" required>
+		
+		<label for="category">카테고리:</label>
+		<select id="category">
+			<option value="IT">IT</option>
+			<option value="BUSINESS">경영</option>
+			<option value="DESIGN">디자인</option>
+			<option value="LANGUAGE">어학</option>
+			<option value="EXAM">수험/자격증</option>
+			<option value="ACADEMICS">학문</option>
+			<option value="LIFESTYLE">라이프스타일</option>
+			<option value="OTHER">기타</option>
+		</select>
+		
+		<label for="province">시/도:</label>
+		<input type="text" id="province" required>
+		
+		<label for="district">시/군/구:</label>
+		<input type="text" id="district" required>
+		
+		<label for="bio">짧은 소개:</label>
+		<textarea id="bio" rows="2"></textarea>
+		
+		<label for="description">상세 소개:</label>
+		<textarea id="description" rows="4"></textarea>
+		
+		<div class="button-group">
+			<button type="submit" id="create-btn">생성하기</button>
+			<button type="button" id="back-btn">뒤로가기</button>
+		</div>
+	</form>
+	
+	<div id="result"></div>
+</div>
+
+<script>
+	const accessToken = localStorage.getItem('accessToken');
+	
+	if (!accessToken) {
+		alert('로그인 정보가 없습니다. 홈으로 이동합니다.');
+		window.location.href = 'home.html';
+	}
+	
+	document.getElementById('createStudyForm').addEventListener('submit', async (event) => {
+		event.preventDefault();
+		const form = event.target;
+		const resultDiv = document.getElementById('result');
+		
+		const data = {
+			title: form.title.value,
+			maxMemberCount: parseInt(form.maxMemberCount.value, 10),
+			category: form.category.value,
+			province: form.province.value,
+			district: form.district.value,
+			bio: form.bio.value,
+			description: form.description.value
+		};
+		
+		resultDiv.className = '';
+		resultDiv.textContent = '생성 요청 중...';
+		
+		try {
+			const response = await fetch('/api/studies', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${accessToken}`
+				},
+				body: JSON.stringify(data)
+			});
+			
+			if (response.status === 201) {
+				let studyId = null;
+				
+				// 서버에서 Location 헤더 반환한다고 가정
+				const location = response.headers.get('Location');
+				if (location) {
+					studyId = location.split('/').pop();
+				}
+				
+				// 없다면 JSON 응답에서 id 추출
+				if (!studyId) {
+					try {
+						const body = await response.json();
+						studyId = body.id;
+					} catch (_) {}
+				}
+				
+				if (studyId) {
+					// ✅ 스터디 홈으로 이동
+					window.location.href = `studyHome.html?studyId=${studyId}`;
+				} else {
+					resultDiv.className = 'success';
+					resultDiv.textContent = '✅ 스터디 생성 성공했지만 studyId를 알 수 없습니다.';
+				}
+			} else if (response.status === 401) {
+				resultDiv.className = 'error';
+				resultDiv.textContent = '❌ 인증 실패: 토큰이 만료되었거나 유효하지 않습니다.';
+			} else {
+				const text = await response.text();
+				resultDiv.className = 'error';
+				resultDiv.textContent = `❌ 실패: ${response.status} - ${text || '알 수 없는 오류'}`;
+			}
+		} catch (error) {
+			console.error('Fetch Error:', error);
+			resultDiv.className = 'error';
+			resultDiv.textContent = '❌ 네트워크 오류 또는 서버 연결 실패.';
+		}
+	});
+	
+	document.getElementById('back-btn').addEventListener('click', () => {
+		window.location.href = "home.html";
+	});
+</script>
+
+</body>
+</html>

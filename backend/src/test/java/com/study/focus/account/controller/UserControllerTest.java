@@ -10,7 +10,6 @@ import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.repository.UserRepository;
 import com.study.focus.common.domain.Address;
 import com.study.focus.common.domain.Category;
-import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.util.S3Uploader;
