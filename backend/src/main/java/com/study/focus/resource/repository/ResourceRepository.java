@@ -10,4 +10,6 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
     List<Resource> findAllByStudy_Id(Long studyId);
 
     Optional<Resource> findByIdAndStudyId(Long id, Long study_Id);
+
+    Optional<Resource>findByIdAndAuthorId(Long id, Long author_Id);
 }

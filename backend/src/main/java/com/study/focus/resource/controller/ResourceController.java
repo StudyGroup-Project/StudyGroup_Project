@@ -5,6 +5,7 @@ import com.study.focus.announcement.dto.GetAnnouncementsResponse;
 import com.study.focus.resource.dto.CreateResourceRequest;
 import com.study.focus.resource.dto.GetResourceDetailResponse;
 import com.study.focus.resource.dto.GetResourcesResponse;
+import com.study.focus.resource.dto.UpdateResourceRequest;
 import com.study.focus.resource.service.ResourceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -60,10 +61,25 @@ public class ResourceController {
     }
 
     // 자료 수정
-    @PutMapping("/{resourceId}")
-    public void updateResource(@PathVariable Long studyId, @PathVariable Long resourceId) {}
+    @PutMapping( path = "/{resourceId}",consumes =  MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> updateResource(@PathVariable Long studyId, @PathVariable Long resourceId,
+                               @AuthenticationPrincipal CustomUserDetails user
+                            , @Valid @ModelAttribute UpdateResourceRequest updateResourceRequest)
+    {
+        log.info("Update ResourceDetail for studyId: {} for resourceId: {}",studyId,resourceId);
+        Long userId = user.getUserId();
+        resourceService.updateResource(studyId,resourceId,userId,updateResourceRequest);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 
     // 자료 삭제
     @DeleteMapping("/{resourceId}")
-    public void deleteResource(@PathVariable Long studyId, @PathVariable Long resourceId) {}
+    public  ResponseEntity<Void> deleteResource(@PathVariable Long studyId, @PathVariable Long resourceId,
+                               @AuthenticationPrincipal CustomUserDetails user)
+    {
+        log.info("Delete Resource for studyId: {}, for resourceId: {}, for userId:{}",studyId,resourceId,user.getUserId());
+        Long userId = user.getUserId();
+        resourceService.deleteResource(studyId,resourceId,userId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }

@@ -79,6 +79,12 @@ public class File extends BaseCreatedEntity {
         submission = null;
     }
 
+    public void deleteResourceFile(){
+        isDeleted = true;
+        resource = null;
+    }
+
+
     public static File ofResource(Resource resource,
                                   FileDetailDto fileDetail) {
         File f = base(fileDetail);
