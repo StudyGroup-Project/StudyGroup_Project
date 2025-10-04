@@ -13,9 +13,6 @@ import java.util.Optional;
 public interface StudyMemberRepository extends JpaRepository<StudyMember,Long> {
    Optional<StudyMember> findByStudyIdAndRoleAndStatus(Long studyId, StudyRole role, StudyMemberStatus status);
 
-   Optional<StudyMember> findByStudyIdAndUserIdAndStatus(Long studyId, Long userId, StudyMemberStatus status);
-
-
     Optional<StudyMember> findByStudyIdAndUserId(Long study_id, Long user_id);
     
     Optional<StudyMember> findByStudyIdAndRole(Long studyId, StudyRole role);
