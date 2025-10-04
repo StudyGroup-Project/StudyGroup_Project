@@ -11,9 +11,11 @@ import java.util.Optional;
 
 @Repository
 public interface StudyMemberRepository extends JpaRepository<StudyMember,Long> {
-    Optional<StudyMember> findByStudyIdAndUserIdAndStatus(Long studyId, Long userId, StudyMemberStatus status);
+   Optional<StudyMember> findByStudyIdAndRoleAndStatus(Long studyId, StudyRole role, StudyMemberStatus status);
 
-    Optional<StudyMember> findByStudyIdAndUserId(Long study_id, Long user_id);
+   Optional<StudyMember> findByStudyIdAndUserIdAndStatus(Long studyId, Long userId, StudyMemberStatus status);
+
+   Optional<StudyMember> findByStudyIdAndUserId(Long study_id, Long user_id);
 
    Optional<StudyMember> findByStudyIdAndRole(Long studyId, StudyRole role);
   
@@ -47,4 +49,6 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember,Long> {
           AND sm.status = com.study.focus.study.domain.StudyMemberStatus.JOINED
         """)
     Optional<Long> findLeaderTrustScoreByStudyId(Long studyId);
+
+    void deleteAllByStudy_Id(Long studyId);
 }

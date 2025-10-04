@@ -9,4 +9,6 @@ import java.util.Optional;
 public interface StudyProfileRepository extends JpaRepository<StudyProfile, Long> {
     Optional<StudyProfile> findByStudy(Study study);
     Optional<StudyProfile> findByStudyId(Long studyId);
+
+    void deleteByStudy_Id(Long studyId);
 }
