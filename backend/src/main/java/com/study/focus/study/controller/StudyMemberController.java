@@ -1,7 +1,9 @@
 package com.study.focus.study.controller;
 
 import com.study.focus.account.dto.CustomUserDetails;
+import com.study.focus.study.dto.GetStudyMembersResponse;
 import com.study.focus.study.service.StudyMemberService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -9,6 +11,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @RestController
 @RequestMapping("/api/studies/{studyId}/members")
+@Slf4j
 public class StudyMemberController {
 
     private final StudyMemberService studyMemberService;
@@ -19,7 +22,14 @@ public class StudyMemberController {
 
     // 멤버 목록 가져오기
     @GetMapping
-    public void getMembers(@PathVariable Long studyId) {}
+    public ResponseEntity<GetStudyMembersResponse> getMembers(@PathVariable Long studyId,
+                           @AuthenticationPrincipal CustomUserDetails user)
+    {
+        log.info("Get GroupStudyMemberList for studyId: {}",studyId);
+        Long userId = user.getUserId();
+        GetStudyMembersResponse members = studyMemberService.getMembers(studyId, userId);
+        return ResponseEntity.ok(members);
+    }
 
     // 그룹 탈퇴
     @DeleteMapping("/me")
