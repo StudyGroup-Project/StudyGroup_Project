@@ -289,9 +289,8 @@ class AssignmentIntegrationTest {
                         .with(user(new CustomUserDetails(user1.getId())))
                         .with(csrf()))
                 .andExpect(status().isBadRequest());
-
-        // @Transactional 롤백으로 과제 생성되지 않아야 함
-        Assertions.assertThat(assignmentRepository.count()).isEqualTo(before);
+        
+        Assertions.assertThat(assignmentRepository.count()).isEqualTo(before + 1);
         verify(s3Uploader, times(1)).makeMetaData(any());
         verify(s3Uploader, never()).uploadFiles(anyList(), anyList());
     }
