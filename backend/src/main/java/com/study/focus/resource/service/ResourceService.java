@@ -1,16 +1,11 @@
 package com.study.focus.resource.service;
 
 import com.study.focus.account.dto.GetMyProfileResponse;
-import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.service.UserService;
-import com.study.focus.announcement.domain.Announcement;
-import com.study.focus.announcement.dto.GetAnnouncementsResponse;
-import com.study.focus.announcement.service.AnnouncementService;
 import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
-import com.study.focus.common.exception.UserErrorCode;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.service.GroupService;
 import com.study.focus.common.util.S3Uploader;
@@ -26,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 @Service
@@ -102,9 +98,30 @@ public class ResourceService {
     }
 
     // 자료 삭제
-    public void deleteResource(Long studyId, Long resourceId) {
-        // TODO: 자료 삭제
+    public void deleteResource(Long studyId, Long resourceId, Long userId) {
+        //멤버 검증
+        StudyMember studyUser = groupService.memberValidation(studyId, userId);
+        //자료 검증
+        Resource resource = resourceValidation(resourceId,studyUser);
+        //자료 관련 파일 찾기
+        List<File> files = fileRepository.findAllByResource_Id(resourceId);
+        //파일 삭제 예약
+        files.forEach(File::deleteResourceFile);
+        //자료 삭제
+        resourceRepository.delete(resource);
     }
+
+    private Resource resourceValidation(Long resourceId,StudyMember studyUser) {
+        // 자료 찾기
+        Resource resource = resourceRepository.findById(resourceId).orElseThrow(
+                () -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+        //자료의 저자 확인
+        if(!Objects.equals(resource.getAuthor().getId(), studyUser.getId())){
+            throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
+        }
+        return resource;
+    }
+
 
     private Resource findResource(Long studyId, Long resourceId) {
         return resourceRepository.findByIdAndStudyId(resourceId, studyId).orElseThrow(

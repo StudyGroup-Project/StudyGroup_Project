@@ -42,6 +42,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -59,8 +60,6 @@ class ResourceServiceTest {
     @InjectMocks
     private ResourceService resourceService;
 
-    @Mock
-    private UserProfileRepository userProfileRepository;
 
     @Mock
     private UserService userService;
@@ -80,7 +79,8 @@ class ResourceServiceTest {
 
     User testUser = User.builder().id(1L). trustScore(30L).lastLoginAt(LocalDateTime.now()).build();
     Study testStudy = Study.builder().maxMemberCount(30).build();
-    StudyMember teststudyMember = StudyMember.builder().user(testUser).study(testStudy).build();
+    StudyMember teststudyMember = StudyMember.builder().user(testUser)
+            .study(testStudy).id(1L).build();
 
     @Test
     @DisplayName("자료 목록 가져오기- 성공: 자료가 있는 경우 ")
@@ -240,8 +240,6 @@ class ResourceServiceTest {
 
     }
 
-
-
     @Test
     @DisplayName("자료 생성 성공 - 파일 없는 경우")
     void createResource_success_withoutFiles() {
@@ -314,5 +312,75 @@ class ResourceServiceTest {
                 resourceService.createResource(studyId, userId, request)
         ).isInstanceOf(RuntimeException.class);
     }
+
+    @Test
+    @DisplayName("자료 삭제 성공")
+    void deleteResource_success() {
+        // given
+        Long studyId = 1L;
+        Long resourceId = 100L;
+        Long userId = 10L;
+
+        Resource resource = Resource.builder().author(teststudyMember).study(testStudy)
+                .title("title").description("des").build();
+
+        File file1 = File.ofResource(resource,
+                new FileDetailDto("file1.txt", "fileKey", "txt", 10L));
+        File file2 = File.ofResource(resource,new FileDetailDto("file2.txt", "fileKey",
+                "txt", 10L));
+        List<File> files = List.of(file1, file2);
+
+        when(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).thenReturn(Optional.of(teststudyMember));
+        when(resourceRepository.findById(resourceId)).thenReturn(Optional.of(resource));
+        when(fileRepository.findAllByResource_Id(resourceId)).thenReturn(files);
+
+        // when
+        resourceService.deleteResource(studyId, resourceId, userId);
+
+        // then
+        assertTrue(files.stream().allMatch(File::getIsDeleted));
+        verify(resourceRepository, times(1)).delete(resource);
+    }
+
+    @Test
+    @DisplayName("자료 삭제 - 실패 : 스터디 멤버가 아닌 경우  ")
+    void deleteResource_Fail_isNotMember() {
+        // given
+        Long studyId = 1L;
+        Long resourceId = 100L;
+        Long userId = 10L;
+        when(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).thenReturn(Optional.empty());
+
+        // when && then
+        Assertions.assertThatThrownBy(() ->  resourceService.deleteResource(studyId, resourceId, userId))
+                .isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    @DisplayName("자료 삭제 - 실패 : 저자가 아닌 경우 ")
+    void deleteResource_Fail_isNotAuthor() {
+        // given
+        Long studyId = 1L;
+        Long resourceId = 100L;
+        Long userId = 10L;
+
+        User anotherUser = User.builder().id(2L). trustScore(30L).lastLoginAt(LocalDateTime.now()).build();
+        StudyMember anotherStudyMember = StudyMember.builder().user(anotherUser)
+                .study(testStudy).id(999L).build();
+
+        Resource resource = Resource.builder().author(anotherStudyMember).study(testStudy)
+                .title("title").description("des").build();
+
+
+        when(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).thenReturn(Optional.of(teststudyMember));
+        when(resourceRepository.findById(resourceId)).thenReturn(Optional.of(resource));
+
+        // when && then
+        Assertions.assertThatThrownBy(() ->  resourceService.deleteResource(studyId, resourceId, userId))
+                .isInstanceOf(BusinessException.class);
+    }
+
+
+
 
 }

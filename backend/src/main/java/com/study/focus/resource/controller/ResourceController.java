@@ -65,5 +65,12 @@ public class ResourceController {
 
     // 자료 삭제
     @DeleteMapping("/{resourceId}")
-    public void deleteResource(@PathVariable Long studyId, @PathVariable Long resourceId) {}
+    public  ResponseEntity<Void> deleteResource(@PathVariable Long studyId, @PathVariable Long resourceId,
+                               @AuthenticationPrincipal CustomUserDetails user)
+    {
+        log.info("Delete Resource for studyId: {}, for resourceId: {}, for userId:{}",studyId,resourceId,user.getUserId());
+        Long userId = user.getUserId();
+        resourceService.deleteResource(studyId,resourceId,userId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 }
