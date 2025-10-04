@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<meta charset="UTF-8">
+	<title>스터디 홈</title>
+	<style>
+		body { font-family: Arial, sans-serif; padding: 20px; background-color: #f8f9fa; }
+		.container { max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+		h2 { text-align: center; margin-bottom: 20px; }
+		.info { margin-bottom: 20px; }
+		.error { color: #b71c1c; margin-top: 10px; font-weight: bold; text-align: center; }
+		button { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; background: #007bff; color: #fff; cursor: pointer; }
+		button:hover { background: #0056b3; }
+		#chat-btn { background: #28a745; }
+		#chat-btn:hover { background: #1e7e34; }
+		#home-btn { background: #6c757d; }
+		#home-btn:hover { background: #5a6268; }
+	</style>
+</head>
+<body>
+<div class="container">
+	<h2 id="studyTitle">스터디 홈</h2>
+	<div class="info">
+		<p><strong>카테고리:</strong> <span id="studyCategory"></span></p>
+		<p><strong>최대 인원:</strong> <span id="studyMaxMember"></span></p>
+		<p><strong>지역:</strong> <span id="studyLocation"></span></p>
+		<p><strong>소개:</strong> <span id="studyBio"></span></p>
+		<p><strong>상세 설명:</strong></p>
+		<p id="studyDescription"></p>
+	</div>
+	
+	<div>
+		<button id="chat-btn">채팅방 입장하기</button>
+		<button id="home-btn">홈으로</button>
+	</div>
+	
+	<div id="errorBox" class="error"></div>
+</div>
+
+<script>
+	const params = new URLSearchParams(window.location.search);
+	const studyId = params.get("studyId");
+	const token = localStorage.getItem("accessToken");
+	
+	if (!studyId) {
+		document.getElementById("errorBox").innerText = "❌ 스터디 ID가 없습니다.";
+	}
+	
+	// 스터디 정보 가져오기
+	async function loadStudyInfo() {
+		try {
+			const res = await fetch("/api/studies/" + studyId, {
+				headers: { "Authorization": "Bearer " + token }
+			});
+			
+			if (res.ok) {
+				const study = await res.json();
+				document.getElementById("studyTitle").innerText = (study.title || "스터디") + " 홈";
+				document.getElementById("studyCategory").innerText = study.category || "-";
+				document.getElementById("studyMaxMember").innerText = study.maxMemberCount || "-";
+				document.getElementById("studyLocation").innerText = (study.province || "") + " " + (study.district || "");
+				document.getElementById("studyBio").innerText = study.bio || "-";
+				document.getElementById("studyDescription").innerText = study.description || "-";
+			} else {
+				document.getElementById("errorBox").innerText = "❌ 스터디 정보를 불러올 수 없습니다. (" + res.status + ")";
+			}
+		} catch (err) {
+			console.error("스터디 정보 오류:", err);
+			document.getElementById("errorBox").innerText = "❌ 네트워크 오류: " + err;
+		}
+	}
+	
+	// 채팅방 입장
+	document.getElementById("chat-btn").addEventListener("click", function() {
+		window.location.href = "chat.html?studyId=" + studyId;
+	});
+	
+	// 홈으로 이동
+	document.getElementById("home-btn").addEventListener("click", function() {
+		window.location.href = "home.html";
+	});
+	
+	loadStudyInfo();
+</script>
+</body>
+</html>

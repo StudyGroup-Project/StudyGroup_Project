@@ -45,85 +45,67 @@
 </div>
 
 <button id="create-study-btn">스터디 생성하기</button>
-<button id="save-token-btn">토큰 저장하기</button> <!-- ✅ 추가 -->
 <button id="logout-btn">로그아웃</button>
 
 <script>
-	// ✅ 쿼리스트링에서 AccessToken 추출 (OAuth SuccessHandler가 붙여준 값)
 	const params = new URLSearchParams(window.location.search);
-	let accessToken = params.get("token");
-
-	// ✅ 토큰 갱신
-	async function refreshAccessToken() {
+	let accessToken = params.get("accessToken") || localStorage.getItem("accessToken");
+	let refreshToken = params.get("refreshToken") || localStorage.getItem("refreshToken");
+	
+	// ✅ 토큰을 localStorage에 저장
+	if (accessToken) localStorage.setItem("accessToken", accessToken);
+	if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
+	
+	// ✅ 프로필 존재 여부 확인
+	async function checkProfile() {
 		try {
-			const response = await fetch("/api/auth/token", {
-				method: "POST",
-				credentials: "include"
+			const res = await fetch("/api/users/me/profile", {
+				headers: { "Authorization": "Bearer " + accessToken }
 			});
-
-			if (response.ok) {
-				const data = await response.json();
-				accessToken = data.accessToken;
-				document.getElementById("accessToken").textContent = accessToken;
-
-				const payload = JSON.parse(atob(accessToken.split(".")[1]));
-				document.getElementById("userId").textContent = payload.sub;
-			} else {
-				alert("토큰 갱신 실패: " + response.status);
+			
+			if (res.status === 404) {
+				// 프로필 없음 → profile.html로 이동
+				window.location.href = "profile.html";
+				return;
 			}
-		} catch (err) {
-			alert("토큰 요청 오류: " + err);
-		}
-	}
-
-	// ✅ 초기화
-	async function initPage() {
-		if (accessToken) {
+			if (!res.ok) {
+				alert("프로필 확인 실패: " + res.status);
+				return;
+			}
+			
+			const payload = JSON.parse(atob(accessToken.split(".")[1]));
 			document.getElementById("accessToken").textContent = accessToken;
-			try {
-				const payload = JSON.parse(atob(accessToken.split(".")[1]));
-				document.getElementById("userId").textContent = payload.sub;
-			} catch (e) {
-				document.getElementById("userId").textContent = "파싱 실패";
-			}
-		} else {
-			await refreshAccessToken();
+			document.getElementById("userId").textContent = payload.sub;
+		} catch (err) {
+			alert("프로필 확인 중 오류: " + err);
 		}
 	}
-	initPage();
-
+	checkProfile();
+	
 	// ✅ 스터디 생성 페이지 이동
 	document.getElementById("create-study-btn").addEventListener("click", function() {
-		window.location.href = "studyTest.html";
+		window.location.href = "createStudy.html";
 	});
-
-	// ✅ 토큰 저장 버튼
-	document.getElementById("save-token-btn").addEventListener("click", function() {
-		if (accessToken) {
-			localStorage.setItem('accessToken', accessToken);
-			alert("AccessToken이 로컬스토리지에 저장되었습니다!");
-		} else {
-			alert("저장할 AccessToken이 없습니다.");
-		}
-	});
-
+	
 	// ✅ 로그아웃
 	document.getElementById("logout-btn").addEventListener("click", async function() {
 		try {
-			localStorage.removeItem('accessToken');
-			const response = await fetch("/api/auth/logout", {
+			localStorage.removeItem("accessToken");
+			localStorage.removeItem("refreshToken");
+			
+			const res = await fetch("/api/auth/logout", {
 				method: "POST",
 				credentials: "include"
 			});
-
-			if (response.ok) {
+			
+			if (res.ok) {
 				alert("로그아웃 성공!");
-				window.location.href = "/login.html";
+				window.location.href = "login.html";
 			} else {
-				alert("로그아웃 실패: " + response.status);
+				alert("로그아웃 실패: " + res.status);
 			}
 		} catch (err) {
-			alert("로그아웃 요청 오류: " + err);
+			alert("로그아웃 오류: " + err);
 		}
 	});
 </script>

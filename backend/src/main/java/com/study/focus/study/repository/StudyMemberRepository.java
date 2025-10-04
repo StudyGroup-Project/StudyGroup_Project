@@ -11,17 +11,17 @@ import java.util.Optional;
 
 @Repository
 public interface StudyMemberRepository extends JpaRepository<StudyMember,Long> {
-    Optional<StudyMember> findByStudyIdAndUserIdAndStatus(Long studyId, Long userId, StudyMemberStatus status);
-
     Optional<StudyMember> findByStudyIdAndUserId(Long study_id, Long user_id);
+    
+    Optional<StudyMember> findByStudyIdAndRole(Long studyId, StudyRole role);
 
-   Optional<StudyMember> findByStudyIdAndRole(Long studyId, StudyRole role);
-  
-   long countByStudyIdAndStatus(Long studyId, StudyMemberStatus status);
+    long countByStudyIdAndStatus(Long studyId, StudyMemberStatus status);
 
-   boolean existsByStudyIdAndUserIdAndStatus(Long studyId, Long userId, StudyMemberStatus status);
+    boolean existsByStudyIdAndUserIdAndStatus(Long studyId, Long userId, StudyMemberStatus status);
 
-
+    Optional<StudyMember> findByStudyIdAndUserIdAndStatus(Long studyId,
+                                                            Long userId,
+                                                            StudyMemberStatus status);
 
     /**
      * 방장의 trustScore 기준 내림차순 상위 10개 스터디 프로필 조회
