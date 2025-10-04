@@ -33,12 +33,12 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -59,9 +59,8 @@ public class ResourceControllerTest {
     @Autowired
     private ResourceRepository resourceRepository;
     @Autowired
-    private ObjectMapper objectMapper;
-    @Autowired
     private FileRepository fileRepository;
+
 
     private User user;
     private Study study;
@@ -79,7 +78,7 @@ public class ResourceControllerTest {
 
         UserProfile userProfile = userProfileRepository.save(UserProfile.builder()
                 .user(user)
-                .nickname("tester")
+                .nickname("tester_"+ UUID.randomUUID())
                 .job(Job.FREELANCER)
                 .preferredCategory(Category.IT)
                 .address(Address.builder().province("p").district("dis").build())
@@ -112,11 +111,11 @@ public class ResourceControllerTest {
 
     @AfterEach
     void after() {
+        userProfileRepository.deleteAll();
         fileRepository.deleteAll();
         resourceRepository.deleteAll();
         studyMemberRepository.deleteAll();
         studyRepository.deleteAll();
-        userProfileRepository.deleteAll();
         userRepository.deleteAll();
     }
 
@@ -238,6 +237,81 @@ public class ResourceControllerTest {
                         .with(user(new CustomUserDetails(9999L)))
                         .with(csrf()))
                 .andExpect(status().isBadRequest());
+    }
+
+
+    @Test
+    @DisplayName("자료 삭제 - 성공")
+    void deleteResource_success() throws Exception {
+        // given
+        long beforeResourceCount = resourceRepository.count();
+        long beforeFileCount = fileRepository.count();
+
+        // when & then
+        mockMvc.perform(delete("/api/studies/" + study.getId() + "/resources/" + resource1.getId())
+                        .with(user(new CustomUserDetails(user.getId())))
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+
+        Assertions.assertThat(resourceRepository.count()).isEqualTo(beforeResourceCount - 1);
+        Assertions.assertThat(fileRepository.count()).isEqualTo(beforeFileCount);
+        Assertions.assertThat(fileRepository.findAll()
+                .stream().allMatch(File::getIsDeleted)).isTrue();
+    }
+
+    @Test
+    @DisplayName("자료 삭제 - 실패 : 스터디 멤버가 아닌 경우  ")
+    void deleteResource_Fail_isNotMember() throws Exception {
+        long beforeResourceCount = resourceRepository.count();
+        long beforeFileCount = fileRepository.count();
+
+        // when & then
+        mockMvc.perform(delete("/api/studies/" + study.getId() + "/resources/" + resource1.getId())
+                        .with(user(new CustomUserDetails(99999L)))
+                        .with(csrf()))
+                .andExpect(status().isBadRequest());
+
+        Assertions.assertThat(resourceRepository.count()).isEqualTo(beforeResourceCount);
+        Assertions.assertThat(fileRepository.count()).isEqualTo(beforeFileCount);
+        Assertions.assertThat(fileRepository.findAll()
+                .stream().allMatch(File::getIsDeleted)).isFalse();
+    }
+
+    @Test
+    @DisplayName("자료 삭제 - 실패 : 저자가 아닌 경우 ")
+    void deleteResource_Fail_isNotAuthor()  throws Exception {
+        // given
+       User anotherUser = userRepository.save(User.builder()
+                .trustScore(50L)
+                .lastLoginAt(LocalDateTime.now())
+                .build());
+       StudyMember anotherStudyMember = studyMemberRepository.save(StudyMember.builder()
+                .user(anotherUser)
+                .study(study)
+                .role(StudyRole.MEMBER)
+                .status(StudyMemberStatus.JOINED)
+                .exitedAt(LocalDateTime.now().plusMonths(1))
+                .build());
+
+      Resource  anotherResource = resourceRepository.save(Resource.builder()
+                .study(study)
+                .author(anotherStudyMember)
+                .title("자료1")
+                .description("내용1")
+                .build());
+      long beforeResourceCount = resourceRepository.count();
+      long beforeFileCount = fileRepository.count();
+
+        // when & then
+        mockMvc.perform(delete("/api/studies/" + study.getId() + "/resources/" + anotherResource.getId())
+                        .with(user(new CustomUserDetails(user.getId())))
+                        .with(csrf()))
+                .andExpect(status().isBadRequest());
+
+        Assertions.assertThat(resourceRepository.count()).isEqualTo(beforeResourceCount);
+        Assertions.assertThat(fileRepository.count()).isEqualTo(beforeFileCount);
+        Assertions.assertThat(fileRepository.findAll()
+                .stream().allMatch(File::getIsDeleted)).isFalse();
     }
 
 

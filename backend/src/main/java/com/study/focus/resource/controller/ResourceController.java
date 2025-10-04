@@ -71,6 +71,6 @@ public class ResourceController {
         log.info("Delete Resource for studyId: {}, for resourceId: {}, for userId:{}",studyId,resourceId,user.getUserId());
         Long userId = user.getUserId();
         resourceService.deleteResource(studyId,resourceId,userId);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
