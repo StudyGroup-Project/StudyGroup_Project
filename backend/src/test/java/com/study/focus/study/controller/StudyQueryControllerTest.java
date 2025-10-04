@@ -20,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -31,6 +32,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
+@Transactional
 @AutoConfigureMockMvc
 class StudyQueryControllerTest {
 
@@ -58,13 +60,9 @@ class StudyQueryControllerTest {
 
         // 2. 로그인 → Redirect URL 추출
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                            {
-                              "loginId": "testuser",
-                              "password": "1234"
-                            }
-                            """))
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED) // Form 데이터 타입
+                        .param("loginId", "testuser")
+                        .param("password", "1234"))
                 .andExpect(status().is3xxRedirection())
                 .andReturn();
 
@@ -77,7 +75,7 @@ class StudyQueryControllerTest {
                 .map(s -> s.split("="))
                 .collect(Collectors.toMap(a -> a[0], a -> a[1]));
 
-        String accessToken = params.get("token");
+        String accessToken = params.get("accessToken");
 
         // 4. 테스트용 Study/StudyProfile/StudyMember 데이터 삽입
         Long userId = tokenProvider.getUserIdFromToken(accessToken);
@@ -94,7 +92,7 @@ class StudyQueryControllerTest {
                 .title("알고리즘")
                 .bio("백준 같이 풀기")
                 .category(Category.IT)
-                .address(new Address("경상북도", "경산시")) 
+                .address(new Address("경상북도", "경산시"))
                 .build();
         studyProfileRepository.save(profile);
 

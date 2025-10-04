@@ -6,7 +6,6 @@ import com.study.focus.assignment.dto.GetAssignmentDetailResponse;
 import com.study.focus.assignment.dto.GetAssignmentsResponse;
 import com.study.focus.assignment.dto.UpdateAssignmentRequest;
 import com.study.focus.assignment.service.AssignmentService;
-import com.study.focus.study.domain.StudyMember;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;

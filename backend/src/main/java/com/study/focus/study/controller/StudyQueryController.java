@@ -4,9 +4,7 @@ import com.study.focus.account.dto.CustomUserDetails;
 import com.study.focus.study.dto.SearchStudiesRequest;
 import com.study.focus.study.dto.SearchStudiesResponse;
 import com.study.focus.study.service.StudyQueryService;
-import com.study.focus.study.service.StudyService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 

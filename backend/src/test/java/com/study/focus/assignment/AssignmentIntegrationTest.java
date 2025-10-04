@@ -26,6 +26,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -40,6 +41,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
+@Transactional
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class AssignmentIntegrationTest {
@@ -561,7 +563,7 @@ class AssignmentIntegrationTest {
 
         // when & then
         mockMvc.perform(get("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId())
-                        .with(user(new com.study.focus.account.dto.CustomUserDetails(user1.getId()))))
+                        .with(user(new CustomUserDetails(user1.getId()))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(a.getId()))
                 .andExpect(jsonPath("$.title").value("detail t"))
@@ -587,7 +589,7 @@ class AssignmentIntegrationTest {
 
         // when & then
         mockMvc.perform(get("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId())
-                        .with(user(new com.study.focus.account.dto.CustomUserDetails(user1.getId()))))
+                        .with(user(new CustomUserDetails(user1.getId()))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(a.getId()))
                 .andExpect(jsonPath("$.files.length()").value(0))
@@ -609,7 +611,7 @@ class AssignmentIntegrationTest {
 
         // when & then
         mockMvc.perform(get("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId())
-                        .with(user(new com.study.focus.account.dto.CustomUserDetails(user2.getId())))) // study1 미소속
+                        .with(user(new CustomUserDetails(user2.getId())))) // study1 미소속
                 .andExpect(status().isBadRequest());
     }
 

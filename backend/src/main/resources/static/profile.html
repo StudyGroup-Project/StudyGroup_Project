@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<meta charset="UTF-8">
+	<title>프로필 설정</title>
+	<style>
+		body { font-family: Arial, sans-serif; padding: 20px; background-color: #f8f9fa; }
+		h2 { text-align: center; }
+		form { margin: 20px 0; }
+		label { display: block; margin: 10px 0; }
+		input, select { padding: 8px; margin-top: 5px; width: 100%; max-width: 300px; }
+		button { padding: 10px 20px; margin-top: 10px; border: none; border-radius: 5px; background: #007bff; color: white; cursor: pointer; }
+		button:hover { background: #0056b3; }
+		#result { margin-top: 20px; font-weight: bold; }
+		img { margin-top: 10px; border-radius: 5px; }
+	</style>
+</head>
+<body>
+<h2>프로필 설정</h2>
+
+<!-- 기본 정보 입력 -->
+<form id="basicForm">
+	<label>닉네임:
+		<input type="text" id="nickname" required>
+	</label>
+	<label>도(Province):
+		<input type="text" id="province" required>
+	</label>
+	<label>시군구(District):
+		<input type="text" id="district" required>
+	</label>
+	<label>생년월일 (yyyy-MM-dd):
+		<input type="date" id="birthDate" required>
+	</label>
+	<label>직업(Job):
+		<select id="job">
+			<option value="STUDENT">학생</option>
+			<option value="OFFICE_WORKER">직장인</option>
+			<option value="FREELANCER">프리랜서</option>
+			<option value="JOB_SEEKER">취업준비생</option>
+			<option value="OTHER">기타</option>
+		</select>
+	</label>
+	<label>선호 카테고리(Category):
+		<select id="preferredCategory">
+			<option value="IT">IT</option>
+			<option value="BUSINESS">비즈니스</option>
+			<option value="DESIGN">디자인</option>
+			<option value="LANGUAGE">어학</option>
+			<option value="EXAM">시험</option>
+			<option value="ACADEMICS">학문</option>
+			<option value="LIFESTYLE">라이프스타일</option>
+			<option value="OTHER">기타</option>
+		</select>
+	</label>
+	<button type="submit">기본 정보 등록</button>
+</form>
+
+<hr>
+
+<!-- 이미지 업로드 -->
+<form id="imageForm" enctype="multipart/form-data">
+	<label>프로필 이미지:
+		<input type="file" id="profileImage" name="file" accept="image/*" required>
+	</label>
+	<button type="submit">이미지 업로드</button>
+</form>
+
+<hr>
+<div id="result"></div>
+
+<script>
+	// 페이지 로드 시 URL에서 토큰 추출 → localStorage 저장
+	document.addEventListener("DOMContentLoaded", () => {
+		const params = new URLSearchParams(window.location.search);
+		const accessToken = params.get("accessToken");
+		const refreshToken = params.get("refreshToken");
+		
+		if (accessToken) localStorage.setItem("accessToken", accessToken);
+		if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
+		
+		if (accessToken || refreshToken) {
+			window.history.replaceState({}, document.title, window.location.pathname);
+		}
+	});
+	
+	// 1. 기본정보 등록
+	document.getElementById("basicForm").addEventListener("submit", async (e) => {
+		e.preventDefault();
+		
+		const token = localStorage.getItem('accessToken');
+		if (!token) {
+			alert("로그인이 필요합니다.");
+			return;
+		}
+		
+		const payload = {
+			nickname: document.getElementById("nickname").value,
+			province: document.getElementById("province").value,
+			district: document.getElementById("district").value,
+			birthDate: document.getElementById("birthDate").value,
+			job: document.getElementById("job").value,
+			preferredCategory: document.getElementById("preferredCategory").value
+		};
+		
+		const res = await fetch("/api/users/me/profile/basic", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				"Authorization": "Bearer " + token
+			},
+			body: JSON.stringify(payload)
+		});
+		
+		if (res.ok) {
+			document.getElementById("result").innerText = "✅ 기본정보 등록 성공! 이제 프로필 이미지를 업로드하세요.";
+		} else {
+			document.getElementById("result").innerText = "❌ 기본정보 등록 실패 (" + res.status + ")";
+		}
+	});
+	
+	// 2. 프로필 이미지 업로드
+	document.getElementById("imageForm").addEventListener("submit", async (e) => {
+		e.preventDefault();
+		
+		const token = localStorage.getItem('accessToken');
+		if (!token) {
+			alert("로그인이 필요합니다.");
+			return;
+		}
+		
+		const formData = new FormData();
+		formData.append("file", document.getElementById("profileImage").files[0]);
+		
+		const res = await fetch("/api/users/me/profile/image", {
+			method: "POST",
+			headers: { "Authorization": "Bearer " + token },
+			body: formData
+		});
+		
+		if (res.ok) {
+			const imageUrl = await res.text();
+			document.getElementById("result").innerHTML =
+					"✅ 이미지 업로드 성공!<br><img src='" + imageUrl + "' width='100'/>";
+			
+			// 업로드 성공 후 자동 홈으로 이동
+			setTimeout(() => {
+				window.location.href = "home.html";
+			}, 1500);
+		} else {
+			document.getElementById("result").innerText = "❌ 이미지 업로드 실패 (" + res.status + ")";
+		}
+	});
+</script>
+</body>
+</html>
