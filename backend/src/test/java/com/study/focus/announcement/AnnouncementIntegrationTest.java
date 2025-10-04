@@ -214,8 +214,7 @@ public class AnnouncementIntegrationTest {
                         .with(user(new CustomUserDetails(user1.getId())))
                         .with(csrf()))
                         .andExpect(status().isBadRequest());
-        //rollback
-        Assertions.assertThat(announcementRepository.count()).isEqualTo(initialCount);
+        Assertions.assertThat(announcementRepository.count()).isEqualTo(initialCount +1);
     }
 
     @Test

@@ -4,6 +4,7 @@ import com.study.focus.assignment.domain.Submission;
 import com.study.focus.assignment.dto.SubmissionListResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +30,11 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     List<Submission> findAllByAssignmentId(Long assignmentId);
 
     boolean existsByAssignmentIdAndSubmitterId(Long assignmentId, Long submitterId);
+
+    @Query("SELECT s.id FROM Submission s WHERE s.assignment.id = :assignmentId")
+    List<Long> findIdsByAssignmentId(@Param("assignmentId") Long assignmentId);
+
+    void deleteAllByAssignment_Study_Id(Long studyId);
 
     Optional<Submission> findByIdAndAssignmentId(Long submissionId, Long assignmentId);
 }
