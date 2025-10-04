@@ -1,11 +1,16 @@
 package com.study.focus.assignment;
 
+import com.study.focus.account.domain.Job;
 import com.study.focus.account.domain.User;
+import com.study.focus.account.domain.UserProfile;
 import com.study.focus.account.dto.CustomUserDetails;
+import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.repository.UserRepository;
 import com.study.focus.assignment.domain.Assignment;
 import com.study.focus.assignment.repository.AssignmentRepository;
 import com.study.focus.assignment.repository.SubmissionRepository;
+import com.study.focus.common.domain.Address;
+import com.study.focus.common.domain.Category;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.util.S3Uploader;
@@ -23,6 +28,10 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+
 
 import java.time.LocalDateTime;
 
@@ -50,6 +59,7 @@ class SubmissionIntegrationTest {
     @Autowired private AssignmentRepository assignmentRepository;
     @Autowired private SubmissionRepository submissionRepository;
     @Autowired private FileRepository fileRepository;
+    @Autowired private UserProfileRepository userProfileRepository;
 
     @MockBean private S3Uploader s3Uploader; // 외부 I/O 차단
 
@@ -89,6 +99,34 @@ class SubmissionIntegrationTest {
                 .startAt(now.minusDays(5))
                 .dueAt(now.minusDays(1)) // 마감 지남
                 .build());
+
+        userProfileRepository.save(
+                UserProfile.builder()
+                        .user(user1)
+                        .nickname("Alice")
+                        .address(Address.builder()
+                                .province("testProvince")
+                                .district("testDistrict")
+                                .build())
+                        .birthDate(java.time.LocalDate.of(1995, 1, 1))      // ✅ 필수
+                        .job(Job.FREELANCER)                                 // ✅ 필수
+                        .preferredCategory(Category.IT)                      // ✅ 필수
+                        .build()
+        );
+
+        userProfileRepository.save(
+                UserProfile.builder()
+                        .user(user2)
+                        .nickname("Bob")
+                        .address(Address.builder()
+                                .province("testProvince")
+                                .district("testDistrict")
+                                .build())
+                        .birthDate(java.time.LocalDate.of(1993, 5, 20))     // ✅ 필수
+                        .job(Job.FREELANCER)                                 // ✅ 필수
+                        .preferredCategory(Category.IT)                      // ✅ 필수
+                        .build()
+        );
     }
 
     @AfterEach
@@ -97,6 +135,7 @@ class SubmissionIntegrationTest {
         submissionRepository.deleteAll();
         assignmentRepository.deleteAll();
         studyMemberRepository.deleteAll();
+        userProfileRepository.deleteAll();
         studyRepository.deleteAll();
         userRepository.deleteAll();
     }
@@ -235,5 +274,148 @@ class SubmissionIntegrationTest {
                         .with(user(new CustomUserDetails(user1.getId())))
                         .with(csrf()))
                 .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    @DisplayName("성공: 파일이 없는 경우 제출물 상세 가져오기 → 200 OK")
+    void getSubmissionDetail_success_withoutFiles() throws Exception {
+        var submission = submissionRepository.save(
+                com.study.focus.assignment.domain.Submission.builder()
+                        .assignment(openAssignment)
+                        .submitter(memberUser1)
+                        .description("no files")
+                        .build()
+        );
+
+        mockMvc.perform(
+                        get("/api/studies/{studyId}/assignments/{assignmentId}/submissions/{submissionId}",
+                                study.getId(), openAssignment.getId(), submission.getId())
+                                .with(user(new CustomUserDetails(user1.getId())))
+                                .with(csrf())
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(submission.getId()))
+                .andExpect(jsonPath("$.submitterName").value("Alice"))
+                .andExpect(jsonPath("$.description").value("no files"))
+                .andExpect(jsonPath("$.files").isArray())
+                .andExpect(jsonPath("$.files.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("성공: 파일이 있는 경우 제출물 상세 가져오기 → 200 OK (files는 url만)")
+    void getSubmissionDetail_success_withFiles() throws Exception {
+        var submission = submissionRepository.save(
+                com.study.focus.assignment.domain.Submission.builder()
+                        .assignment(openAssignment)
+                        .submitter(memberUser1)
+                        .description("with files")
+                        .build()
+        );
+
+        // 파일 2건 저장: fileKey -> url로 매핑된다고 가정("k1","k2")
+        var mf1 = new MockMultipartFile("files", "a.txt", MediaType.TEXT_PLAIN_VALUE, "A".getBytes());
+        var mf2 = new MockMultipartFile("files", "b.pdf", MediaType.APPLICATION_PDF_VALUE, "B".getBytes());
+
+        fileRepository.save(
+                com.study.focus.common.domain.File.ofSubmission(
+                        submission,
+                        new FileDetailDto(mf1.getOriginalFilename(), "k1", mf1.getContentType(), mf1.getSize())
+                )
+        );
+        fileRepository.save(
+                com.study.focus.common.domain.File.ofSubmission(
+                        submission,
+                        new FileDetailDto(mf2.getOriginalFilename(), "k2", mf2.getContentType(), mf2.getSize())
+                )
+        );
+
+        mockMvc.perform(
+                        get("/api/studies/{studyId}/assignments/{assignmentId}/submissions/{submissionId}",
+                                study.getId(), openAssignment.getId(), submission.getId())
+                                .with(user(new CustomUserDetails(user1.getId())))
+                                .with(csrf())
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(submission.getId()))
+                .andExpect(jsonPath("$.submitterName").value("Alice"))
+                .andExpect(jsonPath("$.description").value("with files"))
+                .andExpect(jsonPath("$.files").isArray())
+                .andExpect(jsonPath("$.files.length()").value(2))
+                .andExpect(jsonPath("$.files[*].url").value(containsInAnyOrder("k1", "k2")));
+    }
+
+    @Test
+    @DisplayName("실패: 그룹원이 아닌 사용자의 상세 조회 → 400 Bad Request")
+    void getSubmissionDetail_fail_notStudyMember() throws Exception {
+        var submission = submissionRepository.save(
+                com.study.focus.assignment.domain.Submission.builder()
+                        .assignment(openAssignment)
+                        .submitter(memberUser1)
+                        .description("only member can view")
+                        .build()
+        );
+
+        mockMvc.perform(
+                        get("/api/studies/{studyId}/assignments/{assignmentId}/submissions/{submissionId}",
+                                study.getId(), openAssignment.getId(), submission.getId())
+                                .with(user(new CustomUserDetails(user2.getId()))) // 미소속 사용자
+                                .with(csrf())
+                )
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("실패: 존재하지 않는 과제 ID → 400 Bad Request")
+    void getSubmissionDetail_fail_assignmentNotFound() throws Exception {
+        var submission = submissionRepository.save(
+                com.study.focus.assignment.domain.Submission.builder()
+                        .assignment(openAssignment)
+                        .submitter(memberUser1)
+                        .description("x")
+                        .build()
+        );
+
+        Long wrongAssignmentId = 999_999L;
+
+        mockMvc.perform(
+                        get("/api/studies/{studyId}/assignments/{assignmentId}/submissions/{submissionId}",
+                                study.getId(), wrongAssignmentId, submission.getId())
+                                .with(user(new CustomUserDetails(user1.getId())))
+                                .with(csrf())
+                )
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("실패: 존재하지 않는 제출물 ID → 400 Bad Request")
+    void getSubmissionDetail_fail_submissionNotFound() throws Exception {
+        Long wrongSubmissionId = 888_888L;
+
+        mockMvc.perform(
+                        get("/api/studies/{studyId}/assignments/{assignmentId}/submissions/{submissionId}",
+                                study.getId(), openAssignment.getId(), wrongSubmissionId)
+                                .with(user(new CustomUserDetails(user1.getId())))
+                                .with(csrf())
+                )
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("실패: 인증되지 않은 사용자 → 401 Unauthorized")
+    void getSubmissionDetail_fail_unauthenticated() throws Exception {
+        var submission = submissionRepository.save(
+                com.study.focus.assignment.domain.Submission.builder()
+                        .assignment(openAssignment)
+                        .submitter(memberUser1)
+                        .description("need auth")
+                        .build()
+        );
+
+        mockMvc.perform(
+                        get("/api/studies/{studyId}/assignments/{assignmentId}/submissions/{submissionId}",
+                                study.getId(), openAssignment.getId(), submission.getId())
+                                .with(csrf())
+                )
+                .andExpect(status().isUnauthorized());
     }
 }

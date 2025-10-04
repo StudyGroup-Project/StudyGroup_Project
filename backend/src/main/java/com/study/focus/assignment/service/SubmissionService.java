@@ -1,19 +1,23 @@
 package com.study.focus.assignment.service;
 
+import com.study.focus.account.dto.GetMyProfileResponse;
+import com.study.focus.account.service.UserService;
 import com.study.focus.assignment.domain.Assignment;
 import com.study.focus.assignment.domain.Submission;
 import com.study.focus.assignment.dto.CreateSubmissionRequest;
+import com.study.focus.assignment.dto.GetSubmissionDetailResponse;
 import com.study.focus.assignment.repository.AssignmentRepository;
 import com.study.focus.assignment.repository.SubmissionRepository;
 import com.study.focus.common.domain.File;
+import com.study.focus.common.dto.AssignmentFileResponse;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
 import com.study.focus.common.repository.FileRepository;
+import com.study.focus.common.service.GroupService;
 import com.study.focus.common.util.S3Uploader;
 import com.study.focus.study.domain.StudyMember;
 import com.study.focus.study.repository.StudyMemberRepository;
-import com.study.focus.study.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +35,8 @@ public class SubmissionService {
     private final AssignmentRepository assignmentRepository;
     private final StudyMemberRepository studyMemberRepository;
     private final S3Uploader s3Uploader;
+    private final UserService userService;
+    private final GroupService groupService;
 
     // 과제 제출하기
     @Transactional
@@ -68,7 +74,19 @@ public class SubmissionService {
     }
 
     // 과제 제출물 상세 데이터 가져오기
-    public void getSubmissionDetail(Long studyId, Long assignmentId, Long submissionId) {
-        // TODO: 제출물 상세 조회
+    @Transactional
+    public GetSubmissionDetailResponse getSubmissionDetail(Long studyId, Long assignmentId, Long submissionId, Long userId) {
+        groupService.memberValidation(studyId,userId);
+        assignmentRepository.findByIdAndStudyId(assignmentId, studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+        Submission submission = submissionRepository.findByIdAndAssignmentId(submissionId,assignmentId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+        GetMyProfileResponse userProfile = userService.getMyProfile(submission.getSubmitter().getUser().getId());
+        List<File> files = fileRepository.findAllBySubmissionId(submissionId);
+        List<AssignmentFileResponse> attachFiles = files.stream().map(a -> new AssignmentFileResponse(a.getFileKey())).toList();
+        return new GetSubmissionDetailResponse(
+                submissionId,
+                userProfile.getNickname(),
+                submission.getDescription(),
+                submission.getCreatedAt(),
+                attachFiles);
     }
 }

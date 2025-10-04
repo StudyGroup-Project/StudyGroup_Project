@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
@@ -34,4 +35,6 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     List<Long> findIdsByAssignmentId(@Param("assignmentId") Long assignmentId);
 
     void deleteAllByAssignment_Study_Id(Long studyId);
+
+    Optional<Submission> findByIdAndAssignmentId(Long submissionId, Long assignmentId);
 }
