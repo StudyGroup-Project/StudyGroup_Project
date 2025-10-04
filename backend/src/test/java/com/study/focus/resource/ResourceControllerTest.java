@@ -314,5 +314,97 @@ public class ResourceControllerTest {
                 .stream().allMatch(File::getIsDeleted)).isFalse();
     }
 
+    @Test
+    @DisplayName("자료 수정 - 성공: 제목/내용 수정")
+    void updateResource_success_updateTitleContent() throws Exception {
+        // given
+        long beforeFileCount = fileRepository.count();
+
+        mockMvc.perform(put("/api/studies/" + study.getId() + "/resources/" + resource1.getId())
+                        .param("title", "새 제목")
+                        .param("content", "새 내용")
+                        .contentType(MediaType.MULTIPART_FORM_DATA)
+                        .with(user(new CustomUserDetails(user.getId())))
+                        .with(csrf()))
+                .andExpect(status().isOk());
+
+        Resource updated = resourceRepository.findById(resource1.getId()).orElseThrow();
+        Assertions.assertThat(updated.getTitle()).isEqualTo("새 제목");
+        Assertions.assertThat(updated.getDescription()).isEqualTo("새 내용");
+        Assertions.assertThat(fileRepository.count()).isEqualTo(beforeFileCount);
+    }
+
+    @Test
+    @DisplayName("자료 수정 - 성공: 파일 업로드 포함")
+    void updateResource_success_addFiles() throws Exception {
+        //given
+        MockMultipartFile file = new MockMultipartFile(
+                "files", "hello2.txt", "text/plain", "HelloWorld2".getBytes());
+
+        long beforeFileCount = fileRepository.count();
+
+        //when
+        mockMvc.perform(multipart("/api/studies/" + study.getId() + "/resources/" + resource1.getId())
+                        .file(file)
+                        .param("title", "새로운 제목")
+                        .param("content", "새로운 내용")
+                        .with(user(new CustomUserDetails(user.getId())))
+                        .with(csrf())
+                        .with(req -> { req.setMethod("PUT"); return req; }))
+                .andExpect(status().isOk());
+
+        //then
+        Resource updated = resourceRepository.findById(resource1.getId()).orElseThrow();
+        Assertions.assertThat(updated.getTitle()).isEqualTo("새로운 제목");
+        Assertions.assertThat(updated.getDescription()).isEqualTo("새로운 내용");
+        Assertions.assertThat(fileRepository.count()).isEqualTo(beforeFileCount + 1);
+    }
+
+    @Test
+    @DisplayName("자료 수정 - 실패: 스터디 멤버가 아닌 경우")
+    void updateResource_fail_isNotMember() throws Exception {
+        //when && then
+        mockMvc.perform(put("/api/studies/" + study.getId() + "/resources/" + resource1.getId())
+                        .param("title", "수정 제목")
+                        .param("content", "수정 내용")
+                        .contentType(MediaType.MULTIPART_FORM_DATA)
+                        .with(user(new CustomUserDetails(9999L)))
+                        .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("자료 수정 - 실패: 작성자가 아닌 경우")
+    void updateResource_fail_isNotAuthor() throws Exception {
+        // given
+        User anotherUser = userRepository.save(User.builder()
+                .trustScore(30L)
+                .lastLoginAt(LocalDateTime.now())
+                .build());
+
+        StudyMember anotherMember = studyMemberRepository.save(StudyMember.builder()
+                .user(anotherUser)
+                .study(study)
+                .role(StudyRole.MEMBER)
+                .status(StudyMemberStatus.JOINED)
+                .build());
+
+        Resource anotherResource = resourceRepository.save(Resource.builder()
+                .study(study)
+                .author(anotherMember)
+                .title("title")
+                .description("desc")
+                .build());
+
+        // when & then
+        mockMvc.perform(put("/api/studies/" + study.getId() + "/resources/" + anotherResource.getId())
+                        .param("title", "내가 수정 시도")
+                        .param("content", "내가 수정 내용")
+                        .contentType(MediaType.MULTIPART_FORM_DATA)
+                        .with(user(new CustomUserDetails(user.getId())))
+                        .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
 
 }

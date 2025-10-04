@@ -18,6 +18,7 @@ import com.study.focus.resource.domain.Resource;
 import com.study.focus.resource.dto.CreateResourceRequest;
 import com.study.focus.resource.dto.GetResourceDetailResponse;
 import com.study.focus.resource.dto.GetResourcesResponse;
+import com.study.focus.resource.dto.UpdateResourceRequest;
 import com.study.focus.resource.repository.ResourceRepository;
 import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
@@ -37,6 +38,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -143,7 +145,7 @@ class ResourceServiceTest {
                 .willReturn(Optional.empty());
 
         //when && then
-        Assertions.assertThatThrownBy(() ->{
+        assertThatThrownBy(() ->{
             resourceService.getResources(studyId, userId);
         }).isInstanceOf(BusinessException.class);
 
@@ -213,7 +215,7 @@ class ResourceServiceTest {
                 .willReturn(Optional.empty());
 
         // when & then
-        Assertions.assertThatThrownBy(() -> {
+        assertThatThrownBy(() -> {
             resourceService.getResourceDetail(studyId, resourceId, userId);
         }).isInstanceOf(BusinessException.class);
     }
@@ -234,7 +236,7 @@ class ResourceServiceTest {
 
 
         // when && then
-        Assertions.assertThatThrownBy(() -> {
+        assertThatThrownBy(() -> {
             resourceService.getResourceDetail(studyId, resourceId, userId);
         }).isInstanceOf(BusinessException.class);
 
@@ -308,7 +310,7 @@ class ResourceServiceTest {
                 .willReturn(Optional.empty());
 
         // when & then
-        Assertions.assertThatThrownBy(() ->
+        assertThatThrownBy(() ->
                 resourceService.createResource(studyId, userId, request)
         ).isInstanceOf(RuntimeException.class);
     }
@@ -352,7 +354,7 @@ class ResourceServiceTest {
         when(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).thenReturn(Optional.empty());
 
         // when && then
-        Assertions.assertThatThrownBy(() ->  resourceService.deleteResource(studyId, resourceId, userId))
+        assertThatThrownBy(() ->  resourceService.deleteResource(studyId, resourceId, userId))
                 .isInstanceOf(BusinessException.class);
     }
 
@@ -376,9 +378,164 @@ class ResourceServiceTest {
         when(resourceRepository.findById(resourceId)).thenReturn(Optional.of(resource));
 
         // when && then
-        Assertions.assertThatThrownBy(() ->  resourceService.deleteResource(studyId, resourceId, userId))
+        assertThatThrownBy(() ->  resourceService.deleteResource(studyId, resourceId, userId))
                 .isInstanceOf(BusinessException.class);
     }
+
+
+    @Test
+    @DisplayName("자료 수정 성공 - 제목/내용만 수정")
+    void updateResource_success_updateTitleContent() {
+        // given
+        Long studyId = 1L;
+        Long resourceId = 100L;
+        Long userId = 10L;
+
+        Resource resource = Resource.builder()
+                .id(resourceId)
+                .author(teststudyMember)
+                .study(testStudy)
+                .title("oldTitle")
+                .description("oldDesc")
+                .build();
+
+        UpdateResourceRequest request = new UpdateResourceRequest(
+                "newTitle", "newContent", List.of(), List.of()
+        );
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId))
+                .willReturn(Optional.of(teststudyMember));
+        given(resourceRepository.findById(resourceId))
+                .willReturn(Optional.of(resource));
+
+        // when
+        resourceService.updateResource(studyId, resourceId, userId, request);
+
+        // then
+        then(fileRepository).should(times(0)).findAllById(any());
+        then(s3Uploader).should(times(0)).makeMetaData(any());
+        assert(resource.getTitle().equals("newTitle"));
+        assert(resource.getDescription().equals("newContent"));
+    }
+
+    @Test
+    @DisplayName("자료 수정 성공 - 파일 삭제 포함")
+    void updateResource_success_deleteFiles() {
+        // given
+        Long studyId = 1L;
+        Long resourceId = 100L;
+        Long userId = 10L;
+
+        Resource resource = Resource.builder()
+                .id(resourceId)
+                .author(teststudyMember)
+                .study(testStudy)
+                .title("oldTitle")
+                .description("oldDesc")
+                .build();
+
+
+        File file1 = File.ofResource(resource, new FileDetailDto("file1.txt", "key1", "txt", 10L));
+        File file2 = File.ofResource(resource, new FileDetailDto("file2.txt", "key2", "txt", 20L));
+
+        UpdateResourceRequest request = new UpdateResourceRequest(
+                "newTitle", "newDesc", null,List.of(1L,2L));
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId))
+                .willReturn(Optional.of(teststudyMember));
+        given(resourceRepository.findById(resourceId))
+                .willReturn(Optional.of(resource));
+        given(fileRepository.findAllById(request.getDeleteFileIds()))
+                .willReturn(List.of(file1,file2));
+
+        // when
+        resourceService.updateResource(studyId, resourceId, userId, request);
+
+        // then
+        assert(file1.getIsDeleted());
+        assert(file2.getIsDeleted());
+    }
+    @Test
+    @DisplayName("자료 수정 성공 - 새 파일 업로드 포함")
+    void updateResource_success_addFiles() {
+        // given
+        Long studyId = 1L;
+        Long resourceId = 100L;
+        Long userId = 10L;
+
+        Resource resource = Resource.builder()
+                .id(resourceId)
+                .author(teststudyMember)
+                .study(testStudy)
+                .title("oldTitle")
+                .description("oldDesc")
+                .build();
+
+        MultipartFile mockFile = mock(MultipartFile.class);
+        FileDetailDto meta = new FileDetailDto("new.txt", "newKey", "txt", 5L);
+
+        UpdateResourceRequest request = new UpdateResourceRequest(
+                "newTitle", "newDesc", List.of(mockFile),null);
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId))
+                .willReturn(Optional.of(teststudyMember));
+        given(resourceRepository.findById(resourceId))
+                .willReturn(Optional.of(resource));
+        given(s3Uploader.makeMetaData(mockFile)).willReturn(meta);
+
+        // when
+        resourceService.updateResource(studyId, resourceId, userId, request);
+
+        // then
+        then(fileRepository).should(times(1)).save(any(File.class));
+        then(s3Uploader).should(times(1)).uploadFiles(List.of("newKey"), List.of(mockFile));
+    }
+
+    @Test
+    @DisplayName("자료 수정 실패 - 스터디 멤버가 아님")
+    void updateResource_fail_notMember() {
+        // given
+        Long studyId = 1L;
+        Long resourceId = 100L;
+        Long userId = 10L;
+
+        UpdateResourceRequest request = new UpdateResourceRequest("t", "c", List.of(), List.of());
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId))
+                .willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() ->
+                resourceService.updateResource(studyId, resourceId, userId, request)
+        ).isInstanceOf(BusinessException.class);
+    }
+    @Test
+    @DisplayName("자료 수정 실패 - 작성자가 아닌 경우")
+    void updateResource_fail_notAuthor() {
+        // given
+        Long studyId = 1L;
+        Long resourceId = 100L;
+        Long userId = 10L;
+
+        User anotherUser = User.builder().id(2L).build();
+        StudyMember anotherMember = StudyMember.builder().id(999L).user(anotherUser).study(testStudy).build();
+        Resource resource = Resource.builder().id(resourceId).author(anotherMember).study(testStudy).build();
+
+        UpdateResourceRequest request = new UpdateResourceRequest("t", "c", List.of(), List.of());
+
+        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId))
+                .willReturn(Optional.of(teststudyMember));
+        given(resourceRepository.findById(resourceId))
+                .willReturn(Optional.of(resource));
+
+        // when & then
+        assertThatThrownBy(() ->
+                resourceService.updateResource(studyId, resourceId, userId, request)
+        ).isInstanceOf(BusinessException.class);
+
+    }
+
+
 
 
 

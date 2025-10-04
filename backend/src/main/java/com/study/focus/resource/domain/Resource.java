@@ -4,6 +4,7 @@ import com.study.focus.common.domain.BaseTimeEntity;
 import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 @Entity
@@ -31,4 +32,11 @@ public class Resource extends BaseTimeEntity {
     @Lob
     @Column(nullable = false)
     private String description;
+
+
+    public void updateResource(@NotBlank String title, @NotBlank String description)
+    {
+        this.title = title;
+        this.description = description;
+    }
 }
