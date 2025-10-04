@@ -10,6 +10,8 @@ import java.util.List;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
 
+    void deleteAllByStudy_Id(Long studyId);
+
     /**
      * 특정 스터디의 최근 메시지 N개 (createdAt 내림차순)
      */
@@ -42,4 +44,5 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
                                          LocalDateTime cursorCreatedAt,
                                          Long cursorId,
                                          Pageable pageable);
+
 }
