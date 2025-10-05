@@ -9,13 +9,14 @@ import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.AssignmentFileResponse;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.exception.BusinessException;
+import com.study.focus.common.exception.CommonErrorCode;
 import com.study.focus.common.exception.UserErrorCode;
 import com.study.focus.common.repository.FileRepository;
+import com.study.focus.common.service.GroupService;
 import com.study.focus.common.util.S3Uploader;
 import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
 import com.study.focus.study.domain.StudyRole;
-import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,14 +45,13 @@ class AssignmentUnitTest {
 
     @Mock private AssignmentRepository assignmentRepository;
     @Mock private StudyRepository studyRepository;
-    @Mock private StudyMemberRepository studyMemberRepository;
     @Mock private FileRepository fileRepository;
     @Mock private S3Uploader s3Uploader;
     @Mock private SubmissionRepository submissionRepository;
+    @Mock private GroupService groupService; // ⬅️ 새로 추가: GroupService를 목으로 사용
 
     @InjectMocks
     private AssignmentService assignmentService;
-
 
     private CreateAssignmentRequest dto(LocalDateTime start, LocalDateTime due, String title, String desc, List<MultipartFile> files) {
         CreateAssignmentRequest dto = new CreateAssignmentRequest();
@@ -76,7 +76,7 @@ class AssignmentUnitTest {
 
         Study study = Study.builder().build();
         StudyMember member = StudyMember.builder().study(study).build();
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(member));
+        given(groupService.memberValidation(studyId, userId)).willReturn(member);
 
         LocalDateTime now = LocalDateTime.now();
         Assignment a1 = Assignment.builder()
@@ -94,7 +94,7 @@ class AssignmentUnitTest {
 
         // then
         assertThat(result).hasSize(2);
-        then(studyMemberRepository).should(times(1)).findByStudyIdAndUserId(studyId, userId);
+        then(groupService).should(times(1)).memberValidation(studyId, userId);
         then(assignmentRepository).should(times(1)).findAllByStudyIdOrderByCreatedAtDesc(studyId);
     }
 
@@ -106,7 +106,7 @@ class AssignmentUnitTest {
 
         Study study = Study.builder().build();
         StudyMember member = StudyMember.builder().study(study).build();
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(member));
+        given(groupService.memberValidation(studyId, userId)).willReturn(member);
 
         given(assignmentRepository.findAllByStudyIdOrderByCreatedAtDesc(studyId))
                 .willReturn(List.of());
@@ -124,7 +124,8 @@ class AssignmentUnitTest {
     void getAssignments_fail_notStudyMember() {
         // given
         Long studyId = 1L, userId = 999L;
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.empty());
+        given(groupService.memberValidation(studyId, userId))
+                .willThrow(new BusinessException(CommonErrorCode.INVALID_REQUEST));
 
         // then
         assertThatThrownBy(() -> assignmentService.getAssignments(studyId, userId))
@@ -141,7 +142,7 @@ class AssignmentUnitTest {
         assertThatThrownBy(() -> assignmentService.getAssignments(null, userId))
                 .isInstanceOf(BusinessException.class);
 
-        then(studyMemberRepository).should(never()).findByStudyIdAndUserId(any(), any());
+        then(groupService).should(never()).memberValidation(any(), any());
         then(assignmentRepository).should(never()).findAllByStudyIdOrderByCreatedAtDesc(any());
     }
 
@@ -153,7 +154,7 @@ class AssignmentUnitTest {
         assertThatThrownBy(() -> assignmentService.getAssignments(studyId, null))
                 .isInstanceOf(BusinessException.class);
 
-        then(studyMemberRepository).should(never()).findByStudyIdAndUserId(any(), any());
+        then(groupService).should(never()).memberValidation(any(), any());
         then(assignmentRepository).should(never()).findAllByStudyIdOrderByCreatedAtDesc(any());
     }
 
@@ -176,9 +177,9 @@ class AssignmentUnitTest {
         CreateAssignmentRequest req = dto(start, due, "t", "d", files);
 
         given(studyRepository.findById(studyId)).willReturn(Optional.of(study));
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
+        given(groupService.memberValidation(studyId, userId)).willReturn(leader);
+        doNothing().when(groupService).isLeader(leader);
 
-        // 파일 메타 생성 스텁(여러 번 호출되므로 answer로 처리)
         when(s3Uploader.makeMetaData(any(MultipartFile.class)))
                 .thenAnswer(inv -> {
                     MultipartFile f = inv.getArgument(0);
@@ -203,6 +204,8 @@ class AssignmentUnitTest {
         assignmentService.createAssignment(studyId, userId, req);
 
         // then
+        then(groupService).should(times(1)).memberValidation(studyId, userId);
+        then(groupService).should(times(1)).isLeader(leader);
         then(assignmentRepository).should(times(1)).save(any(Assignment.class));
         then(s3Uploader).should(times(files.size())).makeMetaData(any(MultipartFile.class));
         then(fileRepository).should(times(files.size())).save(any(File.class));
@@ -222,7 +225,9 @@ class AssignmentUnitTest {
         CreateAssignmentRequest req = dto(start, due, "t", "d", null);
 
         given(studyRepository.findById(studyId)).willReturn(Optional.of(study));
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
+        given(groupService.memberValidation(studyId, userId)).willReturn(leader);
+        doNothing().when(groupService).isLeader(leader);
+
         given(assignmentRepository.save(any(Assignment.class)))
                 .willReturn(Assignment.builder().id(1L).study(study).creator(leader).title("t").description("d").startAt(start).dueAt(due).build());
 
@@ -230,6 +235,7 @@ class AssignmentUnitTest {
         assignmentService.createAssignment(studyId, userId, req);
 
         // then
+        then(groupService).should(times(1)).isLeader(leader);
         then(assignmentRepository).should(times(1)).save(any(Assignment.class));
         then(fileRepository).should(never()).save(any(File.class));
         then(s3Uploader).should(never()).uploadFiles(anyList(), anyList());
@@ -248,7 +254,9 @@ class AssignmentUnitTest {
         CreateAssignmentRequest req = dto(start, due, "t", "d", null);
 
         given(studyRepository.findById(studyId)).willReturn(Optional.of(study));
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(member));
+        given(groupService.memberValidation(studyId, userId)).willReturn(member);
+        doThrow(new BusinessException(UserErrorCode.URL_FORBIDDEN))
+                .when(groupService).isLeader(member);
 
         // then
         assertThrows(BusinessException.class, () -> assignmentService.createAssignment(studyId, userId, req));
@@ -268,7 +276,8 @@ class AssignmentUnitTest {
         CreateAssignmentRequest req = dto(start, due, "t", "d", null);
 
         given(studyRepository.findById(studyId)).willReturn(Optional.of(study));
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.empty());
+        given(groupService.memberValidation(studyId, userId))
+                .willThrow(new BusinessException(CommonErrorCode.INVALID_REQUEST));
 
         // then
         assertThrows(BusinessException.class, () -> assignmentService.createAssignment(studyId, userId, req));
@@ -289,7 +298,8 @@ class AssignmentUnitTest {
         CreateAssignmentRequest req = dto(start, due, "t", "d", null);
 
         given(studyRepository.findById(studyId)).willReturn(Optional.of(study));
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
+        given(groupService.memberValidation(studyId, userId)).willReturn(leader);
+        doNothing().when(groupService).isLeader(leader);
 
         // then
         assertThatThrownBy(() -> assignmentService.createAssignment(studyId, userId, req))
@@ -314,13 +324,12 @@ class AssignmentUnitTest {
         CreateAssignmentRequest req = dto(start, due, "t", "d", files);
 
         given(studyRepository.findById(studyId)).willReturn(Optional.of(study));
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
+        given(groupService.memberValidation(studyId, userId)).willReturn(leader);
+        doNothing().when(groupService).isLeader(leader);
 
-        // 파일 메타 파싱에서 예외
         doThrow(new BusinessException(UserErrorCode.INVALID_FILE_TYPE))
                 .when(s3Uploader).makeMetaData(any(MultipartFile.class));
 
-        // assignment 저장은 파일 처리 이전에 수행되므로 1회 호출됨
         given(assignmentRepository.save(any(Assignment.class)))
                 .willAnswer(inv -> {
                     Assignment a = inv.getArgument(0);
@@ -333,7 +342,6 @@ class AssignmentUnitTest {
 
         // when & then
         BusinessException ex = assertThrows(BusinessException.class, () -> assignmentService.createAssignment(studyId, userId, req));
-        // 저장은 1회 되었지만, 파일 저장/업로드는 수행되지 않음
         then(assignmentRepository).should(times(1)).save(any(Assignment.class));
         then(fileRepository).should(times(0)).save(any(File.class));
         then(s3Uploader).should(times(0)).uploadFiles(anyList(), anyList());
@@ -367,7 +375,8 @@ class AssignmentUnitTest {
                 .startAt(LocalDateTime.now()).dueAt(LocalDateTime.now().plusDays(1))
                 .build();
 
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
+        given(groupService.memberValidation(studyId, userId)).willReturn(leader);
+        doNothing().when(groupService).isLeader(leader);
         given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
 
         // when
@@ -411,12 +420,12 @@ class AssignmentUnitTest {
                 .startAt(LocalDateTime.now()).dueAt(LocalDateTime.now().plusDays(1))
                 .build();
 
-        // 삭제할 파일 조회
         File del1 = mock(File.class);
         File del2 = mock(File.class);
         List<File> toDelete = List.of(del1, del2);
 
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
+        given(groupService.memberValidation(studyId, userId)).willReturn(leader);
+        doNothing().when(groupService).isLeader(leader);
         given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
         given(fileRepository.findAllById(deleteIds)).willReturn(toDelete);
 
@@ -430,16 +439,12 @@ class AssignmentUnitTest {
         assignmentService.updateAssignment(studyId, assignmentId, userId, dto);
 
         // then
-        // 삭제 관련
         then(fileRepository).should(times(1)).findAllById(deleteIds);
-        // saveAll은 리스트 한 번으로 1회 호출이 맞음
         then(fileRepository).should(times(1)).saveAll(anyList());
         then(fileRepository).should(times(1)).flush();
-        // 도메인 메서드 호출 여부(선택) — mock이라면 verify 가능
         verify(del1, times(1)).deleteAssignmentFile();
         verify(del2, times(1)).deleteAssignmentFile();
 
-        // 추가 관련
         then(s3Uploader).should(times(files.size())).makeMetaData(any(MultipartFile.class));
         then(fileRepository).should(times(files.size())).save(any(File.class));
         then(s3Uploader).should(times(1)).uploadFiles(anyList(), eq(files));
@@ -463,7 +468,9 @@ class AssignmentUnitTest {
         ReflectionTestUtils.setField(dto, "startAt", start);
         ReflectionTestUtils.setField(dto, "dueAt", due);
 
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(member));
+        given(groupService.memberValidation(studyId, userId)).willReturn(member);
+        doThrow(new BusinessException(UserErrorCode.URL_FORBIDDEN))
+                .when(groupService).isLeader(member);
 
         // then
         assertThrows(BusinessException.class, () -> assignmentService.updateAssignment(studyId, assignmentId, userId, dto));
@@ -487,7 +494,8 @@ class AssignmentUnitTest {
         ReflectionTestUtils.setField(dto, "startAt", start);
         ReflectionTestUtils.setField(dto, "dueAt", due);
 
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.empty());
+        given(groupService.memberValidation(studyId, userId))
+                .willThrow(new BusinessException(CommonErrorCode.INVALID_REQUEST));
 
         // then
         assertThrows(BusinessException.class, () -> assignmentService.updateAssignment(studyId, assignmentId, userId, dto));
@@ -518,17 +526,15 @@ class AssignmentUnitTest {
                 .startAt(LocalDateTime.now()).dueAt(LocalDateTime.now().plusDays(1))
                 .build();
 
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
+        given(groupService.memberValidation(studyId, userId)).willReturn(leader);
+        doNothing().when(groupService).isLeader(leader);
         given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
 
         // when & then
         assertThrows(BusinessException.class,
                 () -> assignmentService.updateAssignment(studyId, assignmentId, userId, dto));
 
-        // 과제 조회는 1회 일어남(never 아님)
         then(assignmentRepository).should(times(1)).findByIdAndStudyId(assignmentId, studyId);
-
-        // 파일 관련 저장/업로드는 수행되지 않음
         then(fileRepository).should(never()).save(any());
         then(fileRepository).should(never()).saveAll(anyList());
         then(s3Uploader).should(never()).uploadFiles(anyList(), anyList());
@@ -563,17 +569,16 @@ class AssignmentUnitTest {
                 .startAt(LocalDateTime.now()).dueAt(LocalDateTime.now().plusDays(1))
                 .build();
 
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
+        given(groupService.memberValidation(studyId, userId)).willReturn(leader);
+        doNothing().when(groupService).isLeader(leader);
         given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
 
-        // 파일 메타에서 예외 발생
         doThrow(new BusinessException(UserErrorCode.INVALID_FILE_TYPE))
                 .when(s3Uploader).makeMetaData(any(MultipartFile.class));
 
         // when & then
         assertThrows(BusinessException.class, () -> assignmentService.updateAssignment(studyId, assignmentId, userId, dto));
 
-        // 파일 저장/업로드는 수행되지 않음
         then(fileRepository).should(never()).save(any(File.class));
         then(s3Uploader).should(never()).uploadFiles(anyList(), anyList());
     }
@@ -598,19 +603,16 @@ class AssignmentUnitTest {
                 .title("T").description("D")
                 .startAt(start).dueAt(due)
                 .build();
-        // 유닛테스트에선 자동 주입 안 되므로 직접 세팅
         org.springframework.test.util.ReflectionTestUtils.setField(assignment, "createdAt", created);
 
-        // 파일 2개(mock)
-        com.study.focus.common.domain.File f1 = mock(com.study.focus.common.domain.File.class);
-        com.study.focus.common.domain.File f2 = mock(com.study.focus.common.domain.File.class);
+        File f1 = mock(File.class);
+        File f2 = mock(File.class);
         when(f1.getFileKey()).thenReturn("key-a");
         when(f2.getFileKey()).thenReturn("key-b");
 
-        // submissions: 개수만 검증
         List<SubmissionListResponse> submissions = List.of(mock(SubmissionListResponse.class));
 
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(member));
+        given(groupService.memberValidation(studyId, userId)).willReturn(member);
         given(assignmentRepository.findById(assignmentId)).willReturn(Optional.of(assignment));
         given(submissionRepository.findSubmissionList(assignmentId)).willReturn(submissions);
         given(fileRepository.findAllByAssignmentId(assignmentId)).willReturn(List.of(f1, f2));
@@ -630,7 +632,7 @@ class AssignmentUnitTest {
                 .containsExactlyInAnyOrder("key-a", "key-b");
         assertThat(res.getSubmissions()).hasSize(1);
 
-        then(studyMemberRepository).should(times(1)).findByStudyIdAndUserId(studyId, userId);
+        then(groupService).should(times(1)).memberValidation(studyId, userId);
         then(assignmentRepository).should(times(1)).findById(assignmentId);
         then(fileRepository).should(times(1)).findAllByAssignmentId(assignmentId);
         then(submissionRepository).should(times(1)).findSubmissionList(assignmentId);
@@ -654,10 +656,9 @@ class AssignmentUnitTest {
                 .title("T2").description("D2")
                 .startAt(start).dueAt(due)
                 .build();
-        // 유닛 테스트에서는 createdAt 자동 주입이 안 되므로 필요 시 수동 세팅
         org.springframework.test.util.ReflectionTestUtils.setField(assignment, "createdAt", created);
 
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(member));
+        given(groupService.memberValidation(studyId, userId)).willReturn(member);
         given(assignmentRepository.findById(assignmentId)).willReturn(Optional.of(assignment));
         given(submissionRepository.findSubmissionList(assignmentId)).willReturn(List.of());
         given(fileRepository.findAllByAssignmentId(assignmentId)).willReturn(List.of());
@@ -666,7 +667,7 @@ class AssignmentUnitTest {
         GetAssignmentDetailResponse res = assignmentService.getAssignmentDetail(studyId, assignmentId, userId);
 
         // then
-        assertThat(res.getFiles()).isEmpty();   // ← DTO 게터명에 맞춰 수정
+        assertThat(res.getFiles()).isEmpty();
         assertThat(res.getSubmissions()).isEmpty();
         then(fileRepository).should(times(1)).findAllByAssignmentId(assignmentId);
     }
@@ -682,7 +683,7 @@ class AssignmentUnitTest {
         assertThatThrownBy(() -> assignmentService.getAssignmentDetail(null, assignmentId, userId))
                 .isInstanceOf(BusinessException.class);
 
-        then(studyMemberRepository).should(never()).findByStudyIdAndUserId(any(), any());
+        then(groupService).should(never()).memberValidation(any(), any());
         then(assignmentRepository).should(never()).findById(any());
         then(fileRepository).should(never()).findAllByAssignmentId(any());
         then(submissionRepository).should(never()).findSubmissionList(any());
@@ -698,7 +699,7 @@ class AssignmentUnitTest {
         assertThatThrownBy(() -> assignmentService.getAssignmentDetail(studyId, assignmentId, null))
                 .isInstanceOf(BusinessException.class);
 
-        then(studyMemberRepository).should(never()).findByStudyIdAndUserId(any(), any());
+        then(groupService).should(never()).memberValidation(any(), any());
         then(assignmentRepository).should(never()).findById(any());
         then(fileRepository).should(never()).findAllByAssignmentId(any());
         then(submissionRepository).should(never()).findSubmissionList(any());
@@ -709,7 +710,8 @@ class AssignmentUnitTest {
     void getAssignmentDetail_fail_notStudyMember() {
         // given
         Long studyId = 1L, assignmentId = 10L, userId = 100L;
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.empty());
+        given(groupService.memberValidation(studyId, userId))
+                .willThrow(new BusinessException(CommonErrorCode.INVALID_REQUEST));
 
         // then
         assertThatThrownBy(() -> assignmentService.getAssignmentDetail(studyId, assignmentId, userId))
@@ -732,16 +734,14 @@ class AssignmentUnitTest {
         StudyMember leader = StudyMember.builder().study(study).role(StudyRole.LEADER).build();
         Assignment assignment = Assignment.builder().id(assignmentId).study(study).creator(leader).build();
 
-        com.study.focus.common.domain.File f1 = mock(com.study.focus.common.domain.File.class);
-        com.study.focus.common.domain.File f2 = mock(com.study.focus.common.domain.File.class);
+        File f1 = mock(File.class);
+        File f2 = mock(File.class);
 
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
+        given(groupService.memberValidation(studyId, userId)).willReturn(leader);
+        doNothing().when(groupService).isLeader(leader);
         given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
 
-        // 제출물 없음
         given(submissionRepository.findAllByAssignmentId(assignmentId)).willReturn(List.of());
-
-        // 과제 직결 파일 존재
         given(fileRepository.findAllByAssignmentId(assignmentId)).willReturn(List.of(f1, f2));
 
         // when
@@ -766,7 +766,8 @@ class AssignmentUnitTest {
         StudyMember leader = StudyMember.builder().study(study).role(StudyRole.LEADER).build();
         Assignment assignment = Assignment.builder().id(assignmentId).study(study).creator(leader).build();
 
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
+        given(groupService.memberValidation(studyId, userId)).willReturn(leader);
+        doNothing().when(groupService).isLeader(leader);
         given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
 
         given(submissionRepository.findAllByAssignmentId(assignmentId)).willReturn(List.of());
@@ -794,20 +795,18 @@ class AssignmentUnitTest {
         StudyMember leader = StudyMember.builder().study(study).role(StudyRole.LEADER).build();
         Assignment assignment = Assignment.builder().id(assignmentId).study(study).creator(leader).build();
 
-        // 제출물 2개(mock) — ID 스텁
         com.study.focus.assignment.domain.Submission s1 = mock(com.study.focus.assignment.domain.Submission.class);
         com.study.focus.assignment.domain.Submission s2 = mock(com.study.focus.assignment.domain.Submission.class);
         when(s1.getId()).thenReturn(201L);
         when(s2.getId()).thenReturn(202L);
 
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(leader));
+        given(groupService.memberValidation(studyId, userId)).willReturn(leader);
+        doNothing().when(groupService).isLeader(leader);
         given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
 
         given(submissionRepository.findAllByAssignmentId(assignmentId)).willReturn(List.of(s1, s2));
 
-        // 제출물에 매달린 파일은 없음
         given(fileRepository.findAllBySubmissionIdIn(List.of(201L, 202L))).willReturn(List.of());
-        // 과제 직결 파일도 없음
         given(fileRepository.findAllByAssignmentId(assignmentId)).willReturn(List.of());
 
         // when
@@ -828,7 +827,7 @@ class AssignmentUnitTest {
         assertThatThrownBy(() -> assignmentService.deleteAssignment(null, assignmentId, userId))
                 .isInstanceOf(BusinessException.class);
 
-        then(studyMemberRepository).should(never()).findByStudyIdAndUserId(any(), any());
+        then(groupService).should(never()).memberValidation(any(), any());
         then(assignmentRepository).should(never()).findByIdAndStudyId(any(), any());
         then(submissionRepository).should(never()).findAllByAssignmentId(any());
     }
@@ -841,7 +840,7 @@ class AssignmentUnitTest {
         assertThatThrownBy(() -> assignmentService.deleteAssignment(studyId, assignmentId, null))
                 .isInstanceOf(BusinessException.class);
 
-        then(studyMemberRepository).should(never()).findByStudyIdAndUserId(any(), any());
+        then(groupService).should(never()).memberValidation(any(), any());
         then(assignmentRepository).should(never()).findByIdAndStudyId(any(), any());
         then(submissionRepository).should(never()).findAllByAssignmentId(any());
     }
@@ -855,7 +854,9 @@ class AssignmentUnitTest {
         Study study = Study.builder().id(studyId).build();
         StudyMember member = StudyMember.builder().study(study).role(StudyRole.MEMBER).build();
 
-        given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId)).willReturn(Optional.of(member));
+        given(groupService.memberValidation(studyId, userId)).willReturn(member);
+        doThrow(new BusinessException(UserErrorCode.URL_FORBIDDEN))
+                .when(groupService).isLeader(member);
 
         // then
         assertThatThrownBy(() -> assignmentService.deleteAssignment(studyId, assignmentId, userId))
