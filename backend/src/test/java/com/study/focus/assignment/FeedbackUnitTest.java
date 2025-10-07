@@ -1,5 +1,8 @@
 package com.study.focus.assignment;
 
+import com.study.focus.account.domain.User;
+import com.study.focus.account.dto.GetMyProfileResponse;
+import com.study.focus.account.service.UserService;
 import com.study.focus.assignment.domain.Assignment;
 import com.study.focus.assignment.domain.Feedback;
 import com.study.focus.assignment.domain.Submission;
@@ -38,6 +41,7 @@ class FeedbackUnitTest {
     @Mock private AssignmentRepository assignmentRepository;
     @Mock private SubmissionRepository submissionRepository;
     @Mock private FeedbackRepository feedbackRepository;
+    @Mock private UserService userService;
 
     private final Long studyId = 1L;
     private final Long assignmentId = 10L;
@@ -78,15 +82,34 @@ class FeedbackUnitTest {
                 .build();
 
         // 제출자 User 목과 trustScore 업데이트 감시
-        var user = Mockito.mock(com.study.focus.account.domain.User.class);
+        var user = Mockito.mock(User.class);
         ReflectionTestUtils.setField(submitter, "user", user);
+        var reviewerUser = Mockito.mock(User.class);
+        ReflectionTestUtils.setField(reviewer, "user", reviewerUser);
+
     }
 
     private EvaluateSubmissionRequest realDto(Long score, String content) {
-        EvaluateSubmissionRequest dto = new EvaluateSubmissionRequest();
-        ReflectionTestUtils.setField(dto, "score", score);
-        ReflectionTestUtils.setField(dto, "content", content);
+        EvaluateSubmissionRequest dto = EvaluateSubmissionRequest.builder().score(score).content(content).build();
         return dto;
+    }
+
+    private GetMyProfileResponse mockProfile(Long userId, String nickname, String imageUrl) {
+        var dto = Mockito.mock(com.study.focus.account.dto.GetMyProfileResponse.class);
+        given(dto.getNickname()).willReturn(nickname);
+        given(dto.getProfileImageUrl()).willReturn(imageUrl);
+        return dto;
+    }
+
+    private Feedback makeFeedback(Long id, Long score, String content, LocalDateTime createdAt, StudyMember reviewer, Submission submission) {
+        Feedback f = Mockito.mock(Feedback.class, Answers.RETURNS_DEEP_STUBS);
+        given(f.getId()).willReturn(id);
+        given(f.getScore()).willReturn(score);
+        given(f.getContent()).willReturn(content);
+        given(f.getCreatedAt()).willReturn(createdAt);
+        given(f.getReviewer()).willReturn(reviewer);
+        given(f.getSubmission()).willReturn(submission);
+        return f;
     }
 
     @Test
@@ -212,5 +235,131 @@ class FeedbackUnitTest {
         ).isInstanceOf(BusinessException.class);
 
         then(feedbackRepository).should(never()).save(any());
+    }
+
+    /* 과제 피드백 목록 조회 test */
+
+    @DisplayName("성공: 피드백 목록 조회 - 아이템 존재")
+    @Test
+    void getFeedbacks_success_with_items() {
+        // given
+        // member 검증 OK
+        given(groupService.memberValidation(studyId, userId)).willReturn(reviewer);
+        // 과제/제출물 존재
+        given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
+        given(submissionRepository.findByIdAndAssignmentId(submissionId, assignmentId)).willReturn(Optional.of(submission));
+
+        var reviewerUser = (User) ReflectionTestUtils.getField(reviewer, "user");
+        given(reviewerUser.getId()).willReturn(900L);
+
+        // 피드백 2건
+        Feedback f1 = makeFeedback(1L, 5L, "great", LocalDateTime.now().minusMinutes(3), reviewer, submission);
+        Feedback f2 = makeFeedback(2L, 3L, "good", LocalDateTime.now().minusMinutes(1), reviewer, submission);
+        given(feedbackRepository.findAllBySubmissionId(submissionId)).willReturn(java.util.List.of(f1, f2));
+
+        // 프로필 조회 목
+        var profile = mockProfile(900L, "alice", "img://alice");
+        // 서비스가 피드백마다 2회 호출(닉네임/이미지)하므로 단순 리턴
+        given(userService.getMyProfile(900L)).willReturn(profile);
+
+        // when
+        var result = feedbackService.getFeedbacks(studyId, assignmentId, submissionId, userId);
+
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getId()).isEqualTo(1L);
+        assertThat(result.get(0).getScore()).isEqualTo(5L);
+        assertThat(result.get(0).getEvaluaterName()).isEqualTo("alice");
+        assertThat(result.get(0).getEvaluatorProfileUrl()).isEqualTo("img://alice");
+
+        assertThat(result.get(1).getId()).isEqualTo(2L);
+        assertThat(result.get(1).getScore()).isEqualTo(3L);
+
+        then(groupService).should().memberValidation(studyId, userId);
+        then(assignmentRepository).should().findByIdAndStudyId(assignmentId, studyId);
+        then(submissionRepository).should().findByIdAndAssignmentId(submissionId, assignmentId);
+        then(feedbackRepository).should().findAllBySubmissionId(submissionId);
+        then(userService).should(atLeastOnce()).getMyProfile(900L);
+    }
+
+    @DisplayName("성공: 피드백 목록 조회 - 빈 리스트")
+    @Test
+    void getFeedbacks_success_empty_list() {
+        // given
+        given(groupService.memberValidation(studyId, userId)).willReturn(reviewer);
+        given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
+        given(submissionRepository.findByIdAndAssignmentId(submissionId, assignmentId)).willReturn(Optional.of(submission));
+        given(feedbackRepository.findAllBySubmissionId(submissionId)).willReturn(java.util.List.of());
+
+        // when
+        var result = feedbackService.getFeedbacks(studyId, assignmentId, submissionId, userId);
+
+        // then
+        assertThat(result).isEmpty();
+        then(userService).shouldHaveNoInteractions(); // 피드백 없으니 프로필 조회 없음
+    }
+
+    @DisplayName("실패: studyId가 null")
+    @Test
+    void getFeedbacks_fail_null_studyId() {
+        // given
+        given(groupService.memberValidation(null, userId)).willThrow(new BusinessException(CommonErrorCode.INVALID_REQUEST));
+
+        // when / then
+        assertThatThrownBy(() -> feedbackService.getFeedbacks(null, assignmentId, submissionId, userId))
+                .isInstanceOf(BusinessException.class);
+
+        then(assignmentRepository).shouldHaveNoInteractions();
+        then(submissionRepository).shouldHaveNoInteractions();
+        then(feedbackRepository).shouldHaveNoInteractions();
+        then(userService).shouldHaveNoInteractions();
+    }
+
+    @DisplayName("실패: assignmentId가 null")
+    @Test
+    void getFeedbacks_fail_null_assignmentId() {
+        // given
+        given(groupService.memberValidation(studyId, userId)).willReturn(reviewer);
+        given(assignmentRepository.findByIdAndStudyId(null, studyId)).willReturn(Optional.empty());
+
+        // when / then
+        assertThatThrownBy(() -> feedbackService.getFeedbacks(studyId, null, submissionId, userId))
+                .isInstanceOf(BusinessException.class);
+
+        then(submissionRepository).shouldHaveNoInteractions();
+        then(feedbackRepository).shouldHaveNoInteractions();
+        then(userService).shouldHaveNoInteractions();
+    }
+
+    @DisplayName("실패: submissionId가 null")
+    @Test
+    void getFeedbacks_fail_null_submissionId() {
+        // given
+        given(groupService.memberValidation(studyId, userId)).willReturn(reviewer);
+        given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
+        given(submissionRepository.findByIdAndAssignmentId(null, assignmentId)).willReturn(Optional.empty());
+
+        // when / then
+        assertThatThrownBy(() -> feedbackService.getFeedbacks(studyId, assignmentId, null, userId))
+                .isInstanceOf(BusinessException.class);
+
+        then(feedbackRepository).shouldHaveNoInteractions();
+        then(userService).shouldHaveNoInteractions();
+    }
+
+    @DisplayName("실패: 해당 user가 study에 속하지 않음 (memberValidation 예외)")
+    @Test
+    void getFeedbacks_fail_user_not_member() {
+        // given
+        given(groupService.memberValidation(studyId, userId)).willThrow(new BusinessException(CommonErrorCode.INVALID_REQUEST));
+
+        // when / then
+        assertThatThrownBy(() -> feedbackService.getFeedbacks(studyId, assignmentId, submissionId, userId))
+                .isInstanceOf(BusinessException.class);
+
+        then(assignmentRepository).shouldHaveNoInteractions();
+        then(submissionRepository).shouldHaveNoInteractions();
+        then(feedbackRepository).shouldHaveNoInteractions();
+        then(userService).shouldHaveNoInteractions();
     }
 }

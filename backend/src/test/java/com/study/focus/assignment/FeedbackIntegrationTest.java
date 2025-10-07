@@ -1,5 +1,12 @@
 package com.study.focus.assignment;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.study.focus.account.domain.Job;
+import com.study.focus.account.domain.User;
+import com.study.focus.account.domain.UserProfile;
+import com.study.focus.account.dto.CustomUserDetails;
+import com.study.focus.account.repository.UserProfileRepository;
+import com.study.focus.account.repository.UserRepository;
 import com.study.focus.assignment.domain.Assignment;
 import com.study.focus.assignment.domain.Feedback;
 import com.study.focus.assignment.domain.Submission;
@@ -7,210 +14,262 @@ import com.study.focus.assignment.dto.EvaluateSubmissionRequest;
 import com.study.focus.assignment.repository.AssignmentRepository;
 import com.study.focus.assignment.repository.FeedbackRepository;
 import com.study.focus.assignment.repository.SubmissionRepository;
-import com.study.focus.assignment.service.FeedbackService;
-import com.study.focus.common.exception.BusinessException;
-import com.study.focus.common.exception.CommonErrorCode;
-import com.study.focus.common.service.GroupService;
-import com.study.focus.study.domain.Study;
-import com.study.focus.study.domain.StudyMember;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
+import com.study.focus.common.domain.Address;
+import com.study.focus.common.domain.Category;
+import com.study.focus.common.domain.File;
+import com.study.focus.common.dto.FileDetailDto;
+import com.study.focus.common.repository.FileRepository;
+import com.study.focus.study.domain.*;
+import com.study.focus.study.repository.StudyMemberRepository;
+import com.study.focus.study.repository.StudyRepository;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
+@Transactional
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
 class FeedbackIntegrationTest {
 
-    @InjectMocks
-    private FeedbackService feedbackService;
+    @Autowired MockMvc mockMvc;
+    @Autowired ObjectMapper objectMapper;
 
-    @Mock private GroupService groupService;
-    @Mock private AssignmentRepository assignmentRepository;
-    @Mock private SubmissionRepository submissionRepository;
-    @Mock private FeedbackRepository feedbackRepository;
+    @Autowired UserRepository userRepository;
+    @Autowired UserProfileRepository userProfileRepository;
 
-    private final Long studyId = 1L;
-    private final Long assignmentId = 10L;
-    private final Long submissionId = 777L;
-    private final Long reviewerUserId = 100L;
+    @Autowired StudyRepository studyRepository;
+    @Autowired StudyMemberRepository studyMemberRepository;
 
-    private Study study;
-    private Assignment assignment;
-    private StudyMember reviewer;   // 피드백 작성자
-    private StudyMember submitter;  // 제출자
-    private Submission submission;
+    @Autowired AssignmentRepository assignmentRepository;
+    @Autowired SubmissionRepository submissionRepository;
+    @Autowired FeedbackRepository feedbackRepository;
+    @Autowired FileRepository fileRepository;
+
+    private Study study1;
+    private Study study2;
+    private User reviewerUser;     // 목록/작성 요청자
+    private User submitterUser;    // 과제 제출자
+    private StudyMember reviewerMember;
+    private StudyMember submitterMember;
+    private Assignment assignment1;
+    private Submission submission1;
 
     @BeforeEach
     void setUp() {
-        study = Study.builder().id(studyId).build();
+        // 유저 & 프로필
+        reviewerUser  = userRepository.save(User.builder().trustScore(10L).lastLoginAt(LocalDateTime.now()).build());
+        submitterUser = userRepository.save(User.builder().trustScore(20L).lastLoginAt(LocalDateTime.now()).build());
 
-        reviewer = StudyMember.builder()
-                .id(200L)
-                .study(study)
-                .build();
+        File img = fileRepository.save(
+                File.ofProfileImage(new FileDetailDto("avatar.png", "reviewer-key", "png", 1234L))
+        );
 
-        submitter = StudyMember.builder()
-                .id(201L)
-                .study(study)
-                .build();
+        userProfileRepository.save(UserProfile.builder()
+                .user(reviewerUser).nickname("reviewerNick")
+                .profileImage(img)
+                .address(Address.builder().province("p").district("d").build())
+                .birthDate(LocalDateTime.now().toLocalDate())
+                .job(Job.STUDENT).preferredCategory(Category.IT).build());
 
-        assignment = Assignment.builder()
-                .id(assignmentId)
-                .study(study)
-                .dueAt(LocalDateTime.now().plusHours(1))
-                .build();
+        // 스터디 2개
+        study1 = studyRepository.save(Study.builder().maxMemberCount(30).recruitStatus(RecruitStatus.OPEN).build());
+        study2 = studyRepository.save(Study.builder().maxMemberCount(30).recruitStatus(RecruitStatus.OPEN).build());
 
-        submission = Submission.builder()
-                .id(submissionId)
-                .assignment(assignment)
-                .submitter(submitter)
-                .description("desc")
-                .build();
+        // 멤버
+        reviewerMember = studyMemberRepository.save(StudyMember.builder()
+                .user(reviewerUser).study(study1).role(StudyRole.MEMBER).status(StudyMemberStatus.JOINED)
+                .exitedAt(LocalDateTime.now().plusMonths(1)).build());
+        submitterMember = studyMemberRepository.save(StudyMember.builder()
+                .user(submitterUser).study(study1).role(StudyRole.MEMBER).status(StudyMemberStatus.JOINED)
+                .exitedAt(LocalDateTime.now().plusMonths(1)).build());
 
-        // 제출자 User 목을 주입 (trustScore 업데이트 호출 검증용)
-        var submitterUser = Mockito.mock(com.study.focus.account.domain.User.class);
-        ReflectionTestUtils.setField(submitter, "user", submitterUser);
+        // 과제/제출물
+        assignment1 = assignmentRepository.save(Assignment.builder()
+                .study(study1).title("A1").description("desc")
+                .startAt(LocalDateTime.now().minusDays(1))
+                .dueAt(LocalDateTime.now().plusDays(1))
+                .creator(reviewerMember)
+                .build());
+
+        submission1 = submissionRepository.save(Submission.builder()
+                .assignment(assignment1).submitter(submitterMember)
+                .description("sub1").build());
+
+
+        UserProfile reviewerProfile = userProfileRepository.findByUserId(reviewerUser.getId()).orElseThrow();
+
+        userProfileRepository.save(reviewerProfile);
     }
-    
-    private EvaluateSubmissionRequest realDto(Long score, String content) {
-        EvaluateSubmissionRequest dto = new EvaluateSubmissionRequest();
-        ReflectionTestUtils.setField(dto, "score", score);
-        ReflectionTestUtils.setField(dto, "content", content);
-        return dto;
+
+    @AfterEach
+    void tearDown() {
+        feedbackRepository.deleteAll();
+        submissionRepository.deleteAll();
+        assignmentRepository.deleteAll();
+        studyMemberRepository.deleteAll();
+        studyRepository.deleteAll();
+        userProfileRepository.deleteAll();
+        userRepository.deleteAll();
+    }
+
+    /* 과자 평가하기 test */
+
+    @Test
+    @DisplayName("성공: 평가 작성 → 201 Created + Location")
+    void addFeedback_success() throws Exception {
+        long before = feedbackRepository.count();
+
+        EvaluateSubmissionRequest req = EvaluateSubmissionRequest.builder()
+                .score(4L).content("nice").build();
+
+        mockMvc.perform(post(url(study1.getId(), assignment1.getId(), submission1.getId()))
+                        .with(user(new CustomUserDetails(reviewerUser.getId())))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location",
+                        org.hamcrest.Matchers.containsString("/api/studies/" + study1.getId()
+                                + "/assignments/" + assignment1.getId()
+                                + "/submissions/" + submission1.getId()
+                                + "/feedbacks/")));
+
+        assertThat(feedbackRepository.count()).isEqualTo(before + 1);
+
+        // 신뢰점수 갱신 확인 (submitterUser가 +4 됐는지)
+        assertThat(userRepository.findById(submitterUser.getId()).orElseThrow().getTrustScore())
+                .isEqualTo(20L + 4L);
     }
 
     @Test
-    @DisplayName("성공: 정상 피드백 작성")
-    void addFeedback_success() {
-        // given
-        EvaluateSubmissionRequest dto = realDto(3L, "well done");
+    @DisplayName("실패: 제출자가 자기 제출물에 평가 시도 → 400")
+    void addFeedback_fail_selfReview() throws Exception {
+        EvaluateSubmissionRequest req = EvaluateSubmissionRequest.builder()
+                .score(2L).content("self").build();
 
-        given(groupService.memberValidation(studyId, reviewerUserId)).willReturn(reviewer);
-        given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
-        given(submissionRepository.findByIdAndAssignmentId(submissionId, assignmentId)).willReturn(Optional.of(submission));
-        given(feedbackRepository.existsBySubmissionIdAndReviewerId(submissionId, reviewer.getId())).willReturn(false);
-
-        // save 시 ID 세팅
-        willAnswer(inv -> {
-            Feedback f = inv.getArgument(0);
-            ReflectionTestUtils.setField(f, "id", 1234L);
-            return f;
-        }).given(feedbackRepository).save(any(Feedback.class));
-
-        // when
-        Long id = feedbackService.addFeedback(studyId, assignmentId, submissionId, reviewerUserId, dto);
-
-        // then
-        assertThat(id).isEqualTo(1234L);
-        then(groupService).should(times(1)).memberValidation(studyId, reviewerUserId);
-        then(assignmentRepository).should(times(1)).findByIdAndStudyId(assignmentId, studyId);
-        then(submissionRepository).should(times(1)).findByIdAndAssignmentId(submissionId, assignmentId);
-        then(feedbackRepository).should(times(1)).existsBySubmissionIdAndReviewerId(submissionId, reviewer.getId());
-        then(feedbackRepository).should(times(1)).save(any(Feedback.class));
-
-        // 신뢰점수 갱신 호출 검증 (Long 인자)
-        var submitterUser = (com.study.focus.account.domain.User) ReflectionTestUtils.getField(submitter, "user");
-        then(submitterUser).should(times(1)).updateTrustScore(3L);
+        mockMvc.perform(post(url(study1.getId(), assignment1.getId(), submission1.getId()))
+                        .with(user(new CustomUserDetails(submitterUser.getId()))) // 제출자 본인
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    @DisplayName("실패: studyId가 null")
-    void addFeedback_fail_null_studyId() {
-        // given
-        EvaluateSubmissionRequest dto = realDto(1L, "x");
-        given(groupService.memberValidation(null, reviewerUserId))
-                .willThrow(new BusinessException(CommonErrorCode.INVALID_REQUEST));
+    @DisplayName("실패: 스터디 멤버 아님 → 400")
+    void addFeedback_fail_notMember() throws Exception {
+        User outsider = userRepository.save(User.builder().trustScore(0L).lastLoginAt(LocalDateTime.now()).build());
+        EvaluateSubmissionRequest req = EvaluateSubmissionRequest.builder()
+                .score(5L).content("x").build();
 
-        // when / then
-        assertThatThrownBy(() ->
-                feedbackService.addFeedback(null, assignmentId, submissionId, reviewerUserId, dto)
-        ).isInstanceOf(BusinessException.class);
-
-        then(assignmentRepository).shouldHaveNoInteractions();
-        then(submissionRepository).shouldHaveNoInteractions();
-        then(feedbackRepository).shouldHaveNoInteractions();
+        mockMvc.perform(post(url(study1.getId(), assignment1.getId(), submission1.getId()))
+                        .with(user(new CustomUserDetails(outsider.getId())))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    @DisplayName("실패: userId가 null")
-    void addFeedback_fail_null_userId() {
-        // given
-        EvaluateSubmissionRequest dto = realDto(1L, "x");
-        given(groupService.memberValidation(studyId, null))
-                .willThrow(new BusinessException(CommonErrorCode.INVALID_REQUEST));
+    @DisplayName("실패: 중복 제출(같은 리뷰어가 같은 제출물 재평가) → 400")
+    void addFeedback_fail_duplicate() throws Exception {
+        feedbackRepository.save(Feedback.builder()
+                .submission(submission1).reviewer(reviewerMember).score(5L).content("once").build());
 
-        // when / then
-        assertThatThrownBy(() ->
-                feedbackService.addFeedback(studyId, assignmentId, submissionId, null, dto)
-        ).isInstanceOf(BusinessException.class);
+        EvaluateSubmissionRequest req = EvaluateSubmissionRequest.builder().score(1L).content("dup").build();
 
-        then(assignmentRepository).shouldHaveNoInteractions();
-        then(submissionRepository).shouldHaveNoInteractions();
-        then(feedbackRepository).shouldHaveNoInteractions();
+        mockMvc.perform(post(url(study1.getId(), assignment1.getId(), submission1.getId()))
+                        .with(user(new CustomUserDetails(reviewerUser.getId())))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest());
+    }
+
+    /* 피드백 조회 test */
+
+    @Test
+    @DisplayName("성공: 피드백 목록 조회 - 아이템 존재")
+    void getFeedbacks_success_withItems() throws Exception {
+        // given: 동일 리뷰어가 제출물에 2개 평가
+        feedbackRepository.save(Feedback.builder()
+                .submission(submission1).reviewer(reviewerMember).score(5L).content("great").build());
+        feedbackRepository.save(Feedback.builder()
+                .submission(submission1).reviewer(reviewerMember).score(3L).content("good").build());
+
+        // when & then
+        mockMvc.perform(get(url(study1.getId(), assignment1.getId(), submission1.getId()))
+                        .with(user(new CustomUserDetails(reviewerUser.getId()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].evaluaterName").value("reviewerNick"))
+                .andExpect(jsonPath("$[0].evaluatorProfileUrl").exists());
     }
 
     @Test
-    @DisplayName("실패: assignmentId가 null")
-    void addFeedback_fail_null_assignmentId() {
-        // given
-        EvaluateSubmissionRequest dto = realDto(1L, "x");
-        given(groupService.memberValidation(studyId, reviewerUserId)).willReturn(reviewer);
-        given(assignmentRepository.findByIdAndStudyId(null, studyId)).willReturn(Optional.empty());
-
-        // when / then
-        assertThatThrownBy(() ->
-                feedbackService.addFeedback(studyId, null, submissionId, reviewerUserId, dto)
-        ).isInstanceOf(BusinessException.class);
-
-        then(assignmentRepository).should(times(1)).findByIdAndStudyId(null, studyId);
-        then(submissionRepository).shouldHaveNoInteractions();
-        then(feedbackRepository).shouldHaveNoInteractions();
+    @DisplayName("성공: 피드백 목록 조회 - 빈 리스트")
+    void getFeedbacks_success_empty() throws Exception {
+        mockMvc.perform(get(url(study1.getId(), assignment1.getId(), submission1.getId()))
+                        .with(user(new CustomUserDetails(reviewerUser.getId()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     @Test
-    @DisplayName("실패: 제출자가 자기 제출물에 피드백 시도")
-    void addFeedback_fail_self_review() {
-        // given
-        EvaluateSubmissionRequest dto = realDto(2L, "self");
-        // reviewer == submitter 로 설정
-        given(groupService.memberValidation(studyId, reviewerUserId)).willReturn(submitter);
-        given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
-        given(submissionRepository.findByIdAndAssignmentId(submissionId, assignmentId)).willReturn(Optional.of(submission));
-
-        // when / then
-        assertThatThrownBy(() ->
-                feedbackService.addFeedback(studyId, assignmentId, submissionId, reviewerUserId, dto)
-        ).isInstanceOf(BusinessException.class);
-
-        then(feedbackRepository).should(never()).save(any());
+    @DisplayName("실패: 스터디 멤버가 아님 → 400")
+    void getFeedbacks_fail_notMember() throws Exception {
+        // reviewerUser는 study2에 속하지 않음
+        mockMvc.perform(get(url(study2.getId(), assignment1.getId(), submission1.getId()))
+                        .with(user(new CustomUserDetails(reviewerUser.getId()))))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    @DisplayName("실패: 이미 피드백을 제출한 리뷰어의 중복 제출")
-    void addFeedback_fail_duplicate_feedback() {
-        // given
-        EvaluateSubmissionRequest dto = realDto(1L, "dup");
+    @DisplayName("실패: assignmentId 불일치 → 400")
+    void getFeedbacks_fail_invalidAssignment() throws Exception {
+        Long wrongAssignmentId = assignmentRepository.save(Assignment.builder()
+                .study(study2).title("X").startAt(LocalDateTime.now().minusDays(1))
+                .dueAt(LocalDateTime.now().plusDays(1)).creator(reviewerMember).build()).getId();
 
-        given(groupService.memberValidation(studyId, reviewerUserId)).willReturn(reviewer);
-        given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
-        given(submissionRepository.findByIdAndAssignmentId(submissionId, assignmentId)).willReturn(Optional.of(submission));
-        given(feedbackRepository.existsBySubmissionIdAndReviewerId(submissionId, reviewer.getId())).willReturn(true);
+        mockMvc.perform(get(url(study1.getId(), wrongAssignmentId, submission1.getId()))
+                        .with(user(new CustomUserDetails(reviewerUser.getId()))))
+                .andExpect(status().isBadRequest());
+    }
 
-        // when / then
-        assertThatThrownBy(() ->
-                feedbackService.addFeedback(studyId, assignmentId, submissionId, reviewerUserId, dto)
-        ).isInstanceOf(BusinessException.class);
+    @Test
+    @DisplayName("실패: submissionId 불일치 → 400")
+    void getFeedbacks_fail_invalidSubmission() throws Exception {
+        Long wrongSubmissionId = submissionRepository.save(Submission.builder()
+                .assignment(assignment1).submitter(submitterMember).description("other").build()).getId();
 
-        then(feedbackRepository).should(never()).save(any());
+        // assignment는 맞지만 submissionId를 존재하지 않는 값으로 (또는 다른 과제의 제출물로)
+        mockMvc.perform(get(url(study1.getId(), assignment1.getId(), 999999L))
+                        .with(user(new CustomUserDetails(reviewerUser.getId()))))
+                .andExpect(status().isBadRequest());
+
+        // 또는 과제/제출물 매칭 불일치
+        mockMvc.perform(get(url(study1.getId(), assignment1.getId(), wrongSubmissionId + 1))
+                        .with(user(new CustomUserDetails(reviewerUser.getId()))))
+                .andExpect(status().isBadRequest());
+    }
+
+
+    private String url(Long studyId, Long assignmentId, Long submissionId) {
+        return "/api/studies/" + studyId + "/assignments/" + assignmentId + "/submissions/" + submissionId + "/feedbacks";
     }
 }
