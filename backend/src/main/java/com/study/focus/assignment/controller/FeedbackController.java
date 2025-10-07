@@ -2,6 +2,7 @@ package com.study.focus.assignment.controller;
 
 import com.study.focus.account.dto.CustomUserDetails;
 import com.study.focus.assignment.dto.EvaluateSubmissionRequest;
+import com.study.focus.assignment.dto.GetFeedbackListResponse;
 import com.study.focus.assignment.service.FeedbackService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -33,5 +35,11 @@ public class FeedbackController {
 
     // 과제 평가 목록 가져오기
     @GetMapping
-    public void getFeedbacks(@PathVariable Long studyId, @PathVariable Long assignmentId, @PathVariable Long submissionId) {}
+    public ResponseEntity<List<GetFeedbackListResponse>> getFeedbacks(@PathVariable Long studyId, @PathVariable Long assignmentId,
+                                                                      @PathVariable Long submissionId, @AuthenticationPrincipal CustomUserDetails user)
+    {
+        Long userId = user.getUserId();
+        List<GetFeedbackListResponse> feedbackList = feedbackService.getFeedbacks(studyId,assignmentId,submissionId,userId);
+        return ResponseEntity.ok(feedbackList);
+    }
 }
