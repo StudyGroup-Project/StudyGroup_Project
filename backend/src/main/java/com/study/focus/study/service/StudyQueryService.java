@@ -2,11 +2,13 @@ package com.study.focus.study.service;
 
 import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.repository.UserRepository;
-import com.study.focus.application.repository.ApplicationRepository;
 import com.study.focus.common.dto.StudyDto;
 import com.study.focus.common.util.S3Uploader;
+import com.study.focus.study.domain.StudyMemberStatus;
 import com.study.focus.study.domain.StudyProfile;
 import com.study.focus.study.domain.StudySortType;
+import com.study.focus.study.dto.GetStudiesRequest;
+import com.study.focus.study.dto.GetStudiesResponse;
 import com.study.focus.study.dto.SearchStudiesRequest;
 import com.study.focus.study.dto.SearchStudiesResponse;
 import com.study.focus.study.repository.BookmarkRepository;
@@ -76,12 +78,39 @@ public class StudyQueryService {
     }
 
     // 내 그룹 데이터 가져오기
-    public void getMyStudies(Long userId) {
-        // TODO: 내가 가입한 스터디 조회
+    public void getMyStudies(GetStudiesRequest dto, Long userId) {
+
     }
 
     // 내 찜 목록 가져오기
-    public void getBookmarks(Long userId) {
-        // TODO: 내가 찜한 스터디 목록 조회
+    public GetStudiesResponse getBookmarks(GetStudiesRequest dto, Long userId) {
+        Pageable pageable = PageRequest.of(
+                dto.getPageOrDefault(),
+                dto.getLimitOrDefault()
+        );
+
+        Page<StudyProfile> page = studyRepository.findBookmarkedStudyProfiles(userId,pageable);
+
+        List<StudyDto> studyDtos = page.stream()
+                .map(sp -> {
+                    Long studyId = sp.getStudy().getId();
+
+                    int memberCount = (int) studyMemberRepository.countByStudyIdAndStatus(studyId, StudyMemberStatus.JOINED);
+                    long bookmarkCount = bookmarkRepository.countByStudyId(studyId);
+                    long trustScore = studyMemberRepository.findLeaderTrustScoreByStudyId(studyId).orElse(0L);
+                    boolean bookmarked = true;
+
+                    return StudyDto.of(sp, memberCount, bookmarkCount, trustScore, bookmarked);
+                })
+                .toList();
+
+        GetStudiesResponse.Meta meta = GetStudiesResponse.Meta.builder()
+                .page(dto.getPage())
+                .limit(dto.getLimitOrDefault())
+                .totalCount(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .build();
+
+        return GetStudiesResponse.builder().studies(studyDtos).meta(meta).build();
     }
 }
