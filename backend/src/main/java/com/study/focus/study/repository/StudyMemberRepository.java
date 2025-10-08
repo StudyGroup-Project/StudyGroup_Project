@@ -25,6 +25,10 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember,Long> {
                                                             Long userId,
                                                             StudyMemberStatus status);
 
+ List<StudyMember> findAllByStudy_IdAndStatus(Long studyId, StudyMemberStatus status);
+
+
+
     /**
      * 방장의 trustScore 기준 내림차순 상위 10개 스터디 프로필 조회
      */
