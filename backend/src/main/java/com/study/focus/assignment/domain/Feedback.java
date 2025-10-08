@@ -29,5 +29,5 @@ public class Feedback extends BaseCreatedEntity {
     private String content;
 
     @Column(nullable = false)
-    private int score;
+    private Long score;
 }

@@ -33,7 +33,7 @@ public class QFeedback extends EntityPathBase<Feedback> {
 
     public final com.study.focus.study.domain.QStudyMember reviewer;
 
-    public final NumberPath<Integer> score = createNumber("score", Integer.class);
+    public final NumberPath<Long> score = createNumber("score", Long.class);
 
     public final QSubmission submission;
 

@@ -32,4 +32,6 @@ public class User extends BaseCreatedEntity {
     public void updateLastLoginAt() {
         this.lastLoginAt = LocalDateTime.now();
     }
+
+    public void updateTrustScore(Long score) { this.trustScore += score; }
 }
