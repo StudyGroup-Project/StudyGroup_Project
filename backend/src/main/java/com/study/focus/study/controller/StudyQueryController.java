@@ -7,6 +7,7 @@ import com.study.focus.study.dto.SearchStudiesRequest;
 import com.study.focus.study.dto.SearchStudiesResponse;
 import com.study.focus.study.service.StudyQueryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,10 +27,10 @@ public class StudyQueryController {
 
     // 내 그룹 데이터 가져오기
     @GetMapping("/mine")
-    public void getMyStudies(@ModelAttribute GetStudiesRequest dto,
-                                           @AuthenticationPrincipal CustomUserDetails user)
+    public GetStudiesResponse getMyStudies(@ModelAttribute GetStudiesRequest dto,
+                                                          @AuthenticationPrincipal CustomUserDetails user)
     {
-
+        return studyQueryService.getMyStudies(dto, user.getUserId());
     }
 
     // 내 찜 목록 가져오기

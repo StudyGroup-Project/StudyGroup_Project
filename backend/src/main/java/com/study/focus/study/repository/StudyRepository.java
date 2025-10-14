@@ -20,4 +20,15 @@ public interface StudyRepository extends JpaRepository<Study, Long>, StudyReposi
   order by b.createdAt desc
   """)
     Page<StudyProfile> findBookmarkedStudyProfiles(@Param("userId") Long userId, Pageable pageable);
+
+    @Query("""
+    select sp
+    from StudyMember sm
+    join sm.study s
+    join StudyProfile sp on sp.study = s
+    where sm.user.id = :userId and
+    sm.status = com.study.focus.study.domain.StudyMemberStatus.JOINED
+    order by sm.createdAt desc
+""")
+    Page<StudyProfile> findJoinedStudyProfiles(@Param("userId") Long userId, Pageable pageable);
 }
