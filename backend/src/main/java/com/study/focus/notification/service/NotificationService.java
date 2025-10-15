@@ -15,6 +15,7 @@ import com.study.focus.study.domain.StudyMember;
 import com.study.focus.study.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -41,6 +42,7 @@ public class NotificationService {
     }
 
     // 과제 알림 생성
+    @Transactional
     public void addAssignmentNotice(Study study, StudyMember actor, String assignmentTitle){
 
         String title = assignmentTitle + " 과제 생성 알림.";
@@ -53,6 +55,7 @@ public class NotificationService {
     }
 
     // 공지 알림 생성
+    @Transactional
     public void addAnnouncementNotice(Study study, StudyMember actor, String announcementTitle){
 
         String title = announcementTitle + " 공지 생성 알림";
@@ -65,7 +68,8 @@ public class NotificationService {
     }
 
     // 새로운 회원 알림 생성
-    public void addOutMemberNotice(Study study, StudyMember actor){
+    @Transactional
+    public void addNewMemberNotice(Study study, StudyMember actor){
 
         UserProfile user = userProfileRepository.findByUser(actor.getUser()).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
         String username = user.getNickname();
@@ -80,7 +84,8 @@ public class NotificationService {
     }
 
     // 기존 회원 탈퇴 일림 생성
-    public void addNotice(Study study, StudyMember actor){
+    @Transactional
+    public void addOutMemberNotice(Study study, StudyMember actor){
 
         UserProfile user = userProfileRepository.findByUser(actor.getUser()).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
         String username = user.getNickname();
@@ -95,6 +100,7 @@ public class NotificationService {
     }
 
     // 신규 지원서 알림 생성
+    @Transactional
     public void addNewApplicationNotice(Study study, StudyMember actor){
 
         String title = "신규 지원서 알림";
