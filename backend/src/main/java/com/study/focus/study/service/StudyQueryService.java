@@ -7,7 +7,6 @@ import com.study.focus.common.util.S3Uploader;
 import com.study.focus.study.domain.StudyMemberStatus;
 import com.study.focus.study.domain.StudyProfile;
 import com.study.focus.study.domain.StudySortType;
-import com.study.focus.study.dto.GetStudiesRequest;
 import com.study.focus.study.dto.GetStudiesResponse;
 import com.study.focus.study.dto.SearchStudiesRequest;
 import com.study.focus.study.dto.SearchStudiesResponse;
@@ -78,47 +77,32 @@ public class StudyQueryService {
     }
 
     // 내 그룹 데이터 가져오기
-    public GetStudiesResponse getMyStudies(GetStudiesRequest dto, Long userId) {
-        Pageable pageable = PageRequest.of(
-                dto.getPageOrDefault(),
-                dto.getLimitOrDefault()
-        );
+    public GetStudiesResponse getMyStudies(Long userId) {
 
-        Page<StudyProfile> page = studyRepository.findJoinedStudyProfiles(userId,pageable);
+        List<StudyProfile> studies = studyRepository.findJoinedStudyProfiles(userId);
 
-        List<StudyDto> studyDtos = page.stream()
+        List<StudyDto> studyDtos = studies.stream()
                 .map(sp -> {
                     Long studyId = sp.getStudy().getId();
 
                     int memberCount = (int) studyMemberRepository.countByStudyIdAndStatus(studyId, StudyMemberStatus.JOINED);
                     long bookmarkCount = bookmarkRepository.countByStudyId(studyId);
                     long trustScore = studyMemberRepository.findLeaderTrustScoreByStudyId(studyId).orElse(0L);
-                    boolean bookmarked = true;
+                    boolean bookmarked = bookmarkRepository.existsByUserIdAndStudyId(userId,sp.getStudy().getId());
 
                     return StudyDto.of(sp, memberCount, bookmarkCount, trustScore, bookmarked);
                 })
                 .toList();
 
-        GetStudiesResponse.Meta meta = GetStudiesResponse.Meta.builder()
-                .page(dto.getPageOrDefault())
-                .limit(dto.getLimitOrDefault())
-                .totalCount(page.getTotalElements())
-                .totalPages(page.getTotalPages())
-                .build();
-
-        return GetStudiesResponse.builder().studies(studyDtos).meta(meta).build();
+        return GetStudiesResponse.builder().studies(studyDtos).build();
     }
 
     // 내 찜 목록 가져오기
-    public GetStudiesResponse getBookmarks(GetStudiesRequest dto, Long userId) {
-        Pageable pageable = PageRequest.of(
-                dto.getPageOrDefault(),
-                dto.getLimitOrDefault()
-        );
+    public GetStudiesResponse getBookmarks(Long userId) {
 
-        Page<StudyProfile> page = studyRepository.findBookmarkedStudyProfiles(userId,pageable);
+        List<StudyProfile> studies = studyRepository.findBookmarkedStudyProfiles(userId);
 
-        List<StudyDto> studyDtos = page.stream()
+        List<StudyDto> studyDtos = studies.stream()
                 .map(sp -> {
                     Long studyId = sp.getStudy().getId();
 
@@ -131,13 +115,6 @@ public class StudyQueryService {
                 })
                 .toList();
 
-        GetStudiesResponse.Meta meta = GetStudiesResponse.Meta.builder()
-                .page(dto.getPage())
-                .limit(dto.getLimitOrDefault())
-                .totalCount(page.getTotalElements())
-                .totalPages(page.getTotalPages())
-                .build();
-
-        return GetStudiesResponse.builder().studies(studyDtos).meta(meta).build();
+        return GetStudiesResponse.builder().studies(studyDtos).build();
     }
 }

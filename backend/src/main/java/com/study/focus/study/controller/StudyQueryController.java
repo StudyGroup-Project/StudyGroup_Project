@@ -1,7 +1,6 @@
 package com.study.focus.study.controller;
 
 import com.study.focus.account.dto.CustomUserDetails;
-import com.study.focus.study.dto.GetStudiesRequest;
 import com.study.focus.study.dto.GetStudiesResponse;
 import com.study.focus.study.dto.SearchStudiesRequest;
 import com.study.focus.study.dto.SearchStudiesResponse;
@@ -27,17 +26,15 @@ public class StudyQueryController {
 
     // 내 그룹 데이터 가져오기
     @GetMapping("/mine")
-    public GetStudiesResponse getMyStudies(@ModelAttribute GetStudiesRequest dto,
-                                                          @AuthenticationPrincipal CustomUserDetails user)
+    public ResponseEntity<GetStudiesResponse> getMyStudies(@AuthenticationPrincipal CustomUserDetails user)
     {
-        return studyQueryService.getMyStudies(dto, user.getUserId());
+        return ResponseEntity.ok(studyQueryService.getMyStudies(user.getUserId()));
     }
 
     // 내 찜 목록 가져오기
     @GetMapping("/bookmarks")
-    public GetStudiesResponse getBookmarks(@ModelAttribute GetStudiesRequest dto,
-                                           @AuthenticationPrincipal CustomUserDetails user)
+    public ResponseEntity<GetStudiesResponse> getBookmarks(@AuthenticationPrincipal CustomUserDetails user)
     {
-        return studyQueryService.getBookmarks(dto,user.getUserId());
+        return ResponseEntity.ok(studyQueryService.getMyStudies(user.getUserId()));
     }
 }

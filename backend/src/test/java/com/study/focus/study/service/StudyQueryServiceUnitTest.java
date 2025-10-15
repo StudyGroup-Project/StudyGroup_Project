@@ -6,7 +6,6 @@ import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMemberStatus;
 import com.study.focus.study.domain.StudyProfile;
 import com.study.focus.study.domain.StudySortType;
-import com.study.focus.study.dto.GetStudiesRequest;
 import com.study.focus.study.dto.GetStudiesResponse;
 import com.study.focus.study.dto.SearchStudiesRequest;
 import com.study.focus.study.dto.SearchStudiesResponse;
@@ -71,28 +70,20 @@ class StudyQueryServiceUnitTest {
         when(study.getId()).thenReturn(100L);
         when(sp.getTitle()).thenReturn("알고리즘");
 
-        Page<StudyProfile> page = new PageImpl<>(
-                List.of(sp), PageRequest.of(0, 10), 1
-        );
-        when(studyRepository.findJoinedStudyProfiles(eq(userId), any(Pageable.class)))
-                .thenReturn(page);
 
         when(studyMemberRepository.countByStudyIdAndStatus(eq(100L), eq(StudyMemberStatus.JOINED)))
                 .thenReturn(0L);
         when(bookmarkRepository.countByStudyId(100L)).thenReturn(0L);
         when(studyMemberRepository.findLeaderTrustScoreByStudyId(100L))
                 .thenReturn(java.util.Optional.empty());
+        when(studyRepository.findJoinedStudyProfiles(userId)).thenReturn(List.of(sp));
 
-        GetStudiesRequest req = mock(GetStudiesRequest.class);
-        when(req.getPageOrDefault()).thenReturn(0);
-        when(req.getLimitOrDefault()).thenReturn(10);
-
-        GetStudiesResponse res = studyQueryService.getMyStudies(req, userId);
+        GetStudiesResponse res = studyQueryService.getMyStudies(userId);
 
         assertThat(res.getStudies()).hasSize(1);
         assertThat(res.getStudies().get(0).getTitle()).isEqualTo("알고리즘");
 
-        verify(studyRepository).findJoinedStudyProfiles(eq(userId), any(Pageable.class));
+        verify(studyRepository).findJoinedStudyProfiles(eq(userId));
     }
 
     @Test
@@ -105,28 +96,20 @@ class StudyQueryServiceUnitTest {
         when(study.getId()).thenReturn(200L);
         when(sp.getTitle()).thenReturn("자료구조");
 
-        Page<StudyProfile> page = new PageImpl<>(
-                List.of(sp), PageRequest.of(0, 10), 1
-        );
-        when(studyRepository.findBookmarkedStudyProfiles(eq(userId), any(Pageable.class)))
-                .thenReturn(page);
-
         when(studyMemberRepository.countByStudyIdAndStatus(200L, StudyMemberStatus.JOINED))
                 .thenReturn(0L);
         when(bookmarkRepository.countByStudyId(200L)).thenReturn(1L);
         when(studyMemberRepository.findLeaderTrustScoreByStudyId(200L))
                 .thenReturn(java.util.Optional.empty());
+        when(studyRepository.findBookmarkedStudyProfiles(userId)).thenReturn(List.of(sp));
 
-        GetStudiesRequest req = mock(GetStudiesRequest.class);
-        when(req.getPageOrDefault()).thenReturn(0);
-        when(req.getLimitOrDefault()).thenReturn(10);
 
-        GetStudiesResponse res = studyQueryService.getBookmarks(req, userId);
+        GetStudiesResponse res = studyQueryService.getBookmarks(userId);
 
         assertThat(res.getStudies()).hasSize(1);
         assertThat(res.getStudies().get(0).getTitle()).isEqualTo("자료구조");
         assertThat(res.getStudies().get(0).isBookmarked()).isTrue();
 
-        verify(studyRepository).findBookmarkedStudyProfiles(eq(userId), any(Pageable.class));
+        verify(studyRepository).findBookmarkedStudyProfiles(eq(userId));
     }
 }

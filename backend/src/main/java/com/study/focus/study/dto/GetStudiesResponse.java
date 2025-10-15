@@ -13,15 +13,4 @@ import java.util.List;
 @AllArgsConstructor
 public class GetStudiesResponse {
     List<StudyDto> studies;
-    private Meta meta;
-
-    @Getter
-    @Builder
-    @AllArgsConstructor
-    public static class Meta {
-        private int page;
-        private int limit;
-        private long totalCount;
-        private int totalPages;
-    }
 }

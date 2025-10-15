@@ -166,15 +166,13 @@ class StudyQueryControllerTest {
                 .study(study)
                 .user(me)
                 .role(StudyRole.LEADER)
-                .status(com.study.focus.study.domain.StudyMemberStatus.JOINED)
+                .status(StudyMemberStatus.JOINED)
                 .build();
         studyMemberRepository.save(member);
 
         // 4) 호출 및 검증
         mockMvc.perform(get("/api/studies/mine")
-                        .header("Authorization", "Bearer " + accessToken)
-                        .param("page", "0")
-                        .param("limit", "10"))
+                        .header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.studies[0].title").value("내가 가입한 스터디"));
     }
@@ -237,9 +235,7 @@ class StudyQueryControllerTest {
 
         // 5) 호출 및 검증
         mockMvc.perform(get("/api/studies/bookmarks")
-                        .header("Authorization", "Bearer " + accessToken)
-                        .param("page", "0")
-                        .param("limit", "10"))
+                        .header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.studies[0].title").value("내가 찜한 스터디"));
     }

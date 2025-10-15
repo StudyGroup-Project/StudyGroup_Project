@@ -19,7 +19,7 @@ public interface StudyRepository extends JpaRepository<Study, Long>, StudyReposi
   where b.user.id = :userId
   order by b.createdAt desc
   """)
-    Page<StudyProfile> findBookmarkedStudyProfiles(@Param("userId") Long userId, Pageable pageable);
+    List<StudyProfile> findBookmarkedStudyProfiles(@Param("userId") Long userId);
 
     @Query("""
     select sp
@@ -30,5 +30,5 @@ public interface StudyRepository extends JpaRepository<Study, Long>, StudyReposi
     sm.status = com.study.focus.study.domain.StudyMemberStatus.JOINED
     order by sm.createdAt desc
 """)
-    Page<StudyProfile> findJoinedStudyProfiles(@Param("userId") Long userId, Pageable pageable);
+    List<StudyProfile> findJoinedStudyProfiles(@Param("userId") Long userId);
 }
