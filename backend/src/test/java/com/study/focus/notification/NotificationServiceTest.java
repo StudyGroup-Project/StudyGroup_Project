@@ -12,6 +12,7 @@ import com.study.focus.notification.repository.NotificationRepository;
 import com.study.focus.notification.service.NotificationService;
 import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
+import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,6 +35,7 @@ class NotificationServiceTest {
     @Mock private NotificationRepository notificationRepository;
     @Mock private StudyRepository studyRepository;
     @Mock private GroupService groupService;
+    @Mock private StudyMemberRepository studyMemberRepository;
 
     @InjectMocks private NotificationService notificationService;
 
@@ -104,9 +106,11 @@ class NotificationServiceTest {
         // given
         given(notificationRepository.save(any(Notification.class)))
                 .willReturn(notification);
+        given(studyMemberRepository.findByStudyIdAndUserId(anyLong(), anyLong()))
+                .willReturn(Optional.of(actor)); // ✅ Mock 리턴값 설정
 
         // when
-        notificationService.addAssignmentNotice(study, actor, "1주차 과제");
+        notificationService.addAssignmentNotice(study,actor.getId(), "1주차 과제");
 
         // then
         verify(notificationRepository, times(1)).save(any(Notification.class));
