@@ -2,13 +2,13 @@ package com.study.focus.notification.service;
 
 import com.study.focus.account.domain.UserProfile;
 import com.study.focus.account.repository.UserProfileRepository;
-import com.study.focus.account.repository.UserRepository;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
 import com.study.focus.common.service.GroupService;
 import com.study.focus.notification.domain.AudienceType;
 import com.study.focus.notification.domain.Notification;
-import com.study.focus.notification.dto.GetNotificationsResponse;
+import com.study.focus.notification.dto.GetNotificationDetailResponse;
+import com.study.focus.notification.dto.GetNotificationsListResponse;
 import com.study.focus.notification.repository.NotificationRepository;
 import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
@@ -29,16 +29,19 @@ public class NotificationService {
     private final GroupService groupService;
 
     // 알림 목록 가져오기
-    public List<GetNotificationsResponse> getNotifications(Long studyId, Long userId) {
+    public List<GetNotificationsListResponse> getNotifications(Long studyId, Long userId) {
         groupService.memberValidation(studyId,userId);
         Study study = studyRepository.findById(studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
         List<Notification> notifications = notificationRepository.findAllByStudy(study);
-        return notifications.stream().map(a -> new GetNotificationsResponse(a.getTitle())).toList();
+        return notifications.stream().map(a -> new GetNotificationsListResponse(a.getId(),a.getTitle())).toList();
     }
 
     // 알림 상세 데이터 가져오기
-    public void getNotificationDetail(Long studyId, Long notificationId) {
-        // TODO: 알림 상세 조회
+    public GetNotificationDetailResponse getNotificationDetail(Long studyId, Long notificationId, Long userId) {
+        groupService.memberValidation(studyId,userId);
+        Study study = studyRepository.findById(studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+        Notification notification = notificationRepository.findById(notificationId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
+        return GetNotificationDetailResponse.builder().createAt(notification.getCreatedAt()).title(notification.getTitle()).description(notification.getDescription()).build();
     }
 
     // 과제 알림 생성
