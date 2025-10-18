@@ -1,16 +1,27 @@
 package com.study.focus.study.service;
 
+import com.study.focus.account.domain.User;
+import com.study.focus.account.dto.GetMyProfileResponse;
+import com.study.focus.account.service.UserService;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
 import com.study.focus.common.exception.UserErrorCode;
+import com.study.focus.common.service.GroupService;
 import com.study.focus.notification.service.NotificationService;
 import com.study.focus.study.domain.StudyMember;
 import com.study.focus.study.domain.StudyMemberStatus;
 import com.study.focus.study.domain.StudyRole;
+import com.study.focus.study.dto.GetStudyMembersResponse;
+import com.study.focus.study.dto.StudyMemberDto;
 import com.study.focus.study.repository.StudyMemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -18,11 +29,34 @@ public class StudyMemberService {
 
     private final StudyMemberRepository studyMemberRepository;
     private final NotificationService notificationService;
+    private final GroupService groupService;
+    private  final UserService userService;
 
+    //스터디 멤버 목록 가져오기
+    public GetStudyMembersResponse getMembers(Long studyId, Long userId) {
+        //Validation
+        groupService.memberValidation(studyId, userId);
 
-    // 멤버 목록 가져오기
-    public void getMembers(Long studyId) {
-        // TODO: 스터디 멤버 조회
+        //Data set
+        List<StudyMember> groupStudyMembers = studyMemberRepository.
+                findAllByStudy_IdAndStatus(studyId, StudyMemberStatus.JOINED);
+        List<GetMyProfileResponse> userProfileList = groupStudyMembers.stream().map(
+                s -> userService.getMyProfile(s.getUser().getId())
+        ).toList();
+
+        List<StudyMemberDto> members = new ArrayList<>();
+        IntStream.range(0,groupStudyMembers.size())
+                .forEach(index ->{
+                    GetMyProfileResponse userProfile = userProfileList.get(index);
+                    StudyMember studyMember = groupStudyMembers.get(index);
+                    User user = studyMember.getUser();
+                    members.add(new StudyMemberDto(user.getId(),userProfile.getNickname(),
+                            userProfile.getProfileImageUrl(),studyMember.getRole().name()
+                            ,user.getLastLoginAt()));
+                });
+
+        //Data Return
+        return new GetStudyMembersResponse(studyId,members);
     }
 
     // 그룹 탈퇴

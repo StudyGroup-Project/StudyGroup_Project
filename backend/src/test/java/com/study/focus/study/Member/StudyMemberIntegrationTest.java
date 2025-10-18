@@ -15,6 +15,7 @@ import com.study.focus.common.util.S3Uploader;
 import com.study.focus.notification.repository.NotificationRepository;
 import com.study.focus.notification.service.NotificationService;
 import com.study.focus.study.domain.*;
+import com.study.focus.study.dto.GetStudyMembersResponse;
 import com.study.focus.study.repository.BookmarkRepository;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyProfileRepository;
@@ -26,18 +27,19 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.mock.http.server.reactive.MockServerHttpRequest.get;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -67,6 +69,8 @@ public class StudyMemberIntegrationTest {
     private User testUser;
     private User leader;
     private User member; // 추방될 멤버
+    private UserProfile leaderProfile;
+    private UserProfile memberProfile;
     private Study testStudy;
     private StudyProfile testProfile;
 
@@ -105,18 +109,18 @@ public class StudyMemberIntegrationTest {
                 .role(StudyRole.MEMBER)
                 .status(StudyMemberStatus.JOINED)
                 .build());
-        Address applicantAddress = Address.builder()
-                .province("서울특별시")
-                .district("강남구")
-                .build();
-        userProfileRepository.save(UserProfile.builder()
-                .user(member)
-                .nickname("추방자")
-                .birthDate(LocalDate.of(2002, 10, 17))
-                .address(applicantAddress)
-                .job(Job.STUDENT)
-                .preferredCategory(Category.IT)
-                .build());
+
+         userProfileRepository.save(UserProfile
+                .builder().user(leader).nickname("leader")
+                .birthDate(LocalDate.now()).job(Job.FREELANCER)
+                         .address(Address.builder().district("dis").province("pro").build())
+                .preferredCategory(Category.IT).build());
+
+        userProfileRepository.save(UserProfile
+                .builder().user(member).nickname("member")
+                .address(Address.builder().district("dis").province("pro").build())
+                .birthDate(LocalDate.now()).job(Job.FREELANCER)
+                .preferredCategory(Category.IT).build());
     }
 
     @AfterEach
@@ -131,6 +135,42 @@ public class StudyMemberIntegrationTest {
         userProfileRepository.deleteAll();
         userRepository.deleteAll();
     }
+
+    @Test
+    @DisplayName("스터디 멤버 목록 조회 - 멤버가 있는 경우")
+    void getMembers_Success() throws Exception {
+
+        // when
+        String response = mockMvc.perform(MockMvcRequestBuilders.get("/api/studies/" + testStudy.getId() + "/members")
+                        .with(user(new CustomUserDetails(leader.getId())))
+                        .with(csrf())
+                )
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        // then
+        GetStudyMembersResponse result = objectMapper.readValue(response, GetStudyMembersResponse.class);
+
+        assertThat(result.getStudyId()).isEqualTo(testStudy.getId());
+        assertThat(result.getMembers()).hasSize(2);
+    }
+
+
+    @Test
+    @DisplayName("스터디 멤버 목록 조회 실패 - 스터디 멤버가 아닌 사용자")
+    void getMembers_Fail_NotStudyMember() throws Exception {
+        // given
+        User outsider = userRepository.save(User.builder().build());
+
+        // when & then
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/studies/" + testStudy.getId() + "/members")
+                .with(user(new CustomUserDetails(outsider.getId())))
+                .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
 
     @Test
     @DisplayName("그룹 인원 추방 - 성공")
