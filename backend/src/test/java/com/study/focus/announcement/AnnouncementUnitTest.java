@@ -21,6 +21,7 @@ import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.UserErrorCode;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.util.S3Uploader;
+import com.study.focus.notification.service.NotificationService;
 import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
 import com.study.focus.study.domain.StudyRole;
@@ -79,13 +80,16 @@ class AnnouncementUnitTest {
     @Mock
     private UserService userService;
 
+    @Mock
+    private NotificationService notificationService;
+
 
     @BeforeEach
     void setUp() {
         groupService = new GroupService(studyMemberRepository);
         announcementService = new AnnouncementService(
                 announcementRepo,fileRepository
-                ,s3uploader,commentRepository,userService,groupService
+                ,s3uploader,commentRepository,userService,groupService,notificationService
         );
     }
 

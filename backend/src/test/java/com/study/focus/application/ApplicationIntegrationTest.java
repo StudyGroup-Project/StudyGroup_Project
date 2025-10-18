@@ -16,6 +16,7 @@ import com.study.focus.application.dto.SubmitApplicationRequest;
 import com.study.focus.application.repository.ApplicationRepository;
 import com.study.focus.common.domain.Address;
 import com.study.focus.common.domain.Category;
+import com.study.focus.notification.repository.NotificationRepository;
 import com.study.focus.study.domain.*;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
@@ -64,6 +65,8 @@ public class ApplicationIntegrationTest {
     private StudyMemberRepository studyMemberRepository;
     @Autowired
     private UserProfileRepository userProfileRepository;
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     private User testUser;
 
@@ -82,6 +85,7 @@ public class ApplicationIntegrationTest {
                 .user(leader)
                 .study(testStudy)
                 .role(StudyRole.LEADER)
+                .status(StudyMemberStatus.JOINED)
                 .build());
         Address applicantAddress = Address.builder()
                 .province("서울특별시")
@@ -95,10 +99,19 @@ public class ApplicationIntegrationTest {
                 .job(Job.STUDENT)
                 .preferredCategory(Category.IT)
                 .build());
+        userProfileRepository.save(UserProfile.builder()
+                .user(leader)
+                .nickname("그룹장")
+                .birthDate(LocalDate.of(2002, 10, 17))
+                .address(applicantAddress)
+                .job(Job.STUDENT)
+                .preferredCategory(Category.IT)
+                .build());
     }
 
     @AfterEach
     void tearDown() {
+        notificationRepository.deleteAll();
         applicationRepository.deleteAll();
         studyMemberRepository.deleteAll();
         userProfileRepository.deleteAll();
@@ -113,7 +126,7 @@ public class ApplicationIntegrationTest {
         SubmitApplicationRequest request = new SubmitApplicationRequest("열심히 하겠습니다!");
         long initialCount = applicationRepository.count();
 
-        mockMvc.perform(post("/api/studies/" + testStudy.getId() + "/applications")
+        mockMvc.perform(post("/api/studies/" + this.testStudy.getId() + "/applications")
                         .with(user(new CustomUserDetails(testUser.getId())))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -195,7 +208,7 @@ public class ApplicationIntegrationTest {
         SubmitApplicationRequest request = new SubmitApplicationRequest("재지원합니다");
         long initialCount = applicationRepository.count();
 
-        mockMvc.perform(post("/api/studies/" + testStudy.getId() + "/applications")
+        mockMvc.perform(post("/api/studies/" + this.testStudy.getId() + "/applications")
                         .with(user(new CustomUserDetails(testUser.getId())))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -323,7 +336,7 @@ public class ApplicationIntegrationTest {
         HandleApplicationRequest request = new HandleApplicationRequest(ApplicationStatus.ACCEPTED);
 
         // when: 방장 권한으로 '수락' 요청
-        mockMvc.perform(put("/api/studies/{studyId}/applications/{applicationId}", testStudy.getId(), application.getId())
+        mockMvc.perform(put("/api/studies/{studyId}/applications/{applicationId}", this.testStudy.getId(), application.getId())
                         .with(user(new CustomUserDetails(leader.getId())))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)

@@ -3,6 +3,7 @@ package com.study.focus.study.service;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
 import com.study.focus.common.exception.UserErrorCode;
+import com.study.focus.notification.service.NotificationService;
 import com.study.focus.study.domain.StudyMember;
 import com.study.focus.study.domain.StudyMemberStatus;
 import com.study.focus.study.domain.StudyRole;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class StudyMemberService {
 
     private final StudyMemberRepository studyMemberRepository;
+    private final NotificationService notificationService;
 
 
     // 멤버 목록 가져오기
@@ -59,6 +61,7 @@ public class StudyMemberService {
 
         // 멤버 추방
         memberExpel.updateStatus(StudyMemberStatus.BANNED);
-
+        // 멤버 추방 알림 생성
+        notificationService.addOutMemberNotice(leaderMember.getStudy(),memberExpel.getUser().getId());
     }
 }

@@ -10,6 +10,7 @@ import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
 import com.study.focus.common.exception.UserErrorCode;
 import com.study.focus.common.util.S3Uploader;
+import com.study.focus.notification.service.NotificationService;
 import com.study.focus.study.domain.*;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
@@ -36,6 +37,7 @@ public class ApplicationService {
     private final UserProfileRepository userProfileRepository;
     private final S3Uploader s3Uploader;
     private final StudyMemberRepository studyMemberRepository;
+    private final NotificationService notificationService;
 
     // 지원서 제출하기
     public Long submitApplication(Long applicantId, Long studyId, SubmitApplicationRequest request) {
@@ -44,6 +46,8 @@ public class ApplicationService {
                 .orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
+        StudyMember leaderMember = studyMemberRepository.findByStudyIdAndRoleAndStatus(studyId, StudyRole.LEADER, StudyMemberStatus.JOINED)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
 
         // 스터디가 모집중인지 상태확인
         if (study.getRecruitStatus() != RecruitStatus.OPEN) {
@@ -66,6 +70,8 @@ public class ApplicationService {
                 .build();
 
         Application saveApplication = applicationRepository.save(application);
+        //그룹에 새로운 지원서 알림 생성
+        notificationService.addNewApplicationNotice(study,leaderMember.getUser().getId());
         return saveApplication.getId();
     }
 
@@ -161,6 +167,8 @@ public class ApplicationService {
                     .status(StudyMemberStatus.JOINED)
                     .build();
             studyMemberRepository.save(newMember);
+            //그룹에 신규 회원 알림 생성
+            notificationService.addNewMemberNotice(study, newMember.getUser().getId());
         }
     }
 }

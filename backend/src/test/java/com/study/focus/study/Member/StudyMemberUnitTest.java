@@ -4,6 +4,7 @@ import com.study.focus.account.domain.User;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
 import com.study.focus.common.exception.UserErrorCode;
+import com.study.focus.notification.service.NotificationService;
 import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
 import com.study.focus.study.domain.StudyMemberStatus;
@@ -35,6 +36,9 @@ public class StudyMemberUnitTest {
 
     @Mock
     private StudyMemberRepository studyMemberRepository;
+
+    @Mock
+    private NotificationService notificationService;
 
 
     @Test

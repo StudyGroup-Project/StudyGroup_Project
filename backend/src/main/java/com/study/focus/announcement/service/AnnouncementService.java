@@ -14,6 +14,7 @@ import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.util.S3Uploader;
+import com.study.focus.notification.service.NotificationService;
 import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class AnnouncementService {
     private  final CommentRepository commentRepository;
     private final UserService userService;
     private  final GroupService groupService;
+    private final NotificationService notificationService;
 
     //ID를 통해 StudyId에 userId가 포함되는지 확인하여 그룹 내 유효성 검증
     public List<GetAnnouncementsResponse> findAllSummaries(Long studyId, Long userId)
@@ -62,6 +64,8 @@ public class AnnouncementService {
                 .description(content).build();
 
         Announcement saveAnnouncements = announcementRepository.save(announcement);
+        //알림 생성
+        notificationService.addAnnouncementNotice(study,userId,title);
         //파일이 있는 경우
         if(files !=null && !files.isEmpty()){
             List<FileDetailDto> list = files.stream().map(s3Uploader::makeMetaData).toList();

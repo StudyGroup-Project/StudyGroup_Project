@@ -18,6 +18,7 @@ import com.study.focus.common.domain.Category;
 import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.repository.FileRepository;
+import com.study.focus.notification.repository.NotificationRepository;
 import com.study.focus.study.domain.*;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
@@ -78,6 +79,9 @@ public class AnnouncementIntegrationTest {
     @Autowired
     ObjectMapper objectMapper;
 
+    @Autowired
+    private NotificationRepository notificationRepository;
+
     private Study study1;
     private Study study2;
     private User user1;
@@ -108,6 +112,7 @@ public class AnnouncementIntegrationTest {
 
     @AfterEach
     void after() {
+        notificationRepository.deleteAll();
         userProfileRepository.deleteAll();
         commentRepository.deleteAll();
         fileRepository.deleteAll();

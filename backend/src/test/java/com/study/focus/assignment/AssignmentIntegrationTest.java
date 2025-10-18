@@ -9,6 +9,7 @@ import com.study.focus.assignment.repository.SubmissionRepository;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.util.S3Uploader;
+import com.study.focus.notification.repository.NotificationRepository;
 import com.study.focus.study.domain.*;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
@@ -54,6 +55,7 @@ class AssignmentIntegrationTest {
     @Autowired private AssignmentRepository assignmentRepository;
     @Autowired private FileRepository fileRepository;
     @Autowired private SubmissionRepository submissionRepository;
+    @Autowired private NotificationRepository notificationRepository;
 
     // 외부 I/O 막기 위해 테스트에서 S3Uploader를 목으로 대체
     @MockBean private S3Uploader s3Uploader;
@@ -103,6 +105,7 @@ class AssignmentIntegrationTest {
 
     @AfterEach
     void tearDown() {
+        notificationRepository.deleteAll();
         fileRepository.deleteAll();
         submissionRepository.deleteAll();
         assignmentRepository.deleteAll();

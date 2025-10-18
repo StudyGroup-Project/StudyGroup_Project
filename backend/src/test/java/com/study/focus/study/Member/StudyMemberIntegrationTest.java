@@ -1,7 +1,9 @@
 package com.study.focus.study.Member;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.study.focus.account.domain.Job;
 import com.study.focus.account.domain.User;
+import com.study.focus.account.domain.UserProfile;
 import com.study.focus.account.dto.CustomUserDetails;
 import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.repository.UserRepository;
@@ -10,6 +12,8 @@ import com.study.focus.common.domain.Address;
 import com.study.focus.common.domain.Category;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.util.S3Uploader;
+import com.study.focus.notification.repository.NotificationRepository;
+import com.study.focus.notification.service.NotificationService;
 import com.study.focus.study.domain.*;
 import com.study.focus.study.repository.BookmarkRepository;
 import com.study.focus.study.repository.StudyMemberRepository;
@@ -26,6 +30,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -53,6 +59,7 @@ public class StudyMemberIntegrationTest {
     @Autowired private BookmarkRepository bookmarkRepository;
     @Autowired private ApplicationRepository applicationRepository;
     @Autowired private FileRepository fileRepository;
+    @Autowired private NotificationRepository notificationRepository;
 
     @MockitoBean
     private S3Uploader s3Uploader;
@@ -98,11 +105,24 @@ public class StudyMemberIntegrationTest {
                 .role(StudyRole.MEMBER)
                 .status(StudyMemberStatus.JOINED)
                 .build());
+        Address applicantAddress = Address.builder()
+                .province("서울특별시")
+                .district("강남구")
+                .build();
+        userProfileRepository.save(UserProfile.builder()
+                .user(member)
+                .nickname("추방자")
+                .birthDate(LocalDate.of(2002, 10, 17))
+                .address(applicantAddress)
+                .job(Job.STUDENT)
+                .preferredCategory(Category.IT)
+                .build());
     }
 
     @AfterEach
     void tearDown() {
         // (tearDown is the same)
+        notificationRepository.deleteAll();
         applicationRepository.deleteAll();
         bookmarkRepository.deleteAll();
         studyMemberRepository.deleteAll();
