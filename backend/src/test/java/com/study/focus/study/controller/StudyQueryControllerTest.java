@@ -225,6 +225,14 @@ class StudyQueryControllerTest {
                 .build();
         studyProfileRepository.save(profile);
 
+        StudyMember member = StudyMember.builder()
+                .study(study)
+                .user(me)
+                .role(StudyRole.LEADER)
+                .status(StudyMemberStatus.JOINED)
+                .build();
+        studyMemberRepository.save(member);
+
         // 4) 북마크 생성
         Bookmark bm = Bookmark.builder()
                 .study(study)
