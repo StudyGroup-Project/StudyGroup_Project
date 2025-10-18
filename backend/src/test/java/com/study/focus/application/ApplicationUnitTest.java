@@ -14,6 +14,8 @@ import com.study.focus.account.domain.User;
 import com.study.focus.account.repository.UserRepository;
 import com.study.focus.common.domain.File;
 import com.study.focus.common.util.S3Uploader;
+import com.study.focus.notification.repository.NotificationRepository;
+import com.study.focus.notification.service.NotificationService;
 import com.study.focus.study.domain.*;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
@@ -55,6 +57,8 @@ public class ApplicationUnitTest {
     private S3Uploader s3Uploader;
     @Mock
     private UserProfileRepository userProfileRepository;
+    @Mock
+    private NotificationService notificationService;
 
     @InjectMocks
     private ApplicationService applicationService;
@@ -77,11 +81,19 @@ public class ApplicationUnitTest {
                 .content(request.getContent())
                 .status(ApplicationStatus.SUBMITTED)
                 .build();
+        User leaderUser = User.builder().id(999L).build();
+        StudyMember leaderMember = StudyMember.builder()
+                .user(leaderUser)
+                .study(fakeStudy)
+                .role(StudyRole.LEADER)
+                .status(StudyMemberStatus.JOINED)
+                .build();
 
         given(userRepository.findById(applicantId)).willReturn(Optional.of(fakeUser));
         given(studyRepository.findById(studyId)).willReturn(Optional.of(fakeStudy));
         given(applicationRepository.findByApplicantAndStudy(fakeUser, fakeStudy)).willReturn(Optional.empty());
         given(applicationRepository.save(any(Application.class))).willReturn(fakeApplication);
+        given(studyMemberRepository.findByStudyIdAndRoleAndStatus(fakeStudy.getId(), StudyRole.LEADER, StudyMemberStatus.JOINED)).willReturn(Optional.of(leaderMember));
 
         // when
         Long actualApplicationId = applicationService.submitApplication(applicantId, studyId, request);
@@ -128,10 +140,18 @@ public class ApplicationUnitTest {
                 .content("이전 지원서")
                 .status(ApplicationStatus.SUBMITTED)
                 .build();
+        User leaderUser = User.builder().id(999L).build();
+        StudyMember leaderMember = StudyMember.builder()
+                .user(leaderUser)
+                .study(fakeStudy)
+                .role(StudyRole.LEADER)
+                .status(StudyMemberStatus.JOINED)
+                .build();
 
         given(userRepository.findById(applicantId)).willReturn(Optional.of(fakeUser));
         given(studyRepository.findById(studyId)).willReturn(Optional.of(fakeStudy));
         given(applicationRepository.findByApplicantAndStudy(fakeUser, fakeStudy)).willReturn(Optional.of(submittedApplication));
+        given(studyMemberRepository.findByStudyIdAndRoleAndStatus(fakeStudy.getId(), StudyRole.LEADER, StudyMemberStatus.JOINED)).willReturn(Optional.of(leaderMember));
 
         // when & then
         assertThatThrownBy(() -> applicationService.submitApplication(applicantId, studyId, request))
@@ -156,10 +176,19 @@ public class ApplicationUnitTest {
                 .content("이전 지원서")
                 .status(ApplicationStatus.ACCEPTED)
                 .build();
+        User leaderUser = User.builder().id(999L).build();
+        StudyMember leaderMember = StudyMember.builder()
+                .user(leaderUser)
+                .study(fakeStudy)
+                .role(StudyRole.LEADER)
+                .status(StudyMemberStatus.JOINED)
+                .build();
+
 
         given(userRepository.findById(applicantId)).willReturn(Optional.of(fakeUser));
         given(studyRepository.findById(studyId)).willReturn(Optional.of(fakeStudy));
         given(applicationRepository.findByApplicantAndStudy(fakeUser, fakeStudy)).willReturn(Optional.of(acceptedApplication));
+        given(studyMemberRepository.findByStudyIdAndRoleAndStatus(fakeStudy.getId(), StudyRole.LEADER, StudyMemberStatus.JOINED)).willReturn(Optional.of(leaderMember));
 
         // when & then
         assertThatThrownBy(() -> applicationService.submitApplication(applicantId, studyId, request))
@@ -192,11 +221,19 @@ public class ApplicationUnitTest {
                 .content(request.getContent())
                 .status(ApplicationStatus.SUBMITTED)
                 .build();
+        User leaderUser = User.builder().id(999L).build();
+        StudyMember leaderMember = StudyMember.builder()
+                .user(leaderUser)
+                .study(fakeStudy)
+                .role(StudyRole.LEADER)
+                .status(StudyMemberStatus.JOINED)
+                .build();
 
         given(userRepository.findById(applicantId)).willReturn(Optional.of(fakeUser));
         given(studyRepository.findById(studyId)).willReturn(Optional.of(fakeStudy));
         given(applicationRepository.findByApplicantAndStudy(fakeUser, fakeStudy)).willReturn(Optional.of(rejectedApplication));
         given(applicationRepository.save(any(Application.class))).willReturn(newApplication);
+        given(studyMemberRepository.findByStudyIdAndRoleAndStatus(fakeStudy.getId(), StudyRole.LEADER, StudyMemberStatus.JOINED)).willReturn(Optional.of(leaderMember));
 
         // when
         Long actualApplicationId = applicationService.submitApplication(applicantId, studyId, request);

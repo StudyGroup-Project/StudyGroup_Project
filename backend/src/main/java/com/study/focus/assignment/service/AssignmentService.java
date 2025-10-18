@@ -14,6 +14,7 @@ import com.study.focus.common.exception.UserErrorCode;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.service.GroupService;
 import com.study.focus.common.util.S3Uploader;
+import com.study.focus.notification.service.NotificationService;
 import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
 import com.study.focus.study.domain.StudyRole;
@@ -37,6 +38,7 @@ public class AssignmentService {
     private final S3Uploader s3Uploader;
     private final SubmissionRepository submissionRepository;
     private final GroupService groupService;
+    private final NotificationService notificationService;
 
     // 과제 목록 가져오기(생성 순 내림차순 정렬)
     @Transactional
@@ -70,6 +72,8 @@ public class AssignmentService {
                 .build();
 
         Assignment saveAssignment = assignmentRepository.save(assignment);
+
+        notificationService.addAssignmentNotice(study,creatorId,dto.getTitle());
 
         if (dto.getFiles() != null && !dto.getFiles().isEmpty()) {
             List<FileDetailDto> list = dto.getFiles().stream().map(s3Uploader::makeMetaData).toList();

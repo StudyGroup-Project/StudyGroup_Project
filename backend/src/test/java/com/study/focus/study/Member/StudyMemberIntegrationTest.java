@@ -12,6 +12,8 @@ import com.study.focus.common.domain.Address;
 import com.study.focus.common.domain.Category;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.util.S3Uploader;
+import com.study.focus.notification.repository.NotificationRepository;
+import com.study.focus.notification.service.NotificationService;
 import com.study.focus.study.domain.*;
 import com.study.focus.study.dto.GetStudyMembersResponse;
 import com.study.focus.study.repository.BookmarkRepository;
@@ -59,6 +61,7 @@ public class StudyMemberIntegrationTest {
     @Autowired private BookmarkRepository bookmarkRepository;
     @Autowired private ApplicationRepository applicationRepository;
     @Autowired private FileRepository fileRepository;
+    @Autowired private NotificationRepository notificationRepository;
 
     @MockitoBean
     private S3Uploader s3Uploader;
@@ -123,6 +126,7 @@ public class StudyMemberIntegrationTest {
     @AfterEach
     void tearDown() {
         // (tearDown is the same)
+        notificationRepository.deleteAll();
         applicationRepository.deleteAll();
         bookmarkRepository.deleteAll();
         studyMemberRepository.deleteAll();

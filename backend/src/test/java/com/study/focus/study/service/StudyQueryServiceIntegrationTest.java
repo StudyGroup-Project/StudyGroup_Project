@@ -5,6 +5,7 @@ import com.study.focus.account.repository.UserRepository;
 import com.study.focus.common.domain.Address;
 import com.study.focus.common.domain.Category;
 import com.study.focus.study.domain.*;
+import com.study.focus.study.dto.GetStudiesResponse;
 import com.study.focus.study.dto.SearchStudiesRequest;
 import com.study.focus.study.dto.SearchStudiesResponse;
 import com.study.focus.study.repository.BookmarkRepository;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
@@ -34,6 +36,7 @@ public class StudyQueryServiceIntegrationTest {
     @Autowired private UserRepository userRepository;
 
     private Long userId;
+    private Long studyUserId;
 
     @BeforeEach
     void setUp() {
@@ -90,6 +93,7 @@ public class StudyQueryServiceIntegrationTest {
         studyMemberRepository.saveAll(List.of(member1, member2));
 
         userId = bookmarker.getId();
+        studyUserId = leader1.getId();
 
         // bookmarker가 study1 북마크
         Bookmark bookmark = Bookmark.builder()
@@ -136,5 +140,19 @@ public class StudyQueryServiceIntegrationTest {
     void bookmarkedCheck() {
         SearchStudiesResponse res = studyQueryService.searchStudies(new SearchStudiesRequest(), userId);
         assertThat(res.getStudies().stream().anyMatch(s -> s.isBookmarked())).isTrue();
+    }
+
+    @Test
+    @DisplayName("bookmarked 그룹 목록 확인")
+    void bookmarkedList() {
+        GetStudiesResponse res = studyQueryService.getBookmarks(userId);
+        assertThat(res.getStudies()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("내 그룹 목록 확인")
+    void myGroupList() {
+        GetStudiesResponse res = studyQueryService.getMyStudies(studyUserId);
+        assertThat(res.getStudies()).hasSize(1);
     }
 }

@@ -7,6 +7,7 @@ import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
 import com.study.focus.common.exception.UserErrorCode;
 import com.study.focus.common.service.GroupService;
+import com.study.focus.notification.service.NotificationService;
 import com.study.focus.study.domain.StudyMember;
 import com.study.focus.study.domain.StudyMemberStatus;
 import com.study.focus.study.domain.StudyRole;
@@ -27,6 +28,7 @@ import java.util.stream.IntStream;
 public class StudyMemberService {
 
     private final StudyMemberRepository studyMemberRepository;
+    private final NotificationService notificationService;
     private final GroupService groupService;
     private  final UserService userService;
 
@@ -93,6 +95,7 @@ public class StudyMemberService {
 
         // 멤버 추방
         memberExpel.updateStatus(StudyMemberStatus.BANNED);
-
+        // 멤버 추방 알림 생성
+        notificationService.addOutMemberNotice(leaderMember.getStudy(),memberExpel.getUser().getId());
     }
 }

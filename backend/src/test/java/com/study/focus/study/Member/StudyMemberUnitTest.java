@@ -11,6 +11,11 @@ import com.study.focus.common.service.GroupService;
 import com.study.focus.study.domain.*;
 import com.study.focus.study.dto.GetStudyMembersResponse;
 import com.study.focus.study.dto.StudyMemberDto;
+import com.study.focus.notification.service.NotificationService;
+import com.study.focus.study.domain.Study;
+import com.study.focus.study.domain.StudyMember;
+import com.study.focus.study.domain.StudyMemberStatus;
+import com.study.focus.study.domain.StudyRole;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.service.StudyMemberService;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +45,9 @@ public class StudyMemberUnitTest {
     @Mock
     private StudyMemberRepository studyMemberRepository;
 
+    @Mock
+    private NotificationService notificationService;
+
 
     @InjectMocks
     private GroupService groupService;
@@ -63,7 +71,7 @@ public class StudyMemberUnitTest {
     void setUp()
     {
         groupService = new GroupService(studyMemberRepository);
-        studyMemberService = new StudyMemberService(studyMemberRepository,groupService,userService);
+        studyMemberService = new StudyMemberService(studyMemberRepository,notificationService,groupService,userService);
         user1 = User.builder().id(1L).trustScore(30)
                 .lastLoginAt(LocalDateTime.now()).build();
         user2 = User.builder().id(2L).trustScore(40)
@@ -144,7 +152,7 @@ public class StudyMemberUnitTest {
         verify(userService, times(1)).getMyProfile(1L);
         verify(userService, times(1)).getMyProfile(2L);
     }
-    
+
 
     @Test
     @DisplayName("스터디 멤버 목록 조회 실패 - 스터디 멤버가 아닌 경우")

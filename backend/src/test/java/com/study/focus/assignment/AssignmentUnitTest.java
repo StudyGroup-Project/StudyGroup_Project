@@ -14,6 +14,7 @@ import com.study.focus.common.exception.UserErrorCode;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.service.GroupService;
 import com.study.focus.common.util.S3Uploader;
+import com.study.focus.notification.service.NotificationService;
 import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
 import com.study.focus.study.domain.StudyRole;
@@ -48,7 +49,8 @@ class AssignmentUnitTest {
     @Mock private FileRepository fileRepository;
     @Mock private S3Uploader s3Uploader;
     @Mock private SubmissionRepository submissionRepository;
-    @Mock private GroupService groupService; // ⬅️ 새로 추가: GroupService를 목으로 사용
+    @Mock private GroupService groupService;
+    @Mock private NotificationService notificationService;
 
     @InjectMocks
     private AssignmentService assignmentService;
