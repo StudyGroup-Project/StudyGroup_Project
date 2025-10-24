@@ -1,9 +1,14 @@
 #  📖 포커스(FOCUS) - **Study Group Project**
 
-<img width="1024" height="1024" alt="로고" src="https://github.com/user-attachments/assets/f92258ab-0da8-4f33-aef8-cb34b2a3716d" />
+
 
 ##  :star: 프로젝트 소개
 오프라인 스터디를 보다 손쉽게 모집하고 관리할 수 있는 웹 애플리케이션입니다. 사용자는 관심 분야별로 스터디 그룹을 개설하거나 참여할 수 있으며, 각 그룹 내에서 과제를 공유하고 피드백을 주고 받으며 개인의 성장을 도모할 수 있습니다.  또한 실시간 채팅 기능을 통해 친목을 다지고, 함께 성장할 수 있는 협력형 학습 생태계를 제공합니다.
+
+<p align ="center">
+<img src="./Focus_Logo.png" alt="프로젝트 로고" width="400" height="400">
+</p>
+
 
 ---
 
@@ -47,20 +52,6 @@
 
 ---
 
-
-## 🚀 기술 스택
-
-| 분야 | 기술 |
-|------|----------------------|
-| **Frontend** | React , Figma|
-| **Backend** | Java, Spring Boot, Spring Security |
-| **Database** | MySQL 8.0.43 |
-| **Infra** | AWS EC2 |
-| **Version Control** | GitHub |
-| **File Resource** | AWS S3|
-
----
-
 ## 📂 프로젝트 핵심 구조
 <pre>
 src
@@ -86,32 +77,21 @@ src
   
 </pre>
 ---
+## 🚀 기술 스택
 
-##  프로젝트 아키텍처
-<img width="1176" height="1044" alt="스크린샷 2025-09-14 161957" src="https://github.com/user-attachments/assets/fac6178b-0e16-4980-aeb9-2d0765610285" />
-
-
----
-##  주요 기능
-- **관심별 스터디 그룹 모집**
-관심있는 스터디 그룹을 손쉽게 찾아서 지원할 수 있다.
-<img width="945" height="998" alt="스터디 1" src="https://github.com/user-attachments/assets/8a094bf7-a6e3-4c06-84bb-830885cbe608" />
-
-
-- **과제를 통한 평가 및 피드백**
-스터디에서 올라온 과제를 다른 사람들이 평가하고 피드백할 수 있도록 한다.
-<img width="592" height="752" alt="스터디2" src="https://github.com/user-attachments/assets/b32c1d86-0054-4f62-b174-2e593c2598cf" />
-
--**공지로 전부에게 알림**
-스터디 그룹에서 공지로 사람들에게 전달내용이 있으면 전달하고 그룹원들은 댓글을 달 수 있음.
-<img width="548" height="562" alt="스터디3" src="https://github.com/user-attachments/assets/6dcfab8a-c0ec-465d-958f-a9a90d15afd1" />
-
+| 분야 | 기술 |
+|------|----------------------|
+| **Frontend** | React , Figma|
+| **Backend** | Java, Spring Boot, Spring Security |
+| **Database** | MySQL 8.0.43 |
+| **Infra** | AWS EC2 |
+| **Version Control** | GitHub |
+| **File Resource** | AWS S3|
 
 ---
 
-## 💾 컨벤션
 
-### 커밋 메시지 
+## 💾 커밋 컨벤션
 
 | Type | Description |
 |------|-------------|
@@ -127,10 +107,32 @@ src
 | **Rename** | 📂 파일/폴더명 변경 및 이동만 수행한 경우 |
 | **Remove** | 🗑️ 파일 삭제만 수행한 경우 |
 | **!BREAKING CHANGE** | 💥 대규모 API 변경 (호환성 깨짐) |
-
-
-
 | **!HOTFIX** | 🚑 긴급 치명적 버그 수정 |
+---
+
+##  🗺️ 프로젝트 아키텍처
+<img width="1176" height="1044" alt="스크린샷 2025-09-14 161957" src="https://github.com/user-attachments/assets/fac6178b-0e16-4980-aeb9-2d0765610285" />
+
+
+---
+## 📑  주요 기능
+- **관심별 스터디 그룹 모집**
+관심있는 스터디 그룹을 손쉽게 찾아서 지원할 수 있다.
+<img width="945" height="998" alt="스터디 1" src="https://github.com/user-attachments/assets/8a094bf7-a6e3-4c06-84bb-830885cbe608" />
+
+
+- **과제를 통한 평가 및 피드백**
+스터디에서 올라온 과제를 다른 사람들이 평가하고 피드백할 수 있도록 한다.
+<img width="592" height="752" alt="스터디2" src="https://github.com/user-attachments/assets/b32c1d86-0054-4f62-b174-2e593c2598cf" />
+
+-**공지로 전부에게 알림**
+스터디 그룹에서 공지로 사람들에게 전달내용이 있으면 전달하고 그룹원들은 댓글을 달 수 있음.
+<img width="548" height="562" alt="스터디3" src="https://github.com/user-attachments/assets/6dcfab8a-c0ec-465d-958f-a9a90d15afd1" />
+
+
+
+
+
 
 
 
