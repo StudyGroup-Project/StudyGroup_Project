@@ -34,11 +34,11 @@ public class ResourceService {
     private final S3Uploader s3Uploader;
 
     // 자료 목록 가져오기
-    public List<GetResourcesResponse> getResources(Long studyId, Long userId) {
+    public List<GetResourcesResponse>getResources(Long studyId, Long userId)  {
         //1. 스터디 그룹 멤버 확인
         groupService.memberValidation(studyId, userId);
         //2. 데이터 조회
-        List<Resource> groupResource = resourceRepository.findAllByStudy_Id(studyId);
+        List<Resource> groupResource = resourceRepository.findAllByStudyId(studyId);
 
         //3.응답 데이터 생성
         List<GetResourcesResponse> resourcesResponseList = groupResource.stream()
