@@ -38,7 +38,7 @@ public class ResourceService {
         //1. 스터디 그룹 멤버 확인
         groupService.memberValidation(studyId, userId);
         //2. 데이터 조회
-        List<Resource> groupResource = resourceRepository.findAllByStudy_Id(studyId);
+        List<Resource> groupResource = resourceRepository.findAllByStudyId(studyId);
 
         //3.응답 데이터 생성
         List<GetResourcesResponse> resourcesResponseList = groupResource.stream()

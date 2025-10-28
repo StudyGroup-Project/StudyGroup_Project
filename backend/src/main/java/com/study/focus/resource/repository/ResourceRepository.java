@@ -12,7 +12,7 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
 
     void deleteAllByStudy_Id(Long studyId);
 
-    Optional<Resource> findByIdAndStudyId(Long id, Long study_Id);
 
+    Optional<Resource> findByIdAndStudyId(Long id, Long study_Id);
 
 }
