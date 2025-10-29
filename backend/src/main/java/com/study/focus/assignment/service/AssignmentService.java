@@ -31,7 +31,6 @@ public class AssignmentService {
 
     private final AssignmentRepository assignmentRepository;
     private final StudyRepository studyRepository;
-    private final StudyMemberRepository studyMemberRepository;
     private final FileRepository fileRepository;
     private final S3Uploader s3Uploader;
     private final SubmissionRepository submissionRepository;
