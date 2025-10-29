@@ -50,7 +50,7 @@ public class NotificationService {
 
     // 과제 알림 생성
     @Transactional
-    public void addAssignmentNotice(Study study, Long actorId, String assignmentTitle){
+    public void addAssignmentNotification(Study study, Long actorId, String assignmentTitle){
         StudyMember actor = studyMemberRepository.findByStudyIdAndUserId(study.getId(),actorId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
         String title = assignmentTitle + " 과제 생성 알림.";
         String description = "과제 게시판에 " + assignmentTitle + " 게시글이 생성되었습니다. 마감일 확인 후 마감일까지 제출 바랍니다.";
@@ -63,7 +63,7 @@ public class NotificationService {
 
     // 공지 알림 생성
     @Transactional
-    public void addAnnouncementNotice(Study study, Long actorId, String announcementTitle){
+    public void addAnnouncementNotification(Study study, Long actorId, String announcementTitle){
         StudyMember actor = studyMemberRepository.findByStudyIdAndUserId(study.getId(),actorId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
         String title = announcementTitle + " 공지 생성 알림";
         String description = "공지 게시판에" + announcementTitle + " 게시글이 생성되었습니다. 스터디원들께서는 확인 바랍니다.";
@@ -76,7 +76,7 @@ public class NotificationService {
 
     // 새로운 회원 알림 생성
     @Transactional
-    public void addNewMemberNotice(Study study, Long actorId){
+    public void addNewMemberNotification(Study study, Long actorId){
         StudyMember actor = studyMemberRepository.findByStudyIdAndUserId(study.getId(),actorId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
         UserProfile user = userProfileRepository.findByUser(actor.getUser()).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
         String username = user.getNickname();
@@ -92,7 +92,7 @@ public class NotificationService {
 
     // 기존 회원 탈퇴 일림 생성
     @Transactional
-    public void addOutMemberNotice(Study study, Long actorId){
+    public void addOutMemberNotification(Study study, Long actorId){
 
         StudyMember actor = studyMemberRepository.findByStudyIdAndUserId(study.getId(),actorId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
         UserProfile user = userProfileRepository.findByUser(actor.getUser()).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
@@ -109,7 +109,7 @@ public class NotificationService {
 
     // 신규 지원서 알림 생성
     @Transactional
-    public void addNewApplicationNotice(Study study, Long actorId){
+    public void addNewApplicationNotification(Study study, Long actorId){
 
         StudyMember actor = studyMemberRepository.findByStudyIdAndUserId(study.getId(),actorId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
 

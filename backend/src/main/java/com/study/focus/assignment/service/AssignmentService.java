@@ -16,7 +16,6 @@ import com.study.focus.common.util.S3Uploader;
 import com.study.focus.notification.service.NotificationService;
 import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
-import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -70,7 +69,7 @@ public class AssignmentService {
 
         Assignment saveAssignment = assignmentRepository.save(assignment);
 
-        notificationService.addAssignmentNotice(study,creatorId,dto.getTitle());
+        notificationService.addAssignmentNotification(study,creatorId,dto.getTitle());
 
         if (dto.getFiles() != null && !dto.getFiles().isEmpty()) {
             List<FileDetailDto> list = dto.getFiles().stream().map(s3Uploader::makeMetaData).toList();

@@ -17,12 +17,9 @@ import com.study.focus.study.repository.StudyRepository;
 import com.study.focus.application.domain.Application;
 import com.study.focus.application.dto.SubmitApplicationRequest;
 import com.study.focus.application.repository.ApplicationRepository;
-import com.study.focus.study.repository.StudyRepository;
-import com.study.focus.study.service.StudyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import software.amazon.awssdk.services.s3.S3Client;
 
 import java.util.List;
 
@@ -71,7 +68,7 @@ public class ApplicationService {
 
         Application saveApplication = applicationRepository.save(application);
         //그룹에 새로운 지원서 알림 생성
-        notificationService.addNewApplicationNotice(study,leaderMember.getUser().getId());
+        notificationService.addNewApplicationNotification(study,leaderMember.getUser().getId());
         return saveApplication.getId();
     }
 
@@ -168,7 +165,7 @@ public class ApplicationService {
                     .build();
             studyMemberRepository.save(newMember);
             //그룹에 신규 회원 알림 생성
-            notificationService.addNewMemberNotice(study, newMember.getUser().getId());
+            notificationService.addNewMemberNotification(study, newMember.getUser().getId());
         }
     }
 }
