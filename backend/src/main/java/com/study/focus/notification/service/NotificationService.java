@@ -31,6 +31,7 @@ public class NotificationService {
     private final GroupService groupService;
 
     // 알림 목록 가져오기
+    @Transactional
     public List<GetNotificationsListResponse> getNotifications(Long studyId, Long userId) {
         groupService.memberValidation(studyId,userId);
         Study study = studyRepository.findById(studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
@@ -39,6 +40,7 @@ public class NotificationService {
     }
 
     // 알림 상세 데이터 가져오기
+    @Transactional
     public GetNotificationDetailResponse getNotificationDetail(Long studyId, Long notificationId, Long userId) {
         groupService.memberValidation(studyId,userId);
         Study study = studyRepository.findById(studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
