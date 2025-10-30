@@ -2,7 +2,6 @@ package com.study.focus.notification;
 
 import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.common.exception.BusinessException;
-import com.study.focus.common.exception.CommonErrorCode;
 import com.study.focus.common.service.GroupService;
 import com.study.focus.notification.domain.AudienceType;
 import com.study.focus.notification.domain.Notification;
@@ -20,7 +19,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -102,15 +100,15 @@ class NotificationServiceTest {
 
     @Test
     @DisplayName("과제 생성 알림을 저장한다")
-    void addAssignmentNotice_success() {
+    void addAssignmentNotification_success() {
         // given
         given(notificationRepository.save(any(Notification.class)))
                 .willReturn(notification);
         given(studyMemberRepository.findByStudyIdAndUserId(anyLong(), anyLong()))
-                .willReturn(Optional.of(actor)); // ✅ Mock 리턴값 설정
+                .willReturn(Optional.of(actor));
 
         // when
-        notificationService.addAssignmentNotice(study,actor.getId(), "1주차 과제");
+        notificationService.addAssignmentNotification(study,actor.getId(), "1주차 과제");
 
         // then
         verify(notificationRepository, times(1)).save(any(Notification.class));

@@ -1,11 +1,9 @@
 package com.study.focus.assignment.dto;
 
-import com.study.focus.common.dto.AssignmentFileResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;

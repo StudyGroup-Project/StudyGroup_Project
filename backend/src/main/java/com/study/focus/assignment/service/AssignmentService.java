@@ -6,19 +6,16 @@ import com.study.focus.assignment.dto.*;
 import com.study.focus.assignment.repository.AssignmentRepository;
 import com.study.focus.assignment.repository.SubmissionRepository;
 import com.study.focus.common.domain.File;
-import com.study.focus.common.dto.AssignmentFileResponse;
+import com.study.focus.assignment.dto.AssignmentFileResponse;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
-import com.study.focus.common.exception.UserErrorCode;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.service.GroupService;
 import com.study.focus.common.util.S3Uploader;
 import com.study.focus.notification.service.NotificationService;
 import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
-import com.study.focus.study.domain.StudyRole;
-import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,7 +30,6 @@ public class AssignmentService {
 
     private final AssignmentRepository assignmentRepository;
     private final StudyRepository studyRepository;
-    private final StudyMemberRepository studyMemberRepository;
     private final FileRepository fileRepository;
     private final S3Uploader s3Uploader;
     private final SubmissionRepository submissionRepository;
@@ -73,7 +69,7 @@ public class AssignmentService {
 
         Assignment saveAssignment = assignmentRepository.save(assignment);
 
-        notificationService.addAssignmentNotice(study,creatorId,dto.getTitle());
+        notificationService.addAssignmentNotification(study,creatorId,dto.getTitle());
 
         if (dto.getFiles() != null && !dto.getFiles().isEmpty()) {
             List<FileDetailDto> list = dto.getFiles().stream().map(s3Uploader::makeMetaData).toList();

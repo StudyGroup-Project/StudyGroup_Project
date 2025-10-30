@@ -65,7 +65,7 @@ public class AnnouncementService {
 
         Announcement saveAnnouncements = announcementRepository.save(announcement);
         //알림 생성
-        notificationService.addAnnouncementNotice(study,userId,title);
+        notificationService.addAnnouncementNotification(study,userId,title);
         //파일이 있는 경우
         if(files !=null && !files.isEmpty()){
             List<FileDetailDto> list = files.stream().map(s3Uploader::makeMetaData).toList();
