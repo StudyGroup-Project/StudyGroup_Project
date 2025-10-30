@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter @Setter
 @AllArgsConstructor
 public class UpdateUserProfileRequest {
@@ -14,5 +16,5 @@ public class UpdateUserProfileRequest {
     private String district;
     private String birthDate;
     private Job job;
-    private Category preferredCategory;
+    private List<Category> preferredCategory;
 }

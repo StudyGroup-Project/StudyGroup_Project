@@ -27,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -76,7 +77,7 @@ class UserControllerTest {
     void initProfile_success() throws Exception {
         InitUserProfileRequest request = new InitUserProfileRequest(
                 "홍길동", "서울특별시", "강남구",
-                "2000-01-01", Job.STUDENT, Category.IT
+                "2000-01-01", Job.STUDENT, List.of(Category.IT)
         );
 
         mockMvc.perform(post("/api/users/me/profile/basic")
@@ -99,7 +100,7 @@ class UserControllerTest {
               "district": "강남구",
               "birthDate": "2000-01-01",
               "job": "INVALID",
-              "preferredCategory": "IT"
+              "preferredCategory": ["IT"]
             }
             """;
 
@@ -121,7 +122,7 @@ class UserControllerTest {
                 new Address("서울특별시", "강남구"),
                 LocalDate.of(2000, 1, 1),
                 Job.STUDENT,
-                Category.IT
+                List.of(Category.IT)
         ));
 
         MockMultipartFile file = new MockMultipartFile(
@@ -166,7 +167,7 @@ class UserControllerTest {
         // 프로필 생성
         InitUserProfileRequest request = new InitUserProfileRequest(
                 "홍길동", "서울특별시", "강남구",
-                "2000-01-01", Job.STUDENT, Category.IT
+                "2000-01-01", Job.STUDENT, List.of(Category.IT)
         );
         mockMvc.perform(post("/api/users/me/profile/basic")
                         .with(user(new CustomUserDetails(user1.getId())))
@@ -180,7 +181,7 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nickname").value("홍길동"))
                 .andExpect(jsonPath("$.job").value("STUDENT"))
-                .andExpect(jsonPath("$.preferredCategory").value("IT"));
+                .andExpect(jsonPath("$.preferredCategory").value(List.of("IT")));
     }
 
     @Test

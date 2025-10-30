@@ -25,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,7 +51,7 @@ class UserServiceTest {
 
         InitUserProfileRequest request = new InitUserProfileRequest(
                 "홍길동", "경상북도", "경산시",
-                "1999-07-15", Job.STUDENT, Category.IT
+                "1999-07-15", Job.STUDENT, List.of(Category.IT)
         );
 
         // when
@@ -68,7 +69,7 @@ class UserServiceTest {
         UserProfile profile = UserProfile.builder().user(user).nickname("홍길동")
                 .address(new Address("경상북도", "경산시"))
                 .birthDate(LocalDate.of(1999, 7, 15))
-                .job(Job.STUDENT).preferredCategory(Category.IT)
+                .job(Job.STUDENT).preferredCategory(List.of(Category.IT))
                 .build();
 
         when(userProfileRepository.findByUserId(1L)).thenReturn(Optional.of(profile));
@@ -99,7 +100,7 @@ class UserServiceTest {
         UserProfile profile = UserProfile.builder().user(user).nickname("홍길동")
                 .address(new Address("경상북도", "경산시"))
                 .birthDate(LocalDate.of(1999, 7, 15))
-                .job(Job.STUDENT).preferredCategory(Category.IT)
+                .job(Job.STUDENT).preferredCategory(List.of(Category.IT))
                 .build();
 
         when(userProfileRepository.findByUserId(1L)).thenReturn(Optional.of(profile));
@@ -124,13 +125,13 @@ class UserServiceTest {
         UserProfile profile = UserProfile.builder().user(user).nickname("홍길동")
                 .address(new Address("경상북도", "경산시"))
                 .birthDate(LocalDate.of(1999, 7, 15))
-                .job(Job.STUDENT).preferredCategory(Category.IT)
+                .job(Job.STUDENT).preferredCategory(List.of(Category.IT))
                 .build();
 
         when(userProfileRepository.findByUserId(1L)).thenReturn(Optional.of(profile));
 
         UpdateUserProfileRequest request = new UpdateUserProfileRequest(
-                "임꺽정", "서울특별시", "강남구", "2000-01-01", Job.FREELANCER, Category.LANGUAGE
+                "임꺽정", "서울특별시", "강남구", "2000-01-01", Job.FREELANCER, List.of(Category.LANGUAGE)
         );
 
         // when
@@ -158,7 +159,7 @@ class UserServiceTest {
         UserProfile profile = UserProfile.builder().user(user).nickname("홍길동")
                 .address(new Address("경상북도", "경산시"))
                 .birthDate(LocalDate.of(1999, 7, 15))
-                .job(Job.STUDENT).preferredCategory(Category.IT)
+                .job(Job.STUDENT).preferredCategory(List.of(Category.IT))
                 .profileImage(file)
                 .build();
 

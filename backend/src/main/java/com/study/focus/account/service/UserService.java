@@ -1,6 +1,5 @@
 package com.study.focus.account.service;
 
-import com.study.focus.account.domain.Job;
 import com.study.focus.account.domain.User;
 import com.study.focus.account.domain.UserProfile;
 import com.study.focus.account.dto.GetMyProfileResponse;
@@ -9,7 +8,6 @@ import com.study.focus.account.dto.UpdateUserProfileRequest;
 import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.repository.UserRepository;
 import com.study.focus.common.domain.Address;
-import com.study.focus.common.domain.Category;
 import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.exception.BusinessException;

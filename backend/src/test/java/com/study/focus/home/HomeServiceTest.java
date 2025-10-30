@@ -58,7 +58,7 @@ class HomeServiceTest {
                 .address(new Address("경상북도", "경산시"))
                 .birthDate(LocalDate.of(2000, 1, 1))
                 .job(Job.STUDENT)
-                .preferredCategory(Category.IT)
+                .preferredCategory(List.of(Category.IT))
                 .profileImage(file)
                 .build();
 
@@ -67,7 +67,7 @@ class HomeServiceTest {
                 .study(study)
                 .title("백엔드 스터디")
                 .bio("백엔드 개발자를 위한 스터디")
-                .category(Category.IT)
+                .category(List.of(Category.IT))
                 .build();
 
         when(userProfileRepository.findByUserId(1L)).thenReturn(Optional.of(profile));
