@@ -269,7 +269,7 @@ class FeedbackUnitTest {
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getId()).isEqualTo(1L);
         assertThat(result.get(0).getScore()).isEqualTo(5L);
-        assertThat(result.get(0).getEvaluaterName()).isEqualTo("alice");
+        assertThat(result.get(0).getEvaluatorName()).isEqualTo("alice");
         assertThat(result.get(0).getEvaluatorProfileUrl()).isEqualTo("img://alice");
 
         assertThat(result.get(1).getId()).isEqualTo(2L);
