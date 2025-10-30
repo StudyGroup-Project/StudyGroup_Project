@@ -1,4 +1,4 @@
-package com.study.focus.common.dto;
+package com.study.focus.assignment.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -30,7 +30,6 @@ public class FeedbackService {
     private final SubmissionRepository submissionRepository;
     private final AssignmentRepository assignmentRepository;
     private final FeedbackRepository feedbackRepository;
-    private final UserProfileRepository userProfileRepository;
     private final UserService userService;
 
     // 과제 평가하기

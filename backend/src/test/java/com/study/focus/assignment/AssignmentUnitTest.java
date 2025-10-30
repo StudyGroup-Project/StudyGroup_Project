@@ -6,7 +6,7 @@ import com.study.focus.assignment.repository.AssignmentRepository;
 import com.study.focus.assignment.repository.SubmissionRepository;
 import com.study.focus.assignment.service.AssignmentService;
 import com.study.focus.common.domain.File;
-import com.study.focus.common.dto.AssignmentFileResponse;
+import com.study.focus.assignment.dto.AssignmentFileResponse;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;

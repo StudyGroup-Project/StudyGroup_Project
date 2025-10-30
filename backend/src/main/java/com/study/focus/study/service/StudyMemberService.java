@@ -18,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -96,6 +95,6 @@ public class StudyMemberService {
         // 멤버 추방
         memberExpel.updateStatus(StudyMemberStatus.BANNED);
         // 멤버 추방 알림 생성
-        notificationService.addOutMemberNotice(leaderMember.getStudy(),memberExpel.getUser().getId());
+        notificationService.addOutMemberNotification(leaderMember.getStudy(),memberExpel.getUser().getId());
     }
 }
