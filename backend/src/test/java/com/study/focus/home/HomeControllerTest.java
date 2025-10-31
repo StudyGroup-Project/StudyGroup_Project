@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.stream.IntStream;
 
 import static org.mockito.ArgumentMatchers.anyString;
@@ -85,7 +86,7 @@ class HomeControllerTest {
                 .address(new Address("경상북도", "경산시"))
                 .birthDate(LocalDate.of(2000, 1, 1))
                 .job(Job.STUDENT)
-                .preferredCategory(Category.IT)
+                .preferredCategory(List.of(Category.IT))
                 .profileImage(file)
                 .build());
 
@@ -99,7 +100,7 @@ class HomeControllerTest {
                 .study(study)
                 .title("백엔드 스터디")
                 .bio("백엔드 개발자를 위한 스터디")
-                .category(Category.IT)
+                .category(List.of(Category.IT))
                 .address(new Address("경상북도", "경산시"))
                 .build());
 
@@ -179,7 +180,7 @@ class HomeControllerTest {
                     .study(newStudy)
                     .title("스터디" + i)
                     .bio("테스트 스터디")
-                    .category(Category.IT)
+                    .category(List.of(Category.IT))
                     .address(new Address("서울특별시", "강남구"))
                     .build());
             studyMemberRepository.save(StudyMember.builder()

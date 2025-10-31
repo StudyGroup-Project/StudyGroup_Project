@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter @Setter
 @AllArgsConstructor
 public class GetMyProfileResponse {
@@ -15,7 +17,7 @@ public class GetMyProfileResponse {
     private String district;
     private String birthDate;
     private Job job;
-    private Category preferredCategory;
+    private List<Category> preferredCategory;
     private String profileImageUrl;
     private Long trustScore;
 }
