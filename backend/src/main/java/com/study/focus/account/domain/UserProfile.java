@@ -4,10 +4,12 @@ import com.study.focus.common.domain.Address;
 import com.study.focus.common.domain.BaseUpdatedEntity;
 import com.study.focus.common.domain.Category;
 import com.study.focus.common.domain.File;
+import com.study.focus.common.util.CategoryListConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Getter
@@ -37,9 +39,9 @@ public class UserProfile extends BaseUpdatedEntity {
     @Column(nullable = false)
     private Job job;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = CategoryListConverter.class) // 컨버터 지정
     @Column(nullable = false)
-    private Category preferredCategory;
+    private List<Category> preferredCategory;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "profile_image_id")
@@ -53,7 +55,7 @@ public class UserProfile extends BaseUpdatedEntity {
                                      Address address,
                                      LocalDate birthDate,
                                      Job job,
-                                     Category preferredCategory) {
+                                     List<Category> preferredCategory) {
         return UserProfile.builder()
                 .user(user)
                 .nickname(nickname)
@@ -71,7 +73,7 @@ public class UserProfile extends BaseUpdatedEntity {
                               Address address,
                               LocalDate birthDate,
                               Job job,
-                              Category preferredCategory) {
+                              List<Category> preferredCategory) {
         this.nickname = nickname;
         this.address = address;
         this.birthDate = birthDate;

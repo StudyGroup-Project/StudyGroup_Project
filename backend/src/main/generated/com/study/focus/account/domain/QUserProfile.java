@@ -34,7 +34,7 @@ public class QUserProfile extends EntityPathBase<UserProfile> {
 
     public final StringPath nickname = createString("nickname");
 
-    public final EnumPath<com.study.focus.common.domain.Category> preferredCategory = createEnum("preferredCategory", com.study.focus.common.domain.Category.class);
+    public final ListPath<com.study.focus.common.domain.Category, EnumPath<com.study.focus.common.domain.Category>> preferredCategory = this.<com.study.focus.common.domain.Category, EnumPath<com.study.focus.common.domain.Category>>createList("preferredCategory", com.study.focus.common.domain.Category.class, EnumPath.class, PathInits.DIRECT2);
 
     public final com.study.focus.common.domain.QFile profileImage;
 

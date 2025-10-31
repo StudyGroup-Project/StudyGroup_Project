@@ -42,7 +42,7 @@ class StudyQueryServiceUnitTest {
     @Test
     void searchStudies_mapsRepositoryResultToResponse() {
         StudyDto dto = new StudyDto(1L, "알고리즘", 10, 5, 3,
-                "PS", Category.IT, 80, true);
+                "PS", List.of(Category.IT), 80, true);
 
         Page<StudyDto> page = new PageImpl<>(List.of(dto), PageRequest.of(0, 10), 1);
         when(studyRepository.searchStudies(any(), any(), any(), any(), anyLong(), any(), any()))

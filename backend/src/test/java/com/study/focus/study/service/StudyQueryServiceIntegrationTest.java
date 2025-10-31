@@ -58,7 +58,7 @@ public class StudyQueryServiceIntegrationTest {
                 .study(study1)
                 .title("알고리즘 스터디")
                 .bio("백준 같이 풀기")
-                .category(Category.IT)
+                .category(List.of(Category.IT))
                 .address(new Address("경상북도", "경산시"))
                 .build();
 
@@ -77,7 +77,7 @@ public class StudyQueryServiceIntegrationTest {
                 .study(study2)
                 .title("네트워크 스터디")
                 .bio("OSI 7계층")
-                .category(Category.IT)
+                .category(List.of(Category.IT))
                 .address(new Address("경상북도", "경산시"))
                 .build();
 
