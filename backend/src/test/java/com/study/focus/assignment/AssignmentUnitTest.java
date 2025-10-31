@@ -1,5 +1,6 @@
 package com.study.focus.assignment;
 
+import com.study.focus.account.service.UserService;
 import com.study.focus.assignment.domain.Assignment;
 import com.study.focus.assignment.dto.*;
 import com.study.focus.assignment.repository.AssignmentRepository;
@@ -51,6 +52,7 @@ class AssignmentUnitTest {
     @Mock private SubmissionRepository submissionRepository;
     @Mock private GroupService groupService;
     @Mock private NotificationService notificationService;
+    @Mock private UserService userService;
 
     @InjectMocks
     private AssignmentService assignmentService;

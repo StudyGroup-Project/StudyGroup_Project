@@ -1,5 +1,6 @@
 package com.study.focus.assignment.dto;
 
+import com.study.focus.account.dto.GetMyProfileResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,4 +29,6 @@ public class GetAssignmentDetailResponse {
     List<AssignmentFileResponse> files;
 
     List<SubmissionListResponse> submissions;
+
+    List<GetMyProfileResponse> profileUrls;
 }
