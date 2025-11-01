@@ -16,7 +16,7 @@
 | 이름 | 역할 | 담당 분야 | GitHub |
 |------|------|-----------|--------|
 | **이시형** | BE | AWS, Announcement, Comment, Resource | [SHNAME](https://github.com/SHNAME) |
-| **이현철** | BE | User, ChatMessage, DB | [sevencomma](https://github.com/sevencomma) |
+| **이현철** | BE | User, Home, ChatMessage, DB | [sevencomma](https://github.com/sevencomma) |
 | **강보성** | BE | Study, Bookmark, Application, AWS EC2 | [kang-bs](https://github.com/kang-bs) |
 | **장세헌** | BE | Assignment, Notification, Submission, Feedback | [jangseheon](https://github.com/jangseheon) |
 | **서주형** | FE | Frontend 개발 | [wnwngud](https://github.com/wnwngud) |
@@ -25,7 +25,14 @@
 ---
 
 ## ✅ 역할 분담
-### 이시형
+### 공통
+- **문서(docs):**
+  - API명세서 초안, ERD 초안 작성
+  - 각 분담 기능별 API명세서, SRS, SDS(use case, class, sequence) 작성
+- **개발(dev):** 각 분담 기능별 구현(스프링MVC) 및 테스트 코드(JUnit5) 작성
+
+### 이시형 (팀장)
+- **협업 도구 관리:** Notion, Github, Erd Cloud, Docs 등 문서화 환경 구축
 - **공지(Announcement):** 공지 제목 List, 세부 데이터, 생성, 수정, 삭제 시스템 구현
 - **공지댓글(Comment):** 공지 세부화면 댓글 작성 구현
 - **자료(Resource):** 자료 제목 List, 상세 데이터, 생성, 수정, 삭제 구현
@@ -33,9 +40,10 @@
 - **스케줄러(Scheduler):** 예약된 파일을 삭제하기 위한 스케줄러 시스템 구축
 
 ### 이현철
-- **유저(User):** ouath 로그인, 일반 로그인, 회원가입 구현(JWT Token)
-- **채팅방(ChatMessage):** 실시간 채팅방 시스템 구현
-- **DB :** 엔티티 작성 
+- **유저(User):** ouath 로그인, 일반 로그인, 회원가입(JWT Token), 로그아웃, 액세스 토큰재발급, 유저 프로필 CRUD구현
+- **홈(Home):** 메인화면 데이터 불러오기, 그룹 검색(동적쿼리) 구현
+- **채팅방(ChatMessage):** 실시간 채팅방 시스템(웹소켓 기반) 구현
+- **DB :** ERD구체화, 엔티티 코드 작성 
 
 ### 강보성
 - **스터디 그룹(Study) :** 그룹 검색 요청, 상위 스터디 가져오기, 생성, 삭제, 탈퇴, 인원 추방, 프로필 정보 수정 구현
@@ -48,6 +56,7 @@
 - **과제 제출물 (Submission) :** 제출물 list, 상세보기 시스템을 구현
 - **과제 피드백 (Feedback) :** 과제 평가, 평가 목록을 구현
 - **알림(Notification):** 알림 제목 list, 세부 데이터 가져오기 등 알림 시스템을 구현
+- **SRS:** SRS 초안 작성 
   
 
 ---
