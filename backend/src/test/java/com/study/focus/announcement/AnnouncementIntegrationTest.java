@@ -1,5 +1,14 @@
 package com.study.focus.announcement;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.study.focus.account.domain.Job;
 import com.study.focus.account.domain.User;
@@ -19,9 +28,15 @@ import com.study.focus.common.domain.File;
 import com.study.focus.common.dto.FileDetailDto;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.notification.repository.NotificationRepository;
-import com.study.focus.study.domain.*;
+import com.study.focus.study.domain.RecruitStatus;
+import com.study.focus.study.domain.Study;
+import com.study.focus.study.domain.StudyMember;
+import com.study.focus.study.domain.StudyMemberStatus;
+import com.study.focus.study.domain.StudyRole;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,17 +50,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @Transactional
@@ -345,7 +349,7 @@ public class AnnouncementIntegrationTest {
         User user = userRepository.save(User.builder().trustScore(30L).lastLoginAt(LocalDateTime.now()).build());
         UserProfile userProfile = UserProfile.builder().user(user)
                 .nickname("testNickname").address(Address.builder().province("testProvince").district("testDistrict").build())
-                .birthDate(LocalDateTime.now().toLocalDate()).job(Job.FREELANCER).preferredCategory(Category.IT).build();
+                .birthDate(LocalDateTime.now().toLocalDate()).job(Job.FREELANCER).preferredCategory(List.of(Category.IT)).build();
         userProfileRepository.save(userProfile);
 
         //study Member 및 공지 생성

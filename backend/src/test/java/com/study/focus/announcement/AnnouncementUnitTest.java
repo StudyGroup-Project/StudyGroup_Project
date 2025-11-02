@@ -439,7 +439,7 @@ class AnnouncementUnitTest {
 
         GetMyProfileResponse mockProfile = new GetMyProfileResponse(1L,
                 "testName","testProvince","testDistrict","testBirth",
-                Job.JOB_SEEKER, Category.ACADEMICS,"tesUrl",30L);
+                Job.JOB_SEEKER, List.of( Category.ACADEMICS),"tesUrl",30L);
 
         // mocking
         given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId))

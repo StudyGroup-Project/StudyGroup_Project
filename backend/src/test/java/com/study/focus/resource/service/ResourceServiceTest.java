@@ -95,11 +95,11 @@ class ResourceServiceTest {
                 .study(testStudy).author(teststudyMember).title("test").description("testd").build();
 
         GetMyProfileResponse mockProfile = new GetMyProfileResponse(1L,"test","test"
-        ,"test","30",Job.FREELANCER, Category.IT,null,30L);
+        ,"test","30",Job.FREELANCER, List.of(Category.IT),null,30L);
 
         given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId))
                 .willReturn(Optional.of(teststudyMember));
-        given(resourceRepository.findAllByStudy_Id(studyId))
+        given(resourceRepository.findAllByStudyId(studyId))
                 .willReturn(List.of(resource));
         given(userService.getMyProfile(any()))
                 .willReturn(mockProfile);
@@ -123,7 +123,7 @@ class ResourceServiceTest {
 
         given(studyMemberRepository.findByStudyIdAndUserId(studyId, userId))
                 .willReturn(Optional.of(teststudyMember));
-        given(resourceRepository.findAllByStudy_Id(studyId))
+        given(resourceRepository.findAllByStudyId(studyId))
                 .willReturn(Collections.emptyList());
 
         //when
@@ -169,7 +169,7 @@ class ResourceServiceTest {
 
         GetMyProfileResponse mockProfile = new GetMyProfileResponse(
                 1L, "authorNick", "profileImg.png",
-                "서울", "30", Job.FREELANCER, Category.IT,
+                "서울", "30", Job.FREELANCER, List.of(Category.IT),
                 null, 100L
         );
 
