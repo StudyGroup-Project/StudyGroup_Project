@@ -4,6 +4,8 @@ import com.study.focus.common.domain.Category;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.List;
+
 
 @Getter
 @AllArgsConstructor
@@ -11,7 +13,7 @@ public class CreateStudyRequest {
 
     private String title;
     private Integer maxMemberCount;
-    private Category category;
+    private List<Category> category;
     private String province;    // 시/도
     private String district;    // 시/군/구
     private String bio;         // 짧은 소개

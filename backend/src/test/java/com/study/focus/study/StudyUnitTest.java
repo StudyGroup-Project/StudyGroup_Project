@@ -31,6 +31,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -88,7 +89,7 @@ class StudyUnitTest {
         final Long userId = 1L;
         final Long expectedStudyId = 10L;
         CreateStudyRequest request = new CreateStudyRequest(
-                "JPA 스터디", 10, Category.IT, "서울", "강남구", "JPA 심화 학습", "상세 설명"
+                "JPA 스터디", 10, List.of(Category.IT), "서울", "강남구", "JPA 심화 학습", "상세 설명"
         );
 
         User fakeUser = User.builder().id(userId).build();
