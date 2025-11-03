@@ -6,6 +6,8 @@ import com.study.focus.study.domain.RecruitStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
 @AllArgsConstructor
 public class GetStudyProfileResponse {
@@ -16,7 +18,7 @@ public class GetStudyProfileResponse {
     private int memberCount; // 현재 인원
     private String bio; // 짧은 소개
     private String description; // 상세 소개
-    private Category category; // 카테고리
+    private List<Category> category;; // 카테고리
     private String province; // 시/도
     private String district; // 시/군/구
     private RecruitStatus recruitStatus; // 모집 상태 (OPEN, CLOSED 등)

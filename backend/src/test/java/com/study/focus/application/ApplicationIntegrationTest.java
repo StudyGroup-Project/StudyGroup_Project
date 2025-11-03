@@ -97,7 +97,7 @@ public class ApplicationIntegrationTest {
                 .address(applicantAddress)
                 .birthDate(LocalDate.of(1990, 1, 1))
                 .job(Job.STUDENT)
-                .preferredCategory(Category.IT)
+                .preferredCategory(List.of(Category.IT))
                 .build());
         userProfileRepository.save(UserProfile.builder()
                 .user(leader)
@@ -105,7 +105,7 @@ public class ApplicationIntegrationTest {
                 .birthDate(LocalDate.of(2002, 10, 17))
                 .address(applicantAddress)
                 .job(Job.STUDENT)
-                .preferredCategory(Category.IT)
+                .preferredCategory(List.of(Category.IT))
                 .build());
     }
 
