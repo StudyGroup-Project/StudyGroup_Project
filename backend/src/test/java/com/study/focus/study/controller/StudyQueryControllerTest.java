@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -91,7 +92,7 @@ class StudyQueryControllerTest {
                 .study(study)
                 .title("알고리즘")
                 .bio("백준 같이 풀기")
-                .category(Category.IT)
+                .category(List.of(Category.IT))
                 .address(new Address("경상북도", "경산시"))
                 .build();
         studyProfileRepository.save(profile);
@@ -157,7 +158,7 @@ class StudyQueryControllerTest {
                 .study(study)
                 .title("내가 가입한 스터디")
                 .bio("알고리즘 스터디")
-                .category(Category.IT)
+                .category(List.of(Category.IT))
                 .address(new Address("경상북도", "경산시"))
                 .build();
         studyProfileRepository.save(profile);
@@ -220,7 +221,7 @@ class StudyQueryControllerTest {
                 .study(study)
                 .title("내가 찜한 스터디")
                 .bio("알고리즘 스터디")
-                .category(Category.IT)
+                .category(List.of(Category.IT))
                 .address(new Address("경상북도", "경산시"))
                 .build();
         studyProfileRepository.save(profile);

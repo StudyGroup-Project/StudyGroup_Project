@@ -20,6 +20,7 @@ import com.study.focus.study.repository.BookmarkRepository;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyProfileRepository;
 import com.study.focus.study.repository.StudyRepository;
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -90,7 +91,7 @@ public class StudyMemberIntegrationTest {
                 .title("알고리즘 스터디")
                 .bio("매주 알고리즘 문제 풀이")
                 .description("알고리즘 문제를 풀고 토론하는 스터디입니다.")
-                .category(Category.IT)
+                .category(List.of(Category.IT))
                 .address(Address.builder().province("경상북도").district("경산시").build())
                 .build());
 
@@ -114,13 +115,13 @@ public class StudyMemberIntegrationTest {
                 .builder().user(leader).nickname("leader")
                 .birthDate(LocalDate.now()).job(Job.FREELANCER)
                          .address(Address.builder().district("dis").province("pro").build())
-                .preferredCategory(Category.IT).build());
+                .preferredCategory(List.of(Category.IT)).build());
 
         userProfileRepository.save(UserProfile
                 .builder().user(member).nickname("member")
                 .address(Address.builder().district("dis").province("pro").build())
                 .birthDate(LocalDate.now()).job(Job.FREELANCER)
-                .preferredCategory(Category.IT).build());
+                .preferredCategory(List.of(Category.IT)).build());
     }
 
     @AfterEach

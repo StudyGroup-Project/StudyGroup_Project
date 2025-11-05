@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter @Setter
 @AllArgsConstructor
 public class InitUserProfileRequest {
@@ -27,5 +29,5 @@ public class InitUserProfileRequest {
     private Job job;
 
     @NotNull
-    private Category preferredCategory;
+    private List<Category> preferredCategory;
 }

@@ -17,6 +17,7 @@ import com.study.focus.resource.repository.ResourceRepository;
 import com.study.focus.study.domain.*;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.study.repository.StudyRepository;
+import java.util.List;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -82,7 +83,7 @@ public class ResourceControllerTest {
                 .user(user)
                 .nickname("tester_"+ UUID.randomUUID())
                 .job(Job.FREELANCER)
-                .preferredCategory(Category.IT)
+                .preferredCategory(List.of(Category.IT))
                 .address(Address.builder().province("p").district("dis").build())
                 .birthDate(LocalDate.now())
                 .build());

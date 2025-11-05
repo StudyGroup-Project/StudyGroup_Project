@@ -41,6 +41,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -102,7 +103,7 @@ class StudyIntegrationTest {
                 .title("알고리즘 스터디")
                 .bio("매주 알고리즘 문제 풀이")
                 .description("알고리즘 문제를 풀고 토론하는 스터디입니다.")
-                .category(Category.IT)
+                .category(List.of(Category.IT))
                 .address(Address.builder().province("경상북도").district("경산시").build())
                 .build());
         leaderMember = studyMemberRepository.save(StudyMember.builder()
@@ -119,7 +120,7 @@ class StudyIntegrationTest {
                 .address(address)
                 .birthDate(LocalDate.of(2000, 1, 1))
                 .job(Job.STUDENT)
-                .preferredCategory(Category.IT)
+                .preferredCategory(List.of(Category.IT))
                 .profileImage(null)
                 .build());
     }
@@ -140,7 +141,7 @@ class StudyIntegrationTest {
     @DisplayName("스터디 그룹 생성 - 성공")
     void createStudy_Success() throws Exception {
         CreateStudyRequest request = new CreateStudyRequest(
-                "통합 테스트 스터디", 10, Category.IT, "서울", "마포구", "API 통합 테스트", "상세 설명"
+                "통합 테스트 스터디", 10, List.of(Category.IT), "서울", "마포구", "API 통합 테스트", "상세 설명"
         );
 
         long initialStudyCount = studyRepository.count();
@@ -161,7 +162,7 @@ class StudyIntegrationTest {
     void createStudy_Fail_UserNotFound() throws Exception {
 
         CreateStudyRequest request = new CreateStudyRequest(
-                "실패할 스터디", 10, Category.IT, "경기", "성남시", "소개", "설명"
+                "실패할 스터디", 10, List.of(Category.IT), "경기", "성남시", "소개", "설명"
         );
         long nonExistentUserId = 999L;
 
@@ -329,7 +330,7 @@ class StudyIntegrationTest {
         final UpdateStudyProfileRequest request = new UpdateStudyProfileRequest(
                 "JPA 마스터 스터디", // title
                 20,                 // maxMemberCount
-                Category.DESIGN,    // category
+                List.of(Category.DESIGN),    // category
                 "서울특별시",         // province
                 "강남구",             // district
                 "JPA 전문가가 되기 위한 스터디", // bio
@@ -362,7 +363,7 @@ class StudyIntegrationTest {
         // given: 방장이 아닌 일반 사용자와 요청 데이터
         final User notLeader = userRepository.save(User.builder().build());
         final UpdateStudyProfileRequest request = new UpdateStudyProfileRequest(
-                "수정 시도", 10, Category.IT, "서울", "강남", "소개", "설명"
+                "수정 시도", 10, List.of(Category.IT), "서울", "강남", "소개", "설명"
         );
 
         // when: 방장이 아닌 사용자로 PUT 요청
@@ -379,7 +380,7 @@ class StudyIntegrationTest {
     void updateStudyProfile_Fail_MaxMemberCountTooLow() throws Exception {
         // given: 현재 멤버(leader)는 1명. 최대 인원을 0으로 수정 요청
         final UpdateStudyProfileRequest request = new UpdateStudyProfileRequest(
-                "수정 시도", 0, Category.IT, "서울", "강남", "소개", "설명"
+                "수정 시도", 0, List.of(Category.IT), "서울", "강남", "소개", "설명"
         );
 
         // when: 방장 권한으로 PUT 요청
