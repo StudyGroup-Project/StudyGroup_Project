@@ -5,6 +5,7 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.StringExpression;
+import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.study.focus.account.domain.QUser;
@@ -26,7 +27,7 @@ public class StudyRepositoryImpl implements StudyRepositoryCustom {
 
     @Override
     public Page<StudyDto> searchStudies(String keyword,
-                                        Category category,
+                                        List<Category> categories,
                                         String province,
                                         String district,
                                         Long userId,
@@ -44,22 +45,19 @@ public class StudyRepositoryImpl implements StudyRepositoryCustom {
             where.and(profile.title.containsIgnoreCase(keyword)
                     .or(profile.bio.containsIgnoreCase(keyword)));
         }
-        if (category != null) {
-            String categoryName = category.name(); // "IT"
 
-            // @Convert가 적용된 필드(profile.category)를 String으로 명시적으로 변환
-            // 이를 통해 SQL String 함수(eq, contains 등)를 사용할 수 있습니다.
-            StringExpression categoryStringPath = Expressions.stringTemplate("{0}", profile.category);
+        // 1) DB의 실제 문자열 컬럼을 직접 Path로 잡기 (ListPath 피하기)
+        StringPath categoryPath = Expressions.stringPath("category");
 
-            // DB 컬럼에 저장된 "IT_BUSINESS_DESIGN" 같은 문자열을 상대로
-            // 'IT'가 정확히 일치하는지 확인합니다. (LIFESTYLE의 'IT' 방지)
-            where.and(
-                    categoryStringPath.eq(categoryName) // "IT" (정확히 일치)
-                            .or(categoryStringPath.startsWith(categoryName + DELIMITER)) // "IT_..."
-                            .or(categoryStringPath.endsWith(DELIMITER + categoryName)) // "..._IT"
-                            .or(categoryStringPath.contains(DELIMITER + categoryName + DELIMITER)) // "..._IT_..."
-            );
+        // 2) '_{category}_' 형태로 패딩
+        StringExpression padded = Expressions.stringTemplate("concat('_', {0}, '_')", categoryPath);
+
+        // 3) 단일 카테고리 포함 검사: %_IT_% 와 매칭
+        if (categories != null && !categories.isEmpty()) {
+            String categoryName = categories.get(0).name();
+            where.and(padded.like("%_" + categoryName + "_%"));
         }
+
         if (province != null && !province.isBlank()) {
             where.and(profile.address.province.eq(province));
         }

@@ -2,6 +2,7 @@ package com.study.focus.study.service;
 
 import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.repository.UserRepository;
+import com.study.focus.common.domain.Category;
 import com.study.focus.common.dto.StudyDto;
 import com.study.focus.common.util.S3Uploader;
 import com.study.focus.study.domain.StudyMemberStatus;
@@ -22,6 +23,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -45,9 +47,13 @@ public class StudyQueryService {
                 getSort(request.getSort())
         );
 
+        List<Category> categories = (request.getCategory() != null)
+                ? List.of(request.getCategory())
+                : Collections.emptyList();
+
         Page<StudyDto> pageResult = studyRepository.searchStudies(
                 request.getKeyword(),
-                request.getCategory(),
+                categories,
                 request.getProvince(),
                 request.getDistrict(),
                 userId,
