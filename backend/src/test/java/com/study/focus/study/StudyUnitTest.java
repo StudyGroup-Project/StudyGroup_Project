@@ -114,7 +114,7 @@ class StudyUnitTest {
     void createStudy_Fail_UserNotFound() {
         final Long nonExistentUserId = 999L;
         CreateStudyRequest request = new CreateStudyRequest(
-                "JPA 스터디", 10, Category.IT, "서울", "강남구", "JPA 심화 학습", "상세 설명"
+                "JPA 스터디", 10, List.of(Category.IT), "서울", "강남구", "JPA 심화 학습", "상세 설명"
         );
 
         given(userRepository.findById(nonExistentUserId)).willReturn(Optional.empty());
@@ -320,7 +320,7 @@ class StudyUnitTest {
                 .title("알고리즘 스터디")
                 .bio("매주 알고리즘 문제 풀이")
                 .description("알고리즘 문제를 풀고 토론하는 스터디입니다.")
-                .category(Category.IT)
+                .category(List.of(Category.IT))
                 .address(address)
                 .build();
         StudyMember leaderMember = StudyMember.builder().user(User.builder().id(leaderId).trustScore(82).build()).role(StudyRole.LEADER).build();
@@ -372,7 +372,7 @@ class StudyUnitTest {
                 .title("알고리즘 스터디")
                 .bio("매주 알고리즘 문제 풀이")
                 .description("알고리즘 문제를 풀고 토론하는 스터디입니다.")
-                .category(Category.IT)
+                .category(List.of(Category.IT))
                 .address(address)
                 .build();
         StudyMember leaderMember = StudyMember.builder().user(User.builder().id(leaderId).trustScore(82).build()).role(StudyRole.LEADER).build();
@@ -437,7 +437,7 @@ class StudyUnitTest {
         final Long studyId = 1L;
         final Long leaderUserId = 100L;
         final UpdateStudyProfileRequest request = new UpdateStudyProfileRequest(
-                "새로운 스터디 제목", 20, Category.IT, "경기도", "성남시", "새로운 한 줄 소개", "새로운 상세 설명"
+                "새로운 스터디 제목", 20, List.of(Category.IT), "경기도", "성남시", "새로운 한 줄 소개", "새로운 상세 설명"
         );
 
         User leaderUser = User.builder().id(leaderUserId).build();
@@ -460,7 +460,7 @@ class StudyUnitTest {
         assertThat(maxMemberCaptor.getValue()).isEqualTo(20);
 
         ArgumentCaptor<String> titleCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<Category> categoryCaptor = ArgumentCaptor.forClass(Category.class);
+        ArgumentCaptor<List<Category>> categoryCaptor = ArgumentCaptor.forClass(List.class);
         ArgumentCaptor<Address> addressCaptor = ArgumentCaptor.forClass(Address.class);
         ArgumentCaptor<String> bioCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
@@ -481,7 +481,7 @@ class StudyUnitTest {
         final Long studyId = 1L;
         final Long notLeaderUserId = 999L; // 요청자 ID
         final UpdateStudyProfileRequest request = new UpdateStudyProfileRequest(
-                "제목", 10, Category.IT, "서울", "강남", "소개", "설명"
+                "제목", 10, List.of(Category.IT), "서울", "강남", "소개", "설명"
         );
 
         User actualLeaderUser = User.builder().id(100L).build(); // 실제 방장 ID
@@ -505,7 +505,7 @@ class StudyUnitTest {
         final Long studyId = 1L;
         final Long leaderUserId = 100L;
         final UpdateStudyProfileRequest request = new UpdateStudyProfileRequest(
-                "제목", 5, Category.IT, "서울", "강남", "소개", "설명" // 5명으로 수정 요청
+                "제목", 5, List.of(Category.IT), "서울", "강남", "소개", "설명" // 5명으로 수정 요청
         );
 
         User leaderUser = User.builder().id(leaderUserId).build();
