@@ -15,6 +15,7 @@ public class GetSubmissionDetailResponse {
     Long id;
     String submitterName;
     String description;
+    String submitterProfileUrl;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     LocalDateTime CreateAt;

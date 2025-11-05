@@ -1,5 +1,7 @@
 package com.study.focus.assignment.service;
 
+import com.study.focus.account.dto.GetMyProfileResponse;
+import com.study.focus.account.service.UserService;
 import com.study.focus.assignment.domain.Assignment;
 import com.study.focus.assignment.domain.Submission;
 import com.study.focus.assignment.dto.*;
@@ -35,6 +37,7 @@ public class AssignmentService {
     private final SubmissionRepository submissionRepository;
     private final GroupService groupService;
     private final NotificationService notificationService;
+    private final UserService userService;
 
     // 과제 목록 가져오기(생성 순 내림차순 정렬)
     @Transactional
@@ -43,7 +46,7 @@ public class AssignmentService {
             throw new BusinessException(CommonErrorCode.INVALID_PARAMETER);
         }
 
-        groupService.memberValidation(studyId,userId);
+        groupService.memberValidation(studyId, userId);
 
         List<Assignment> assignments = assignmentRepository.findAllByStudyIdOrderByCreatedAtDesc(studyId);
 
@@ -54,7 +57,7 @@ public class AssignmentService {
     @Transactional
     public Long createAssignment(Long studyId, Long creatorId, CreateAssignmentRequest dto) {
         Study study = studyRepository.findById(studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
-        StudyMember creator = groupService.memberValidation(studyId,creatorId);
+        StudyMember creator = groupService.memberValidation(studyId, creatorId);
         groupService.isLeader(creator);
         if (!dto.getDueAt().isAfter(dto.getStartAt())) throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
 
@@ -69,7 +72,7 @@ public class AssignmentService {
 
         Assignment saveAssignment = assignmentRepository.save(assignment);
 
-        notificationService.addAssignmentNotification(study,creatorId,dto.getTitle());
+        notificationService.addAssignmentNotification(study, creatorId, dto.getTitle());
 
         if (dto.getFiles() != null && !dto.getFiles().isEmpty()) {
             List<FileDetailDto> list = dto.getFiles().stream().map(s3Uploader::makeMetaData).toList();
@@ -90,11 +93,12 @@ public class AssignmentService {
             throw new BusinessException(CommonErrorCode.INVALID_PARAMETER);
         }
 
-        groupService.memberValidation(studyId,userId);
+        groupService.memberValidation(studyId, userId);
         Assignment assignment = assignmentRepository.findById(assignmentId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
         List<SubmissionListResponse> submissions = submissionRepository.findSubmissionList(assignmentId);
         List<File> files = fileRepository.findAllByAssignmentId(assignmentId);
         List<AssignmentFileResponse> attachFiles = files.stream().map(a -> new AssignmentFileResponse(a.getFileKey())).toList();
+        List<GetMyProfileResponse> profileUrls = submissions.stream().map(a -> userService.getMyProfile(a.getSubmitterId())).toList();
 
         return new GetAssignmentDetailResponse(assignment.getId(),
                 assignment.getTitle(),
@@ -103,13 +107,15 @@ public class AssignmentService {
                 assignment.getDueAt(),
                 assignment.getCreatedAt(),
                 attachFiles,
-                submissions);
+                submissions,
+                profileUrls
+        );
     }
 
     // 과제 수정하기
     @Transactional
     public void updateAssignment(Long studyId, Long assignmentId, Long creatorId, UpdateAssignmentRequest dto) {
-        StudyMember creator = groupService.memberValidation(studyId,creatorId);
+        StudyMember creator = groupService.memberValidation(studyId, creatorId);
         groupService.isLeader(creator);
         Assignment assignment = assignmentRepository.findByIdAndStudyId(assignmentId, studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
         if (!dto.getDueAt().isAfter(dto.getStartAt())) throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
@@ -142,7 +148,7 @@ public class AssignmentService {
             throw new BusinessException(CommonErrorCode.INVALID_PARAMETER);
         }
 
-        StudyMember creator = groupService.memberValidation(studyId,userId);
+        StudyMember creator = groupService.memberValidation(studyId, userId);
         groupService.isLeader(creator);
         Assignment assignment = assignmentRepository.findByIdAndStudyId(assignmentId, studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
 

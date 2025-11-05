@@ -35,6 +35,6 @@ public class StudyQueryController {
     @GetMapping("/bookmarks")
     public ResponseEntity<GetStudiesResponse> getBookmarks(@AuthenticationPrincipal CustomUserDetails user)
     {
-        return ResponseEntity.ok(studyQueryService.getMyStudies(user.getUserId()));
+        return ResponseEntity.ok(studyQueryService.getBookmarks(user.getUserId()));
     }
 }

@@ -14,6 +14,6 @@ public class GetFeedbackListResponse {
     Long score;
     String feedback;
     LocalDateTime evaluatedAt;
-    String evaluaterName;
+    String evaluatorName;
     String evaluatorProfileUrl;
 }

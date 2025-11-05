@@ -32,6 +32,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -84,7 +85,7 @@ class FeedbackIntegrationTest {
                 .profileImage(img)
                 .address(Address.builder().province("p").district("d").build())
                 .birthDate(LocalDateTime.now().toLocalDate())
-                .job(Job.STUDENT).preferredCategory(Category.IT).build());
+                .job(Job.STUDENT).preferredCategory(List.of(Category.IT)).build());
 
         // 스터디 2개
         study1 = studyRepository.save(Study.builder().maxMemberCount(30).recruitStatus(RecruitStatus.OPEN).build());

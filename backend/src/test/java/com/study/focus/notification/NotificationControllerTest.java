@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -68,7 +69,7 @@ class NotificationControllerTest {
                 .address(new Address("서울특별시", "강남구"))
                 .birthDate(LocalDate.of(2000, 1, 1))  // ✅ 이전에 빠졌던 필드
                 .job(Job.STUDENT)                     // ✅ 지금 추가해야 하는 필드
-                .preferredCategory(Category.IT)
+                .preferredCategory(List.of(Category.IT))
                 .build());
 
 

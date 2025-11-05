@@ -86,6 +86,7 @@ public class SubmissionService {
                 submissionId,
                 userProfile.getNickname(),
                 submission.getDescription(),
+                userProfile.getProfileImageUrl(),
                 submission.getCreatedAt(),
                 attachFiles);
     }

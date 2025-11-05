@@ -34,6 +34,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
@@ -108,9 +109,9 @@ class SubmissionIntegrationTest {
                                 .province("testProvince")
                                 .district("testDistrict")
                                 .build())
-                        .birthDate(java.time.LocalDate.of(1995, 1, 1))      // ✅ 필수
-                        .job(Job.FREELANCER)                                 // ✅ 필수
-                        .preferredCategory(Category.IT)                      // ✅ 필수
+                        .birthDate(java.time.LocalDate.of(1995, 1, 1))
+                        .job(Job.FREELANCER)
+                        .preferredCategory(List.of(Category.IT))
                         .build()
         );
 
@@ -122,9 +123,9 @@ class SubmissionIntegrationTest {
                                 .province("testProvince")
                                 .district("testDistrict")
                                 .build())
-                        .birthDate(java.time.LocalDate.of(1993, 5, 20))     // ✅ 필수
-                        .job(Job.FREELANCER)                                 // ✅ 필수
-                        .preferredCategory(Category.IT)                      // ✅ 필수
+                        .birthDate(java.time.LocalDate.of(1993, 5, 20))
+                        .job(Job.FREELANCER)
+                        .preferredCategory(List.of(Category.IT))
                         .build()
         );
     }
