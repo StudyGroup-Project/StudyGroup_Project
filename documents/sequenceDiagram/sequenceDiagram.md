@@ -194,7 +194,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.13. 공지 목록 조회
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2013.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2013.png)
 그림 \# sequence 13.png
 
 위 그림은 스터디 내 생성된 공지 목록 조회 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다.
@@ -215,7 +215,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.14. 공지 생성
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2014.png) 
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2014.png) 
 그림 \# sequence 14.png
 
 위 그림은 스터디 내 공지 생성 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다.
@@ -240,7 +240,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.15.공지 수정
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2015.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2015.png)
 그림 \# sequence 15.png
 
 위 그림은 스터디 내 공지 수정 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다.
@@ -278,7 +278,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.16. 공지 삭제
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2016.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2016.png)
 그림 \# sequence 16.png
 
 위 그림은 스터디 내 공지 삭제 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다.
@@ -315,7 +315,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.17.공지 상세 조회
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2017.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2017.png)
 그림 \# sequence 17.png
 
 위 그림은 스터디 내 특정 공지의 상세 조회 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다.
@@ -352,7 +352,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.18.공지 댓글 달기
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2018.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2018.png)
 그림 \# sequence 18.png
 
 위 그림은 스터디 내 특정 공지에 댓글을 작성하는 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다.
@@ -378,7 +378,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.19. 자료 목록 조회
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2019.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2019.png)
 그림 \# sequence 19.png
 
 위 그림은 스터디 내 자료 목록 조회 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다.
@@ -407,7 +407,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.20. 자료 생성
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2020.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2020.png)
 그림 \# sequence 20.png
 
 위 그림은 스터디 내 자료 생성 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다.
@@ -434,7 +434,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.21. 자료 수정
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%221.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2021.png)
 그림 \# sequence 21.png
 
 위 그림은 스터디 내 자료 수정 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다.
@@ -466,7 +466,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.22. 자료 삭제
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2022.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2022.png)
 그림 \# sequence 22.png
 
 위 그림은 스터디 내 특정 자료 삭제 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다.
@@ -497,7 +497,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.23. 자료 상세 데이터 가져오기 
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2023.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2023.png)
 그림 \# sequence 23.png
 
 위 그림은 스터디 내 특정 자료의 상세 데이터를 조회하는 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다. 
@@ -528,7 +528,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 - 컨트롤러는 서비스 계층에서 전달된 DTO를 HTTP 200 OK 코드와 함께 클라이언트에 반환한다. 
 
 4.24 스터디 그룹 찜하기  
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2024.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2024.png)
 그림 \# sequence 24
 
 이 시퀀스 다이어그램은 사용자가 특정 '스터디' 항목에 대해 북마크 추가를 요청할 때, Spring MVC 백엔드 내부에서 동작하는 북마크 생성 및 영속화 절차를 단계적으로 나타낸 것입니다.
@@ -548,7 +548,7 @@ BookmarkService는 실제 비즈니스 로직을 처리하는 핵심 주체입�
 즉, 이 시퀀스 다이어그램은 사용자의 단순한 요청이 백엔드 내부의 Controller, Service, Repository 계층을 거치며 처리되는 흐름을 구체적으로 보여줍니다. 특히 BookmarkService가 데이터 중복 검증 로직과 빌더 패턴을 이용한 신규 엔티티 생성 로직을 모두 담당하는 핵심적인 역할을 수행함을 명확히 나타냅니다.
 
 4.25 스터디 그룹 찜 해제하기   
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2025.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2025.png)
 그림 \# sequence 25
 
 이 시퀀스 다이어그램은 사용자가 특정 '스터디' 항목에 대해 북마크 삭제를 요청할 때, Spring MVC 백엔드 내부에서 동작하는 북마크 조회 및 삭제 절차를 단계적으로 나타낸 것입니다.
@@ -566,7 +566,7 @@ BookmarkService는 실제 비즈니스 로직을 처리하는 핵심 주체입�
 즉, 이 시퀀스 다이어그램은 사용자의 단순한 요청이 백엔드 내부의 Controller, Service, Repository 계층을 거치며 처리되는 흐름을 구체적으로 보여줍니다. 특히 BookmarkService가 삭제할 엔티티를 먼저 정확히 조회하고, 이후 삭제 로직을 호출하는(비록 다이어그램에서는 생략되었지만) 핵심적인 역할을 수행함을 명확히 나타냅니다.
 
 4.26 스터디 그룹 지원서 제출하기  
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2026.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2026.png)
 그림 \# sequence 26
 
 이 시퀀스 다이어그램은 사용자가 특정 '스터디'에 참여 신청(지원)을 할 때, Spring MVC 백엔드 내부에서 동작하는 신청 처리 및 알림 발송 절차를 단계적으로 나타낸 것입니다.
@@ -587,7 +587,7 @@ ApplicationService는 실제 비즈니스 로직을 처리하는 핵심 주체�
 
 4.27 스터디 그룹 생성하기
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2027.png) 
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2027.png)
 그림 \# sequence 27
 
 이 시퀀스 다이어그램은 사용자가 신규 스터디 생성을 요청할 때, Spring MVC 백엔드 내부에서 동작하는 스터디 및 연관 엔티티 생성 절차를 단계적으로 나타낸 것입니다.
@@ -604,7 +604,7 @@ Study 엔티티 생성: 1.1.2: builder를 호출하고 maxMemberCount(1.1.3), cu
 
 4.28 그룹 프로필 정보 조회하기
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2028.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2028.png)
 그림 \# sequence 28
 
 이 시퀀스 다이어그램은 사용자가 특정 '스터디'의 상세 프로필 조회를 요청할 때, Spring MVC 백엔드 내부에서 동작하는 데이터 집계 및 응답 생성 절차를 단계적으로 나타낸 것입니다.
@@ -625,7 +625,7 @@ StudyService는 위에서 수집한 모든 데이터(리더 정보, S3 이미지
 
 4.29 그룹 정보 수정하기
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2029.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2029.png)
 그림 \# sequence 29
 
 이 시퀀스 다이어그램은 사용자가 기존 '스터디'의 프로필 수정을 요청할 때, Spring MVC 백엔드 내부에서 동작하는 데이터 검증 및 업데이트 절차를 단계적으로 나타낸 것입니다.
@@ -645,7 +645,7 @@ StudyService는 실제 비즈니스 로직을 처리하는 핵심 주체로서, 
 즉, 이 다이어그램은 '업데이트' 요청이 단순히 데이터를 덮어쓰는 것이 아니라, 권한 검증(Authorization)과 비즈니스 규칙 검증(Validation)이라는 두 개의 중요한 관문을 통과해야만 실제 데이터 수정이 이루어지는 복잡한 과정임을 구체적으로 보여줍니다.
 
 4.30 그룹 삭제하기  
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2030.png) 
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2030.png)
 그림 \# sequence 30
 
 이 시퀀스 다이어그램은 사용자가 자신이 생성한 '스터디'를 완전히 삭제할 때, Spring MVC 백엔드 내부에서 동작하는 데이터 검증 및 연쇄 삭제(Cascade Delete) 절차를 단계적으로 나타낸 것입니다. 이는 단순한 단일 엔티티 삭제가 아닌, 스터디와 관련된 모든 하위 데이터를 정리하는 매우 복잡하고 중요한 작업입니다.
