@@ -172,7 +172,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.12. 그룹원 목록 조회
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%212.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2012.png)
 그림 \# sequence 12.png
 
 위 그림은 스터디 그룹원 목록 조회 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다.
@@ -194,7 +194,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.13. 공지 목록 조회
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%213.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2013.png)
 그림 \# sequence 13.png
 
 위 그림은 스터디 내 생성된 공지 목록 조회 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다.
@@ -215,7 +215,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.14. 공지 생성
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%214.png) 
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2014.png) 
 그림 \# sequence 14.png
 
 위 그림은 스터디 내 공지 생성 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다.
@@ -240,7 +240,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.15.공지 수정
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%215.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2015.png)
 그림 \# sequence 15.png
 
 위 그림은 스터디 내 공지 수정 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다.
@@ -278,7 +278,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.16. 공지 삭제
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%216.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2016.png)
 그림 \# sequence 16.png
 
 위 그림은 스터디 내 공지 삭제 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다.
@@ -315,7 +315,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.17.공지 상세 조회
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%217.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2017.png)
 그림 \# sequence 17.png
 
 위 그림은 스터디 내 특정 공지의 상세 조회 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다.
@@ -352,7 +352,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.18.공지 댓글 달기
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%218.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2018.png)
 그림 \# sequence 18.png
 
 위 그림은 스터디 내 특정 공지에 댓글을 작성하는 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다.
@@ -378,7 +378,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.19. 자료 목록 조회
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%219.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2019.png)
 그림 \# sequence 19.png
 
 위 그림은 스터디 내 자료 목록 조회 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다.
@@ -407,7 +407,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.20. 자료 생성
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%220.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2020.png)
 그림 \# sequence 20.png
 
 위 그림은 스터디 내 자료 생성 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다.
