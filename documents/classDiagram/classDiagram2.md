@@ -270,7 +270,6 @@
 
 3.2.9 study
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/b1a34117ce075f5b3163118cb3e670d3bba353bd/documents/image/class%20image/%EA%B7%B8%EB%A6%BC%20%23%20class%20329%20StudyDomain-Diagram.png)
 <p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/b1a34117ce075f5b3163118cb3e670d3bba353bd/documents/image/class%20image/%EA%B7%B8%EB%A6%BC%20%23%20class%20329%20StudyDomain-Diagram.png?raw=true" width="900"/>
 </p>
@@ -281,8 +280,6 @@
 <p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/b1a34117ce075f5b3163118cb3e670d3bba353bd/documents/image/class%20image/%EA%B7%B8%EB%A6%BC%20%23%20class329%20StudyRepository-Diagram.png?raw=true" width="900"/>
 </p>
-
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/b1a34117ce075f5b3163118cb3e670d3bba353bd/documents/image/class%20image/%EA%B7%B8%EB%A6%BC%20%23%20class329%20StudyRepository-Diagram.png)
 
 그림 \# class329 StudyRepository-Diagram
 
