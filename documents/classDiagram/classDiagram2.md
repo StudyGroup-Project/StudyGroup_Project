@@ -1,6 +1,8 @@
 3.2.6 home
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/b1a34117ce075f5b3163118cb3e670d3bba353bd/documents/image/class%20image/%EA%B7%B8%EB%A6%BC%20%23%20class%20326%20home.png)
+<p align="center">
+  <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/b1a34117ce075f5b3163118cb3e670d3bba353bd/documents/image/class%20image/%EA%B7%B8%EB%A6%BC%20%23%20class%20326%20home.png?raw=true" width="900"/>
+</p>
 그림 \# class 326 home
 
 /controller
@@ -39,7 +41,10 @@
 
 3.2.7 notification
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/b1a34117ce075f5b3163118cb3e670d3bba353bd/documents/image/class%20image/%EA%B7%B8%EB%A6%BC%20%23%20class%20327%20Notification-Diagram.png)
+<p align="center">
+  <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/b1a34117ce075f5b3163118cb3e670d3bba353bd/documents/image/class%20image/%EA%B7%B8%EB%A6%BC%20%23%20class%20327%20Notification-Diagram.png?raw=true" width="900"/>
+</p>
+
 
 그림 \# class 327 Notification-Diagram
 
@@ -149,7 +154,10 @@
 
 3.2.8 resource
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/b1a34117ce075f5b3163118cb3e670d3bba353bd/documents/image/class%20image/%EA%B7%B8%EB%A6%BC%20%23%20class%20328%20Resource-Diagram.png)
+<p align="center">
+  <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/b1a34117ce075f5b3163118cb3e670d3bba353bd/documents/image/class%20image/%EA%B7%B8%EB%A6%BC%20%23%20class%20328%20Resource-Diagram.png?raw=true" width="900"/>
+</p>
+
 그림 \# class 328 Resource-Diagram
 
 /domain
@@ -263,14 +271,25 @@
 3.2.9 study
 
 ![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/b1a34117ce075f5b3163118cb3e670d3bba353bd/documents/image/class%20image/%EA%B7%B8%EB%A6%BC%20%23%20class%20329%20StudyDomain-Diagram.png)
+<p align="center">
+  <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/b1a34117ce075f5b3163118cb3e670d3bba353bd/documents/image/class%20image/%EA%B7%B8%EB%A6%BC%20%23%20class%20329%20StudyDomain-Diagram.png?raw=true" width="900"/>
+</p>
+
 
 그림 \# class 329 StudyDomain-Diagram
+
+<p align="center">
+  <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/b1a34117ce075f5b3163118cb3e670d3bba353bd/documents/image/class%20image/%EA%B7%B8%EB%A6%BC%20%23%20class329%20StudyRepository-Diagram.png?raw=true" width="900"/>
+</p>
 
 ![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/b1a34117ce075f5b3163118cb3e670d3bba353bd/documents/image/class%20image/%EA%B7%B8%EB%A6%BC%20%23%20class329%20StudyRepository-Diagram.png)
 
 그림 \# class329 StudyRepository-Diagram
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/b1a34117ce075f5b3163118cb3e670d3bba353bd/documents/image/class%20image/%EA%B7%B8%EB%A6%BC%20%23%20class%20329%20StudyService-Diagram.png)
+<p align="center">
+  <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/b1a34117ce075f5b3163118cb3e670d3bba353bd/documents/image/class%20image/%EA%B7%B8%EB%A6%BC%20%23%20class%20329%20StudyService-Diagram.png?raw=true" width="900"/>
+</p>
+
 
 그림 \# class 329 StudyService-Diagram
 
