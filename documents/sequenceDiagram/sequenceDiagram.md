@@ -4,7 +4,7 @@
 
 4.1. 시스템 로그인하기
 
-![Sequence 1](documents/image/sequence%20image/그림%20%23%20sequence%201.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/84438528b7cbfd561e410248c13187d7747129ad/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%201.png)
 ㅇㅁㄴㅇㄴㅁ
 그림 \# sequence 1
 
