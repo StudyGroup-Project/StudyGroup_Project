@@ -838,7 +838,7 @@ AssignmentService는 studyId, userId, assignmentId가 null이면 BusinessExcepti
 컨트롤러는 클라이언트에게 ok(200)코드를 반환한다.
 
 4.42 과제 삭제하기  
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2042.png)  
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2042.png) 
 그림 \# sequence 42  
 이 시퀀스 다이어그램은 사용자가 과제를 삭제할 때, Spring MVC 백엔드 내부에서 수행되는 검색 처리 과정을 단계적으로 나타낸 것이다.  
 요청은 AssignmentController에서 시작된다. 사용자가 studyId를 전송하면 컨트롤러는 이를 AssignmentService의 deleteAssignment로 전달한다.
@@ -848,7 +848,7 @@ AssignmentService는 studyId, userId, assignmentId가 null이면 BusinessExcepti
 컨트롤러는 클라이언트에게 200(ok)코드를 반환한다.
 
 4.43 과제 상세 내용 가져오기  
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2043.png)  
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2043.png)
 그림 \# sequence 43  
 이 시퀀스 다이어그램은 사용자가 과제의 상세내용을 가져올 때, Spring MVC 백엔드 내부에서 수행되는 검색 처리 과정을 단계적으로 나타낸 것이다.  
 요청은 AssignmentController에서 시작된다. 사용자가 studyId, assignmentId와 userId를 전송하면 컨트롤러는 이를 AssignmentService의 getAssignmentDetail로 전달한다.
@@ -859,7 +859,7 @@ AssignmentService는 studyId, userId, assignmentId가 null이면 BusinessExcepti
 컨트롤러는 전달받은 GetAssignmentDetailResponse를 사용자에게 반환한다.
 
 4.44 과제 제출하기  
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2044.png)    
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2044.png) 
 그림 \# sequence 44  
 이 시퀀스 다이어그램은 사용자가 과제의 제출물을 제출할 때, Spring MVC 백엔드 내부에서 수행되는 검색 처리 과정을 단계적으로 나타낸 것이다.  
 요청은 SubmissionController에서 시작된다. 사용자가 studyId, assignmentId, userId, 요청DTO 를 전송하면 컨트롤러는 이를 SubmissionService의 submitSubmission로 전달한다.
@@ -872,7 +872,7 @@ SubmissionService는 studyId, userId, assignmentId가 null이면 BusinessExcepti
  
 
 4.45 과제 제출물 상세 데이터 가져오기  
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2045.png)  
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2045.png)  
 그림 \# sequence 45  
 이 시퀀스 다이어그램은 사용자가 과제의 제출물의 상세보기할 때, Spring MVC 백엔드 내부에서 수행되는 검색 처리 과정을 단계적으로 나타낸 것이다.  
 요청은 SubmissionController에서 시작된다. 사용자가 studyId, assignmentId, userId, submissionId를 전송하면 컨트롤러는 이를 SubmissionService의 getSubmissionDetail로 전달한다.
@@ -882,7 +882,7 @@ SubmissionService는 studyId, userId, assignmentId, submissionId가 null이면 B
 
 컨트롤러는 전달받은 DTO를 사용자에게 반환한다.  
 4.46 과제 평가하기  
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2046.png)  
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2046.png)
 그림 \# sequence 46  
 이 시퀀스 다이어그램은 사용자가 과제의 제출물을 피드백할 때, Spring MVC 백엔드 내부에서 수행되는 검색 처리 과정을 단계적으로 나타낸 것이다.  
 요청은 FeedbackController에서 시작된다. 사용자가 studyId, assignmentId, userId, submissionId와 요청 DTO를 전송하면 컨트롤러는 이를 FeedbackService의 addFeedback으로 전달한다.
@@ -893,7 +893,7 @@ SubmissionService는 studyId, userId, assignmentId, submissionId가 null이면 B
 컨트롤러는 반환된 id를 통해 url을 만들어 201(created)코드와 함께 url을 클라이언트에 반환한다.
 
 4.47 과제 평가 목록 가져오기  
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2047.png)  
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2047.png)
 그림 \# sequence 47  
 이 시퀀스 다이어그램은 사용자가 과제 제출물의 피드백 목록을 조회할 때, Spring MVC 백엔드 내부에서 수행되는 검색 처리 과정을 단계적으로 나타낸 것이다.  
 요청은 FeedbackController에서 시작된다. 사용자가 studyId, assignmentId, userId, submissionId를 전송하면 컨트롤러는 이를 FeedbackService의 getFeedbacks으로 전달한다.
@@ -903,7 +903,7 @@ SubmissionService는 studyId, userId, assignmentId, submissionId가 null이면 B
 
 컨트롤러는 반환된 값을 사용자에게 반환하며 사용자는 제출물 상세 화면을 렌더링한다.  
 4.48 알림 목록 가져오기  
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2048.png)  
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2048.png)
 그림 \# sequence 48  
 이 시퀀스 다이어그램은 사용자가 그룹의 알림 목록을 조회할 때, Spring MVC 백엔드 내부에서 수행되는 검색 처리 과정을 단계적으로 나타낸 것이다.  
 요청은 NotificationController에서 시작된다. 사용자가 studyId, userId를 전송하면 컨트롤러는 이를 NotificationService의 getNotifications으로 전달한다.
@@ -915,7 +915,7 @@ NotificationService는 studyId, userId가 null이면 BusinessException을 발생
 
 4.49. 채팅목록 가져오기
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2049.png)  
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2049.png)
 
 그림 \#  sequence 49
 
@@ -933,7 +933,7 @@ ChatService는 전체 메시지 목록을 정리하여 ChatRestController로 전
 
 4.50. 채팅하기
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2050.png)  
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2050.png)
 
 그림 \#  sequence 50
 
@@ -949,7 +949,7 @@ ChatMessageBuilder는 메시지의 주요 속성들을 순차적으로 설정한
 이후 ChatMessageResponseBuilder가 실행되어 메시지 응답 객체를 구성한다. 빌더는 메시지 ID, 발신자 ID, 닉네임, 프로필 이미지 URL, 메시지 내용, 생성 시각 등의 필드를 순차적으로 채운 뒤, ChatMessageResponse 객체를 생성한다. 생성된 응답은 다시 ChatWebSocketController로 반환되어 WebSocket 세션을 통해 모든 참여자에게 브로드캐스팅된다.
 
 4.51 알림 상세 데이터 가져오기  
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2051.png)    
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2051.png)  
 그림 \# sequence 51  
 이 시퀀스 다이어그램은 사용자가 그룹의 알림의 상세정보를 조회할 때, Spring MVC 백엔드 내부에서 수행되는 검색 처리 과정을 단계적으로 나타낸 것이다.  
 요청은 NotificationController에서 시작된다. 사용자가 studyId, notificationId, userId를 전송하면 컨트롤러는 이를 NotificationService의 getNotificationDetail으로 전달한다.
