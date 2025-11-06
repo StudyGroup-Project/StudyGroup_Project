@@ -670,7 +670,7 @@ StudyService는 실제 비즈니스 로직을 처리하는 핵심 주체로서, 
 
 4.31 그룹 탈퇴하기
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2031.png) 
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2031.png)
 그림 \# sequence 31
 
 이 시퀀스 다이어그램은 사용자가 참여 중인 '스터디'에서 '탈퇴'를 요청할 때, Spring MVC 백엔드 내부에서 동작하는 데이터 검증 및 상태 변경 절차를 단계적으로 나타낸 것입니다.
@@ -689,7 +689,7 @@ StudyMemberService는 실제 비즈니스 로직을 처리하는 핵심 주체�
 
 4.32 그룹원 강퇴하기
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2032.png)  
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2032.png)
 그림 \# sequence 32
 
 이 시퀀스 다이어그램은 사용자가(스터디 리더로 추정) 특정 '스터디'에서 다른 멤버를 강퇴(Expel)시킬 때, Spring MVC 백엔드 내부에서 동작하는 권한 검증, 상태 변경, 알림 발송 절차를 단계적으로 나타낸 것입니다.
@@ -715,7 +715,7 @@ StudyMemberService는 실제 비즈니스 로직을 처리하는 핵심 주체�
 즉, 이 다이어그램은 멤버 강퇴가 이중 권한 검증(리더 여부, 셀프 강퇴 여부)을 통과해야만 실행되며, 대상의 상태를 변경하고 당사자에게 알림을 생성하는 일련의 과정을 구체적으로 보여줍니다.
 
 4.33 그룹 지원서 목록 조회하기  
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2033.png) 
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2033.png)
 그림 \# sequence 33
 
 이 시퀀스 다이어그램은 사용자가(스터디 리더로 추정) 자신이 관리하는 스터디의 '참여 신청 목록 조회'를 요청할 때, Spring MVC 백엔드 내부에서 동작하는 권한 검증, 데이터 조회, 그리고 최종 응답 DTO(Data Transfer Object) 조립 절차를 단계적으로 나타낸 것입니다.
@@ -735,7 +735,7 @@ ApplicationService는 실제 비즈니스 로직을 처리하는 핵심 주체�
 즉, 이 다이어그램은 '신청 목록 조회'라는 하나의 읽기(Read) 요청이, 실제로는 엄격한 리더 권한 검증을 거친 후에야 여러 리포지토리(ApplicationRepository, UserProfileRepository)와 외부 서비스(S3Uploader)의 데이터를 유기적으로 조합하여 최종 응답을 만들어내는 복잡한 '집계(Aggregation)' 작업임을 구체적으로 보여줍니다.
 
 4.34 그룹 지원서 상세 조회하기  
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2034.png)   
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2034.png)
 그림 \# sequence 34
 
 이 시퀀스 다이어그램은 사용자가(스터디 리더로 추정) 특정 스터디에 제출된 단일 참여 신청 내역의 상세 정보를 조회할 때, Spring MVC 백엔드 내부에서 동작하는 권한 검증 및 상세 데이터 조회 절차를 단계적으로 나타낸 것입니다.
@@ -751,7 +751,7 @@ ApplicationService는 실제 비즈니스 로직을 처리하는 핵심 주체�
 즉, 이 다이어그램은 '신청 상세 조회'라는 읽기(Read) 요청 역시, 엄격한 리더 권한 검증을 통과해야만 실제 데이터에 접근할 수 있음을 구체적으로 보여줍니다.
 
 4.35 그룹 지원 승인하기  
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2035.png)  
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2035.png)
 그림 \# sequence 35
 
 이 흐름은 ApplicationService의 1.1: handleApplication 메서드가 호출되고, 1.1.5: updateStatus를 통해 신청서의 상태가 '승인(ACCEPTED)'으로 변경된 직후부터 시작됩니다.
@@ -767,7 +767,7 @@ ApplicationService는 실제 비즈니스 로직을 처리하는 핵심 주체�
 요약하면, '승인' 처리는 정원 검사, 신규 멤버 생성, 그리고 승인 알림 발송이라는 세 가지 핵심 하위 작업으로 구성됩니다.
 
 4.36 그룹 지원 거절하기  
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2036.png) 
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2036.png)
 그림 \# sequence 36
 
 흐름은 ApplicationService의 1.1: handleApplication 메서드가 호출되고, 1.1.1(리더 권한 검증)과 1.1.4(신청서 상태 검증)를 모두 통과한 직후부터 시작됩니다.
@@ -783,7 +783,7 @@ NotificationService는 1.1.14.1.1: findById 등으로 신청자의 프로필을 
 요약하면, '거절' 처리는 신청서 상태를 'REJECTED'로 변경하고, 신청자에게 '거절' 알림을 발송하는 두 가지 작업으로 완료됩니다.
 
 4.37 내 찜 목록 가져오기  
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2037.png) 
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2037.png)
 그림 \# sequence 37  
 이 시퀀스 다이어그램은 사용자가 찜한 스터디 그룹을 조회할 때, Spring MVC 백엔드 내부에서 수행되는 검색 처리 과정을 단계적으로 나타낸 것이다.  
 요청은 StudyQueryController에서 시작된다. 사용자가 내 스터디를 조회하면, 컨트롤러는 이를 StudyQueryService의 getBookmarks로 전달한다.
@@ -794,7 +794,7 @@ StudyQueryService는 찜한 스터디를 가져오기 위해 StudyRepository의 
 수집된 정보를 바탕으로 StudyQueryService는 StudyDto를 생성한 뒤 응답에 필요한 필드를 GetStudiesResponse에담는다. 완성된 응답 객체는 StudyQueryService에서 StudyQueryController로 돌아가고 컨트롤러는 이를 사용자에게 반환한다. 클라이언트는 응답된 정보를 화면에 랜더링한다.
 
 4.38 내 그룹 데이터 가져오기  
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2038.png) 
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2038.png)
 그림 \# sequence 38  
 이 시퀀스 다이어그램은 사용자가 속한 스터디 그룹을 조회할 때, Spring MVC 백엔드 내부에서 수행되는 검색 처리 과정을 단계적으로 나타낸 것이다.
 
@@ -805,7 +805,7 @@ StudyQueryService는 먼저 사용자가 소속된 스터디를 가져오기 위
 수집된 정보를 바탕으로 StudyQueryService는 StudyDto를 생성한 뒤 응답에 필요한 필드를 GetStudiesResponse에담는다. 완성된 응답 객체는 StudyQueryService에서 StudyQueryController로 돌아가고 컨트롤러는 이를 사용자에게 반환한다. 클라이언트는 응답된 정보를 화면에 랜더링한다.
 
 4.39 과제 목록 가져오기  
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2039.png) 
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2039.png)
 그림 \# sequence 39  
 이 시퀀스 다이어그램은 사용자가 과제의 목록을 조회할 때, Spring MVC 백엔드 내부에서 수행되는 검색 처리 과정을 단계적으로 나타낸 것이다.  
 요청은 AssignmentController에서 시작되며 클라이언트가 studyId와 userId를 포함해 AssignmentService의 getAssignments로 전달한다.
@@ -815,7 +815,7 @@ Assignment는 먼저 studyId나 userId가 null면 BusinessException을 발생시
 
 컨트롤러는 서비스에서 받은 응답을 사용자에게 전달하며, 사용자는 과제 목록을 화면에 렌더링한다.
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2040.png)  
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2040.png)
 그림 \# sequence 40  
 이 시퀀스 다이어그램은 사용자가 과제를 생성할 때, Spring MVC 백엔드 내부에서 수행되는 검색 처리 과정을 단계적으로 나타낸 것이다.  
 요청은 AssignmentController에서 시작된다. 사용자가 studyId와 과제 생성 요청 DTO를 전송하면 컨트롤러는 이를 AssignmentService의 createAssignment로 전달한다.
@@ -827,7 +827,7 @@ AssignmentService는 studyId나 userId가 null이면 BusinessException을 발생
 컨트롤러는 전달받은 id를 통해 url를 만들어 이를 사용자에게 반환하게 된다.
 
 4.41 과제 수정하기  
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2041.png)    
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/4c4ea59049fc217eb6b45a1f0e0a8556aeef0905/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2041.png)   
 그림 \# sequence 41  
 이 시퀀스 다이어그램은 사용자가 과제를 수정할 때, Spring MVC 백엔드 내부에서 수행되는 검색 처리 과정을 단계적으로 나타낸 것이다.  
 요청은 AssignmentController에서 시작된다. 사용자가 studyId와 과제 수정 요청 DTO를 전송하면 컨트롤러는 이를 AssignmentService의 updateAssignment로 전달한다.
