@@ -3,8 +3,8 @@
   이 장은 예상 UI와 UI안의 각 구성요소를 설명한다. 본 프로토타입은 앱 형태의 화면을 웹 환경에서 구현한 것으로, 실제 서비스 구현 시 일부 화면이나 동작이 달라질 수 있다.
 
  
-
- ![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/2b95ea9b6b872b8930413fdc05597c55b868a58a/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-1%5D%20%EC%B4%88%EA%B8%B0%20%EB%A1%9C%EB%94%A9%20%ED%99%94%EB%A9%B4.png)![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/2b95ea9b6b872b8930413fdc05597c55b868a58a/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-2%5D%20%EC%B4%88%EA%B8%B0%20%ED%99%94%EB%A9%B4.png)
+<img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/2b95ea9b6b872b8930413fdc05597c55b868a58a/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-1%5D%20%EC%B4%88%EA%B8%B0%20%EB%A1%9C%EB%94%A9%20%ED%99%94%EB%A9%B4.png?raw=true" width="400"/>
+<img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/2b95ea9b6b872b8930413fdc05597c55b868a58a/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-2%5D%20%EC%B4%88%EA%B8%B0%20%ED%99%94%EB%A9%B4.png?raw=true" width="400"/>
 
  \[그림 6-1, 2\] 초기 로딩 화면,  초기 화면
 
