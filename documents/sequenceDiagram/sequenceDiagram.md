@@ -172,7 +172,7 @@ StudyQueryService는 완성된 응답 객체를 StudyQueryController로 전달�
 
 4.12. 그룹원 목록 조회
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/ca0d819133db773e5b6c101a535cfdac06b4f050/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20%20sequence%2012.png)
+![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/bf03e119074a680f97525c848e257038dae63aeb/documents/image/sequence%20image/%EA%B7%B8%EB%A6%BC%20%23%20sequence%2012.png)
 그림 \# sequence 12.png
 
 위 그림은 스터디 그룹원 목록 조회 기능의 동작 흐름을 나타낸 시퀀스 다이어그램이다.
