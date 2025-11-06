@@ -28,7 +28,7 @@ public class QStudyProfile extends EntityPathBase<StudyProfile> {
 
     public final StringPath bio = createString("bio");
 
-    public final EnumPath<com.study.focus.common.domain.Category> category = createEnum("category", com.study.focus.common.domain.Category.class);
+    public final ListPath<com.study.focus.common.domain.Category, EnumPath<com.study.focus.common.domain.Category>> category = this.<com.study.focus.common.domain.Category, EnumPath<com.study.focus.common.domain.Category>>createList("category", com.study.focus.common.domain.Category.class, EnumPath.class, PathInits.DIRECT2);
 
     public final StringPath description = createString("description");
 
