@@ -348,8 +348,6 @@
 
 <p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-51%5D%20%EC%9E%90%EB%A3%8C%EC%8B%A4%20%EC%83%81%EC%84%B8%20%EB%82%B4%EC%9A%A9%20%ED%99%94%EB%A9%B4.png?raw=true" width="250"/>
-</p>
-<p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-52%5D%20%EC%88%98%EC%A0%95_%EC%82%AD%EC%A0%9C%20%EB%B2%84%ED%8A%BC.png?raw=true" width="250"/>
 </p>
 
