@@ -172,87 +172,77 @@
 </p>
 
 
-\[그림 6-25\] 채팅 화면
+[그림 6-25] 채팅 화면
 
  메시지 모양의 버튼을 통해 이동할 수 있는 채팅화면이다. 사용자가 그룹원들끼리 채팅을 할 수 있는 화면이다.
 
 <p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-26%5D%20%EB%B0%A9%EC%9E%A5%20%EC%A0%84%EC%9A%A9%20%EA%B3%B5%EC%A7%80%20%EC%84%B8%EB%B6%80%20%ED%99%94%EB%A9%B4.png?raw=true" width="250"/>
-</p>
-<p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-27%5D%20%EB%B0%A9%EC%9E%A5%20%EC%A0%84%EC%9A%A9%20%EA%B3%B5%EC%A7%80%20%EC%84%B8%EB%B6%80%20%ED%99%94%EB%A9%B4.png?raw=true" width="250"/>
 </p>
-    <p align="center">
+<p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-28%5D%20%EC%88%98%EC%A0%95_%EC%82%AD%EC%A0%9C%20%EB%B2%84%ED%8A%BC.png?raw=true" width="250"/>
 </p>
 
 
-\[그림 6-26, 27, 28\] 방장 전용 공지 세부 화면, 수정/삭제 버튼
+[그림 6-26, 27, 28] 방장 전용 공지 세부 화면, 수정/삭제 버튼
 
- 방장 권한의 계정일 때, 공지 화면은 이렇게 뜨게 된다. 공지 화면에 \+버튼을 누르면 \[그림 6-28\]과 같이 공지 생성 화면으로 전환된다. \[그림 6-26\]에 있는 각 공지를 클릭하게 되면 \[그림 6-27\]의 공지 상세 화면으로 전환된다. 여기서 … 를 누르게 되면 \[그림 6-28\] 처럼 수정/삭제 버튼이 뜨고, 이 버튼을 누르면 각각 수정이나 삭제가 가능하다. 또한, 그룹 내 모든 인원들은 공지에 대해 댓글도 달 수 있다.
+ 방장 권한의 계정일 때, 공지 화면은 이렇게 뜨게 된다. 공지 화면에 +버튼을 누르면 [그림 6-28]과 같이 공지 생성 화면으로 전환된다. [그림 6-26]에 있는 각 공지를 클릭하게 되면 [그림 6-27]의 공지 상세 화면으로 전환된다. 여기서 … 를 누르게 되면 [그림 6-28] 처럼 수정/삭제 버튼이 뜨고, 이 버튼을 누르면 각각 수정이나 삭제가 가능하다. 또한, 그룹 내 모든 인원들은 공지에 대해 댓글도 달 수 있다.
 
 <p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-29%5D%20%EA%B3%B5%EC%A7%80%20%EC%84%B8%EB%B6%80%20%ED%99%94%EB%A9%B4.png?raw=true" width="250"/>
-</p>
-<p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-30%5D%20%EA%B3%B5%EC%A7%80%20%EC%84%B8%EB%B6%80%20%ED%99%94%EB%A9%B4.png?raw=true" width="250"/>
 </p>
 
 
-\[그림 6-29, 30\] 공지 세부 화면
+[그림 6-29, 30] 공지 세부 화면
 
- \[그림 6-29\]에 있는 각 공지를 클릭하게 되면 \[그림 6-30\]의 공지 상세 화면으로 전환된다. 또한, 그룹 내 모든 인원들은 공지에 대해 댓글도 달 수 있다.
+ [그림 6-29]에 있는 각 공지를 클릭하게 되면 [그림 6-30]의 공지 상세 화면으로 전환된다. 또한, 그룹 내 모든 인원들은 공지에 대해 댓글도 달 수 있다.
 
 <p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-31%5D%20%EA%B3%B5%EC%A7%80%20%EC%83%9D%EC%84%B1%20%ED%99%94%EB%A9%B4.png?raw=true" width="250"/>
 </p>
 
 
-\[그림 6-31 공지 생성 화면\]
+[그림 6-31 공지 생성 화면]
 
-  \[그림 6-26\]에서 \+버튼을 누르게 되면 연결되는 공지 생성 화면이다. 공지 이름, 내용, 첨부 파일까지 작성 가능하다.
+ [그림 6-26]에서 +버튼을 누르게 되면 연결되는 공지 생성 화면이다. 공지 이름, 내용, 첨부 파일까지 작성 가능하다.
 
 <p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-32%5D%20%EA%B3%B5%EC%A7%80%20%EC%88%98%EC%A0%95%20%ED%99%94%EB%A9%B4.png?raw=true" width="250"/>
 </p>
 
-\[그림 6-32 공지 수정 화면\]
+[그림 6-32 공지 수정 화면]
 
- \[그림 6-28\]의 수정 버튼을 누르게 되면 전환되는 공지 수정 화면이다. 작성된 공지 이름, 내용, 첨부 파일란을 수정 가능하고, 첨부 파일을 삭제할 수도 있다.
+ [그림 6-28]의 수정 버튼을 누르게 되면 전환되는 공지 수정 화면이다. 작성된 공지 이름, 내용, 첨부 파일란을 수정 가능하고, 첨부 파일을 삭제할 수도 있다.
 
 <p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-33%5D%20%EC%95%8C%EB%A6%BC%20%EC%83%81%EC%84%B8%20%ED%99%94%EB%A9%B4.png?raw=true" width="250"/>
 </p>
 
 
-\[그림 6-33 알림 상세 화면\]
+[그림 6-33 알림 상세 화면]
 
   그룹원, 방장 모두 그룹 내의 알림 들을 확인할 수 있는 화면이다. 알림 상세 화면에서는 알림 제목만 간단히 뜨고, 각 알림 제목을 클릭하면 상세 내용 확인 가능하다.
 
 <p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-34%5D%20%EC%95%8C%EB%A6%BC%20%EC%83%81%EC%84%B8%20card.png?raw=true" width="250"/>
-</p>
-<p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-35%5D%20%EC%95%8C%EB%A6%BC%20%EC%83%81%EC%84%B8%20card.png?raw=true" width="250"/>
-</p>
-<p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-36%5D%20%EC%95%8C%EB%A6%BC%20%EC%83%81%EC%84%B8%20card.png?raw=true" width="250"/>
-</p>
-<p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-37%5D%20%EC%95%8C%EB%A6%BC%20%EC%83%81%EC%84%B8%20card.png?raw=true" width="250"/>
 </p>
 
 
-\[그림 6-34, 35, 36, 37 알림 상세 card\]
+[그림 6-34, 35, 36, 37 알림 상세 card]
 
- \[그림 6-30\]에서 각 알림을 클릭하면 상세 card가 오버레이된다. 각 알림의 상세 내용을 확인 가능하다.
+ [그림 6-30]에서 각 알림을 클릭하면 상세 card가 오버레이된다. 각 알림의 상세 내용을 확인 가능하다.
 
 <p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-38%5D%20%EA%B3%BC%EC%A0%9C%20%EB%A6%AC%EC%8A%A4%ED%8A%B8%20%ED%99%94%EB%A9%B4.png?raw=true" width="250"/>
 </p>
 
 
-\[그림 6-38 과제 리스트 화면\]
+[그림 6-38 과제 리스트 화면]
 
  그룹 내의 과제 리스트를 확인할 수 있다. 각 과제를 클릭하면 과제의 상세 내용을 확인 가능하다.
 
@@ -261,7 +251,7 @@
 </p>
 
 
-\[그림 6-39 과제 상세 화면\]
+[그림 6-39 과제 상세 화면]
 
  과제 리스트 중 하나를 클릭하면 과제 이름, 시작 일시, 마감 일시, 과제 내용, 첨부파일 등을 확인 가능하다. 제출란에 과제를 작성하고, 첨부파일이 필요하다면 첨부하여 제출하면 된다. 상세 화면 하단엔 그룹원들의 제출 현황을 확인 가능한데, 그룹원의 과제 상세보기나 평가 목록을 확인 가능하다.
 
@@ -270,46 +260,44 @@
 </p>
 
 
-\[그림 6-40 방장용 과제 리스트 화면\]
+[그림 6-40 방장용 과제 리스트 화면]
 
- 방장 계정으로 로그인을 하였을 때, \+버튼을 누르면 과제 생성 화면으로 전환된다. 마찬가지로 과제 리스트 화면이므로 과제 리스트를 확인 가능하다.
+ 방장 계정으로 로그인을 하였을 때, +버튼을 누르면 과제 생성 화면으로 전환된다. 마찬가지로 과제 리스트 화면이므로 과제 리스트를 확인 가능하다.
 
 <p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-41%5D%20%EB%B0%A9%EC%9E%A5%EC%9A%A9%20%EA%B3%BC%EC%A0%9C%20%EC%83%9D%EC%84%B1%20%ED%99%94%EB%A9%B4.png?raw=true" width="250"/>
 </p>
 
 
-\[그림 6-41 방장용 과제 생성 화면\]
+[그림 6-41 방장용 과제 생성 화면]
 
  방장은 과제 생성이 가능하므로, 과제 생성 화면에서 과제 이름, 시작/마감 일시 설정, 과제 내용, 첨부 파일란 모두 작성하여 과제 생성이 가능하다.
 
 <p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-42%5D%20%EB%B0%A9%EC%9E%A5%EC%9A%A9%20%EA%B3%BC%EC%A0%9C%20%EC%83%81%EC%84%B8%20%ED%99%94%EB%A9%B4.png?raw=true" width="250"/>
-</p>
-<p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-43%5D%20%EC%88%98%EC%A0%95_%EC%82%AD%EC%A0%9C%20%EB%B2%84%ED%8A%BC.png?raw=true" width="250"/>
 </p>
 
 
-\[그림 6-42, 43 방장용 과제 상세 화면, 수정/삭제 버튼\]
+[그림 6-42, 43 방장용 과제 상세 화면, 수정/삭제 버튼]
 
- 방장 권한으로 로그인 시 확인 가능한 과제 상세 화면으로, 시작/마감 일시를 설정할 수 있는 버튼이 따로 존재하고, 방장 또한 제출란, 첨부파일란을 사용하여 과제를 제출함과 동시에 그룹원들의 제출현황도 확인 가능하다. 과제 상세 화면 상단에 … 를 누르면 \[그림 6-43\]과 같이 수정/삭제 버튼으로 과제 수정, 삭제도 가능하다.
+ 방장 권한으로 로그인 시 확인 가능한 과제 상세 화면으로, 시작/마감 일시를 설정할 수 있는 버튼이 따로 존재하고, 방장 또한 제출란, 첨부파일란을 사용하여 과제를 제출함과 동시에 그룹원들의 제출현황도 확인 가능하다. 과제 상세 화면 상단에 … 를 누르면 [그림 6-43]과 같이 수정/삭제 버튼으로 과제 수정, 삭제도 가능하다.
 
 <p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-44%5D%20%EB%B0%A9%EC%9E%A5%EC%9A%A9%20%EA%B3%BC%EC%A0%9C%20%EC%88%98%EC%A0%95%20%ED%99%94%EB%A9%B4.png?raw=true" width="250"/>
 </p>
 
 
-\[그림 6-44 방장용 과제 수정 화면\]
+[그림 6-44 방장용 과제 수정 화면]
 
- \[그림 6-43\]의 수정 버튼을 클릭하면 전환되는 과제 수정 화면이다. 과제 이름, 시작/마감 일시, 과제 내용, 첨부 파일을 수정 가능하다.
+ [그림 6-43]의 수정 버튼을 클릭하면 전환되는 과제 수정 화면이다. 과제 이름, 시작/마감 일시, 과제 내용, 첨부 파일을 수정 가능하다.
 
 <p align="center">
   <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-45%5D%20%EA%B3%BC%EC%A0%9C%20%EC%8B%9C%EC%9E%91%2C%20%EB%A7%88%EA%B0%90%20%EC%9D%BC%EC%8B%9C%20%EC%84%A4%EC%A0%95.png?raw=true" width="250"/>
 </p>
 
 
-\[그림 6-45 과제 시작, 마감 일시 설정\]
+[그림 6-45 과제 시작, 마감 일시 설정]
 
  과제 상세, 생성, 수정에서 모두 사용가능한 시작, 마감 일시 설정 캘린더이다.
 
@@ -318,13 +306,13 @@
 </p>
 
 
-\[그림 6-46 방장용 과제 삭제 확인 문자\]
+[그림 6-46 방장용 과제 삭제 확인 문자]
 
- \[그림 6-43\]의 삭제 버튼을 클릭하면 오버레이되는 과제 삭제 확인 문자이다. 예를 누르면 과제가 삭제된다.
+ [그림 6-43]의 삭제 버튼을 클릭하면 오버레이되는 과제 삭제 확인 문자이다. 예를 누르면 과제가 삭제된다.
 
 <p align="center">
-  <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-47%5D%20%EA%B3%BC%EC%A0%9C%20%ED%8F%89%EA%B0%80%20%ED%99%94%EB%A9%B4.png?raw=true" width="250"/>
-</p>
+  <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/7781005e0082bb63454786457d75148fe90d02e6/documents/image/ui%20image/%5B%EA%B7%B8%EB%A6%BC%206-47%5D%20%EA%B3%BC%EC%A0%9C%20%ED%
+
 
 
 \[그림 6-47 과제 평가 화면\]
