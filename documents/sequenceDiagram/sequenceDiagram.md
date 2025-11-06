@@ -4,7 +4,7 @@
 
 4.1. 시스템 로그인하기
 
-![][image1]
+![Sequence 1](documents/image/sequence%20image/그림%20%23%20sequence%201.png)
 ㅇㅁㄴㅇㄴㅁ
 그림 \# sequence 1
 
