@@ -40,8 +40,10 @@ Focus 시스템의 Use Case는 크게 인증/회원관리, 메인 서비스, 그
 
 이 다이어그램은 전체 시스템의 기능적 요구사항을 요약적으로 표현하며,  
  다음 절(2.2)에서는 각 Use Case별 세부 동작 흐름과 조건을 구체적으로 기술한다.
+<p align="center">
+  <img src="https://github.com/StudyGroup-Project/StudyGroup_Project/blob/825c235f00af8dacae16b4a6d87094cd4488513e/documents/image/UseCaseDiagram-2025-10-24.jpg?raw=true" width="900"/>
+</p>
 
-![](https://github.com/StudyGroup-Project/StudyGroup_Project/blob/825c235f00af8dacae16b4a6d87094cd4488513e/documents/image/UseCaseDiagram-2025-10-24.jpg)
 
 \# UseCaseDiagram-2025-10-24
 
