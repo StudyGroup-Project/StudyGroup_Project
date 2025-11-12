@@ -469,7 +469,7 @@ class StudyUnitTest {
                 bioCaptor.capture(), descriptionCaptor.capture()
         );
         assertThat(titleCaptor.getValue()).isEqualTo("새로운 스터디 제목");
-        assertThat(categoryCaptor.getValue()).isEqualTo(Category.IT);
+        assertThat(categoryCaptor.getValue()).isEqualTo(List.of(Category.IT));
         assertThat(addressCaptor.getValue().getProvince()).isEqualTo("경기도");
         assertThat(bioCaptor.getValue()).isEqualTo("새로운 한 줄 소개");
     }
