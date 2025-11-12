@@ -255,7 +255,7 @@ class FeedbackUnitTest {
         // 피드백 2건
         Feedback f1 = makeFeedback(1L, 5L, "great", LocalDateTime.now().minusMinutes(3), reviewer, submission);
         Feedback f2 = makeFeedback(2L, 3L, "good", LocalDateTime.now().minusMinutes(1), reviewer, submission);
-        given(feedbackRepository.findAllBySubmissionId(submissionId)).willReturn(java.util.List.of(f1, f2));
+        given(feedbackRepository.findAllBySubmissionIdOrderByCreatedAtDescIdDesc(submissionId)).willReturn(java.util.List.of(f1, f2));
 
         // 프로필 조회 목
         var profile = mockProfile(900L, "alice", "img://alice");
@@ -278,7 +278,7 @@ class FeedbackUnitTest {
         then(groupService).should().memberValidation(studyId, userId);
         then(assignmentRepository).should().findByIdAndStudyId(assignmentId, studyId);
         then(submissionRepository).should().findByIdAndAssignmentId(submissionId, assignmentId);
-        then(feedbackRepository).should().findAllBySubmissionId(submissionId);
+        then(feedbackRepository).should().findAllBySubmissionIdOrderByCreatedAtDescIdDesc(submissionId);
         then(userService).should(atLeastOnce()).getMyProfile(900L);
     }
 
@@ -289,7 +289,7 @@ class FeedbackUnitTest {
         given(groupService.memberValidation(studyId, userId)).willReturn(reviewer);
         given(assignmentRepository.findByIdAndStudyId(assignmentId, studyId)).willReturn(Optional.of(assignment));
         given(submissionRepository.findByIdAndAssignmentId(submissionId, assignmentId)).willReturn(Optional.of(submission));
-        given(feedbackRepository.findAllBySubmissionId(submissionId)).willReturn(java.util.List.of());
+        given(feedbackRepository.findAllBySubmissionIdOrderByCreatedAtDescIdDesc(submissionId)).willReturn(java.util.List.of());
 
         // when
         var result = feedbackService.getFeedbacks(studyId, assignmentId, submissionId, userId);

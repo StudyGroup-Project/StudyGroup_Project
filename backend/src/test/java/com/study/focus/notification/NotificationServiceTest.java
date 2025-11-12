@@ -60,7 +60,7 @@ class NotificationServiceTest {
     void getNotifications_success() {
         // given
         given(studyRepository.findById(1L)).willReturn(Optional.of(study));
-        given(notificationRepository.findAllByStudy(study)).willReturn(List.of(notification));
+        given(notificationRepository.findAllByStudyOrderByCreatedAtDescIdDesc(study)).willReturn(List.of(notification));
 
         // when
         List<GetNotificationsListResponse> result = notificationService.getNotifications(1L, 1L);
