@@ -147,7 +147,7 @@ public class S3Uploader
     public List<String> getUrlFiles(List<String> keys){
         if(keys == null || keys.isEmpty()) {
             throw  new BusinessException(UserErrorCode.FILE_NOT_FOUND);}
-        return keys.parallelStream().map(this::getUrlFile).collect(Collectors.toList());
+        return keys.stream().map(this::getUrlFile).collect(Collectors.toList());
     }
 
     
