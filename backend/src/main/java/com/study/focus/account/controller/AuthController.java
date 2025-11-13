@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -47,22 +49,29 @@ public class AuthController {
         return ResponseEntity.ok(new CheckDuplicatedIdResponse(available));
     }
 
-    // 일반 로그인
     @PostMapping("/login")
-    public void login(@RequestParam String loginId,
-                      @RequestParam String password,
-                      HttpServletResponse response,
-                      HttpServletRequest request) throws IOException {
+    public ResponseEntity<Map<String, Object>> login(
+            @RequestBody Map<String, String> body,
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse
+    ) {
+        String loginId = body.get("loginId");
+        String password = body.get("password");
+
         LoginResponse loginResponse = accountService.login(new LoginRequest(loginId, password));
+
         String accessToken = loginResponse.getAccessToken();
         String refreshToken = loginResponse.getRefreshToken();
 
-        addRefreshTokenToCookie(request, response, loginResponse.getRefreshToken());
+        // Refresh Token 쿠키 저장
+        addRefreshTokenToCookie(httpRequest, httpResponse, refreshToken);
 
+        // 프로필 존재 여부 체크
         Long userId = tokenProvider.getUserIdFromToken(accessToken);
         boolean profileExists = userProfileRepository.findByUserId(userId).isPresent();
 
-        String targetUrl = UrlUtil.createRedirectUrl(
+        // 프론트가 이동할 redirect URL 생성
+        String redirectUrl = UrlUtil.createRedirectUrl(
                 UrlUtil.FRONTEND_BASE_URL,
                 UrlUtil.HOME_PATH,
                 UrlUtil.PROFILE_SETUP_PATH,
@@ -71,8 +80,16 @@ public class AuthController {
                 profileExists
         );
 
-        response.sendRedirect(targetUrl);
+        // JSON 응답
+        Map<String, Object> result = new HashMap<>();
+        result.put("accessToken", accessToken);
+        result.put("refreshToken", refreshToken);
+        result.put("profileExists", profileExists);
+        result.put("redirectUrl", redirectUrl);
+
+        return ResponseEntity.ok(result);
     }
+
 
     // 로그아웃
     @PostMapping("/logout")
