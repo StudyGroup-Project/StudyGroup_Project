@@ -55,7 +55,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         boolean profileExists = userProfileRepository.findByUserId(userId).isPresent();
 
         String targetUrl = UrlUtil.createRedirectUrl(
-                "https://study-group-project-frontend.vercel.app/",
+                "https://study-group-project-frontend.vercel.app",
                 UrlUtil.HOME_PATH,
                 UrlUtil.PROFILE_SETUP_PATH,
                 accessToken,
