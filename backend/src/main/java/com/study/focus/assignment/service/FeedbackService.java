@@ -1,13 +1,9 @@
 package com.study.focus.assignment.service;
 
-import com.study.focus.account.domain.UserProfile;
-import com.study.focus.account.repository.UserProfileRepository;
-import com.study.focus.account.repository.UserRepository;
 import com.study.focus.account.service.UserService;
 import com.study.focus.assignment.domain.Feedback;
 import com.study.focus.assignment.domain.Submission;
 import com.study.focus.assignment.dto.EvaluateSubmissionRequest;
-import com.study.focus.assignment.dto.GetAssignmentDetailResponse;
 import com.study.focus.assignment.dto.GetFeedbackListResponse;
 import com.study.focus.assignment.repository.AssignmentRepository;
 import com.study.focus.assignment.repository.FeedbackRepository;
@@ -55,7 +51,7 @@ public class FeedbackService {
         groupService.memberValidation(studyId,userId);
         assignmentRepository.findByIdAndStudyId(assignmentId, studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
         submissionRepository.findByIdAndAssignmentId(submissionId, assignmentId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
-        List<Feedback> feedbacks = feedbackRepository.findAllBySubmissionId(submissionId);
+        List<Feedback> feedbacks = feedbackRepository.findAllBySubmissionIdOrderByCreatedAtDescIdDesc(submissionId);
 
         return feedbacks.stream().map(a -> new GetFeedbackListResponse(a.getId(), a.getScore(),a.getContent(),a.getCreatedAt(),
                 userService.getMyProfile(a.getReviewer().getUser().getId()).getNickname(),

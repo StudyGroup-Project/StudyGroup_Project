@@ -35,7 +35,7 @@ public class NotificationService {
     public List<GetNotificationsListResponse> getNotifications(Long studyId, Long userId) {
         groupService.memberValidation(studyId,userId);
         Study study = studyRepository.findById(studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
-        List<Notification> notifications = notificationRepository.findAllByStudy(study);
+        List<Notification> notifications = notificationRepository.findAllByStudyOrderByCreatedAtDescIdDesc(study);
         return notifications.stream().map(a -> new GetNotificationsListResponse(a.getId(),a.getTitle())).toList();
     }
 

@@ -218,7 +218,7 @@ class FeedbackIntegrationTest {
                         .with(user(new CustomUserDetails(reviewerUser.getId()))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].evaluaterName").value("reviewerNick"))
+                .andExpect(jsonPath("$[0].evaluatorName").value("reviewerNick"))
                 .andExpect(jsonPath("$[0].evaluatorProfileUrl").exists());
     }
 
