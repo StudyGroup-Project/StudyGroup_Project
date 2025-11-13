@@ -138,6 +138,9 @@ public class StudyService {
         Application application = applicationRepository.findByApplicantIdAndStudyId(userId, studyId).orElse(null);
         String applicationStatus = (application != null) ? application.getStatus().name() : null;
 
+        // 현재 로그인한 사용자가 그룹장인지 확인
+        boolean isLeader = leader.getId().equals(userId);
+
         // 추방정보확인
         boolean isBanned = studyMemberRepository.existsByStudyIdAndUserIdAndStatus(studyId, userId, StudyMemberStatus.BANNED);
 
@@ -162,6 +165,7 @@ public class StudyService {
                 trustScore,
                 applicationStatus,
                 canApply,
+                isLeader,
                 new GetStudyProfileResponse.LeaderProfile(
                         leader.getId(),
                         nickname,
