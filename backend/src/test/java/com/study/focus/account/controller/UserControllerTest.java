@@ -30,6 +30,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -181,7 +182,7 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nickname").value("홍길동"))
                 .andExpect(jsonPath("$.job").value("STUDENT"))
-                .andExpect(jsonPath("$.preferredCategory").value(List.of("IT")));
+                .andExpect(jsonPath("$.preferredCategory", containsInAnyOrder("IT")));
     }
 
     @Test

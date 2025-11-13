@@ -1,4 +1,4 @@
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre-jammy
 
 # 2. 컨테이너 내 작업 디렉토리 설정
 WORKDIR /app

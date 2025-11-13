@@ -6,9 +6,11 @@ import com.study.focus.study.domain.StudySortType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface StudyRepositoryCustom {
     Page<StudyDto> searchStudies(String keyword,
-                                 Category category,
+                                 List<Category> categories,
                                  String province,
                                  String district,
                                  Long userId,
