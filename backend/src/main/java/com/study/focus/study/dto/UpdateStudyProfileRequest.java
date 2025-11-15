@@ -12,7 +12,7 @@ import java.util.List;
 public class UpdateStudyProfileRequest {
     private String title;
     private int maxMemberCount;
-    private List<Category> category;;
+    private List<Category> category;
     private String province;
     private String district;
     private String bio;
