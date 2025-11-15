@@ -27,7 +27,7 @@ public class GetStudyProfileResponse {
 
     private String applicationStatus; // 지원서 상태 (SUBMITTED, ACCEPTED, REJECTED) - 없으면 null 또는 "NONE"
     private boolean canApply; // 지원 가능 여부 (추방, 마감, 이미 지원 등 모두 포함)
-    private boolean isLeader; // 리더 인지 확인
+    private boolean leaderCheck; // 리더 인지 확인
     private LeaderProfile leader; // 그룹장 프로필
 
     @Getter

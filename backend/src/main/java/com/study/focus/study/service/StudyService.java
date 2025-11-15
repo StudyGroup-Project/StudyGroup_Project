@@ -42,12 +42,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
+
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class StudyService {
     private final StudyRepository studyRepository;
     private final StudyProfileRepository studyProfileRepository;
@@ -123,6 +126,7 @@ public class StudyService {
                 .orElseThrow(()-> new BusinessException(CommonErrorCode.INVALID_REQUEST));
         User leader = leadermember.getUser();
 
+
         //그룹장 프로필 조회
         UserProfile leaderProfile = userProfileRepository.findByUser(leader)
                 .orElseThrow(() -> new BusinessException(UserErrorCode.URL_FORBIDDEN));
@@ -136,10 +140,11 @@ public class StudyService {
 
         // 지원서 조회 ,없으면 null
         Application application = applicationRepository.findByApplicantIdAndStudyId(userId, studyId).orElse(null);
-        String applicationStatus = (application != null) ? application.getStatus().name() : null;
+        String applicationStatus = (application != null) ? application.getStatus().name() : "NONE";
 
         // 현재 로그인한 사용자가 그룹장인지 확인
-        boolean isLeader = leader.getId().equals(userId);
+        boolean leaderCheck = leader.getId().equals(userId);
+
 
         // 추방정보확인
         boolean isBanned = studyMemberRepository.existsByStudyIdAndUserIdAndStatus(studyId, userId, StudyMemberStatus.BANNED);
@@ -165,7 +170,7 @@ public class StudyService {
                 .trustScore(trustScore)
                 .applicationStatus(applicationStatus)
                 .canApply(canApply)
-                .isLeader(isLeader)
+                .leaderCheck(leaderCheck)
                 .leader(GetStudyProfileResponse.LeaderProfile.builder()
                         .id(leader.getId())
                         .nickname(nickname)
