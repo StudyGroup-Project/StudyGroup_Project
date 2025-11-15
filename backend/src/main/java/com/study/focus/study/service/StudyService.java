@@ -151,27 +151,28 @@ public class StudyService {
         // 방장의 신뢰 점수
         int trustScore = (int) leader.getTrustScore();
 
-        return new GetStudyProfileResponse(
-                study.getId(),
-                profile.getTitle(),
-                profile.getStudy().getMaxMemberCount(),
-                memberCount,
-                profile.getBio(),
-                profile.getDescription(),
-                profile.getCategory(),
-                profile.getAddress().getProvince(),
-                profile.getAddress().getDistrict(),
-                study.getRecruitStatus(),
-                trustScore,
-                applicationStatus,
-                canApply,
-                isLeader,
-                new GetStudyProfileResponse.LeaderProfile(
-                        leader.getId(),
-                        nickname,
-                        profileImageUrl
-                )
-        );
+        return GetStudyProfileResponse.builder()
+                .id(study.getId())
+                .title(profile.getTitle())
+                .maxMemberCount(profile.getStudy().getMaxMemberCount())
+                .memberCount(memberCount)
+                .bio(profile.getBio())
+                .description(profile.getDescription())
+                .category(profile.getCategory())
+                .province(profile.getAddress().getProvince())
+                .district(profile.getAddress().getDistrict())
+                .recruitStatus(study.getRecruitStatus())
+                .trustScore(trustScore)
+                .applicationStatus(applicationStatus)
+                .canApply(canApply)
+                .isLeader(isLeader)
+                .leader(GetStudyProfileResponse.LeaderProfile.builder()
+                        .id(leader.getId())
+                        .nickname(nickname)
+                        .profileImageUrl(profileImageUrl)
+                        .build())
+                .build();
+
     }
 
     // 그룹 프로필 정보 수정하기
