@@ -6,6 +6,7 @@ import com.study.focus.assignment.domain.Assignment;
 import com.study.focus.assignment.domain.Submission;
 import com.study.focus.assignment.dto.*;
 import com.study.focus.assignment.repository.AssignmentRepository;
+import com.study.focus.assignment.repository.FeedbackRepository;
 import com.study.focus.assignment.repository.SubmissionRepository;
 import com.study.focus.common.domain.File;
 import com.study.focus.assignment.dto.AssignmentFileResponse;
@@ -38,6 +39,7 @@ public class AssignmentService {
     private final GroupService groupService;
     private final NotificationService notificationService;
     private final UserService userService;
+    private final FeedbackRepository feedbackRepository;
 
     // 과제 목록 가져오기(생성 순 내림차순 정렬)
     @Transactional
@@ -153,6 +155,11 @@ public class AssignmentService {
         Assignment assignment = assignmentRepository.findByIdAndStudyId(assignmentId, studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
 
         List<Submission> submissions = submissionRepository.findAllByAssignmentId(assignmentId);
+
+        for(Submission submission: submissions){
+            feedbackRepository.deleteAllBySubmission(submission);
+        }
+
         List<Long> submissionIds = submissions.stream().map(Submission::getId).toList();
 
         if (!submissionIds.isEmpty()) {
