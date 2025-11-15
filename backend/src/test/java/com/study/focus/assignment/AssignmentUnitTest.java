@@ -4,6 +4,7 @@ import com.study.focus.account.service.UserService;
 import com.study.focus.assignment.domain.Assignment;
 import com.study.focus.assignment.dto.*;
 import com.study.focus.assignment.repository.AssignmentRepository;
+import com.study.focus.assignment.repository.FeedbackRepository;
 import com.study.focus.assignment.repository.SubmissionRepository;
 import com.study.focus.assignment.service.AssignmentService;
 import com.study.focus.common.domain.File;
@@ -53,6 +54,7 @@ class AssignmentUnitTest {
     @Mock private GroupService groupService;
     @Mock private NotificationService notificationService;
     @Mock private UserService userService;
+    @Mock private FeedbackRepository feedbackRepository;
 
     @InjectMocks
     private AssignmentService assignmentService;
