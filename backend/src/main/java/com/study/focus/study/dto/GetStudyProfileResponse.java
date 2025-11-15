@@ -5,10 +5,11 @@ import com.study.focus.common.domain.Category;
 import com.study.focus.study.domain.RecruitStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-
+import lombok.Builder;
 import java.util.List;
 
 @Getter
+@Builder
 @AllArgsConstructor
 public class GetStudyProfileResponse {
 
@@ -30,6 +31,7 @@ public class GetStudyProfileResponse {
     private LeaderProfile leader; // 그룹장 프로필
 
     @Getter
+    @Builder
     @AllArgsConstructor
     public static class LeaderProfile {
         private Long id;
