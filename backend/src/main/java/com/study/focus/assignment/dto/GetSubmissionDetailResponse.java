@@ -18,7 +18,7 @@ public class GetSubmissionDetailResponse {
     String submitterProfileUrl;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    LocalDateTime CreateAt;
+    LocalDateTime createAt;
 
     List<AssignmentFileResponse> files;
 }
