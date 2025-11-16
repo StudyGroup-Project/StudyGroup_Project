@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor
 public class GetAnnouncementsResponse {
-    private  Long AnnouncementId;
+    private  Long announcementId;
     private  String title;
     private LocalDateTime createdAt;
 }
