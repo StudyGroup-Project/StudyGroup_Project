@@ -21,39 +21,68 @@ public class StompHandler implements ChannelInterceptor {
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
 
-        // 1) command가 없는 경우 (handshake 단계) → 무조건 통과
-        if (accessor.getCommand() == null) {
+        StompCommand command = accessor.getCommand();
+        log.info("[STOMP] command={} sessionId={}", command, accessor.getSessionId());
+
+        // 1) command 없는 경우(handshake 등) → 그대로 통과
+        if (command == null) {
             return message;
         }
 
-        // 2) CONNECT 프레임일 때만 JWT 검사
-        if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+        // 토큰 꺼내는 공통 함수
+        String jwtToken = resolveToken(accessor);
 
-            String jwtToken = accessor.getFirstNativeHeader("Authorization");
+        // 2) CONNECT에서 JWT 검증
+        if (StompCommand.CONNECT.equals(command)) {
+            log.info("[STOMP] CONNECT 헤더들: {}", accessor.toNativeHeaderMap());
 
-            if (jwtToken != null && jwtToken.startsWith("Bearer ")) {
-                jwtToken = jwtToken.substring(7);
+            if (jwtToken == null) {
+                log.warn("[STOMP] CONNECT - Authorization 헤더 없음, 연결 거부");
+                // 실제 운영에서는 예외 던져서 끊어도 되지만,
+                // 일단 원인 파악을 위해 null 리턴(메시지 drop)만 하거나 그대로 통과해도 됨
+                // throw new IllegalArgumentException("Missing JWT in CONNECT");
+                return null; // 이 세션 CONNECT는 처리 안 함 → 클라이언트에서 close로 보임
             }
 
-            if (jwtToken == null || !tokenProvider.validateToken(jwtToken)) {
-                throw new IllegalArgumentException("Invalid or missing JWT Token in CONNECT");
+            if (!tokenProvider.validateToken(jwtToken)) {
+                log.warn("[STOMP] CONNECT - 유효하지 않은 토큰");
+                return null;
             }
+
+            log.info("[STOMP] CONNECT - JWT 검증 성공");
         }
 
-        // 3) SEND 프레임일 때도 JWT 검사 (CONNECT 검증 통과한 뒤에만 도달)
-        if (StompCommand.SEND.equals(accessor.getCommand())) {
-
-            String jwtToken = accessor.getFirstNativeHeader("Authorization");
-
-            if (jwtToken != null && jwtToken.startsWith("Bearer ")) {
-                jwtToken = jwtToken.substring(7);
-            }
+        // 3) SEND에서도 JWT 검증
+        if (StompCommand.SEND.equals(command)) {
+            log.info("[STOMP] SEND dest={} headers={}",
+                    accessor.getDestination(), accessor.toNativeHeaderMap());
 
             if (jwtToken == null || !tokenProvider.validateToken(jwtToken)) {
-                throw new IllegalArgumentException("Invalid JWT Token in SEND");
+                log.warn("[STOMP] SEND - JWT 없음 또는 유효하지 않음");
+                return null;
             }
         }
 
         return message;
+    }
+
+    /**
+     * STOMP CONNECT / SEND native header에서 JWT 토큰 추출
+     */
+    private String resolveToken(StompHeaderAccessor accessor) {
+        String header = accessor.getFirstNativeHeader("Authorization");
+        if (header == null) {
+            header = accessor.getFirstNativeHeader("authorization");
+        }
+
+        if (header == null) {
+            return null;
+        }
+
+        // "Bearer xxx" 형태면 제거
+        if (header.startsWith("Bearer ")) {
+            return header.substring(7);
+        }
+        return header;
     }
 }

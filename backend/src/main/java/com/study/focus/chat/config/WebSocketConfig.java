@@ -18,19 +18,25 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/sub");   // 구독 prefix
-        registry.setApplicationDestinationPrefixes("/pub"); // 발행 prefix
+        registry.enableSimpleBroker("/sub");              // 구독 prefix
+        registry.setApplicationDestinationPrefixes("/pub");// 발행 prefix
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-stomp")
-                .setAllowedOriginPatterns("*")
+                // 프론트 도메인들만 명시적으로 허용
+                .setAllowedOrigins(
+                        "http://localhost:5173",
+                        "http://localhost:5174",
+                        "https://study-group-project-frontend.vercel.app"
+                )
                 .withSockJS();
     }
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(stompHandler); // JWT 인증 인터셉터 등록
+        // STOMP 프레임 들어올 때 JWT 검증
+        registration.interceptors(stompHandler);
     }
 }
