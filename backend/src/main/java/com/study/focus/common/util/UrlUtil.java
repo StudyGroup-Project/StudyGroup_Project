@@ -9,7 +9,7 @@ public class UrlUtil {
     public static final String FRONTEND_BASE_URL = "http://localhost:5173";
     public static final String BACKEND_BASE_URL = "http://localhost:8080";
     // 프론트 배포 완료시 변경 + 환경변수 설정
-    public static final String FRONT_BEFO_URL = "http://my-study-frontend.s3-website-ap-northeast-2.amazonaws.com";
+    public static final String FRONT_BEFO_URL = "http://my-study-focus-frontend.s3-website.ap-northeast-2.amazonaws.com";
     // ⭐️ 공통화된 경로 상수
     public static final String HOME_PATH = "/home"; // OAuth와 일반 로그인 모두 이 경로를 사용
     public static final String PROFILE_SETUP_PATH = "/profile"; // OAuth와 일반 로그인 모두 이 경로를 사용
