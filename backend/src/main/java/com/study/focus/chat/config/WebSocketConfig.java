@@ -24,11 +24,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws-stomp")  // 클라이언트에서 접속할 endpoint
-                .setAllowedOrigins(
-                        UrlUtil.FRONTEND_BASE_URL,
-                        "http://3.39.81.234:8080"
-                )
+        registry.addEndpoint("/ws-stomp")
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
     }
