@@ -145,13 +145,17 @@ public class StudyService {
         // 현재 로그인한 사용자가 그룹장인지 확인
         boolean leaderCheck = leader.getId().equals(userId);
 
+        boolean isMember = studyMemberRepository.existsByStudyIdAndUserIdAndStatus(studyId, userId, StudyMemberStatus.JOINED);
+
 
         // 추방정보확인
         boolean isBanned = studyMemberRepository.existsByStudyIdAndUserIdAndStatus(studyId, userId, StudyMemberStatus.BANNED);
 
         // 지원 가능 여부 ( 프론트에서 확인하기 위함.)
-        boolean canApply = !isBanned && study.getRecruitStatus() == RecruitStatus.OPEN
-                && (applicationStatus == null || "REJECTED".equals(applicationStatus));
+        boolean canApply = !isBanned
+                && study.getRecruitStatus() == RecruitStatus.OPEN
+                && !isMember
+                && ("NONE".equals(applicationStatus)|| "REJECTED".equals(applicationStatus));
 
         // 방장의 신뢰 점수
         int trustScore = (int) leader.getTrustScore();
