@@ -29,7 +29,4 @@ public class ChatMessage extends BaseCreatedEntity {
     @Lob
     @Column(nullable = false)
     private String content;
-
-    public static ChatMessage create(Study study, User user, String content) {
-    }
 }

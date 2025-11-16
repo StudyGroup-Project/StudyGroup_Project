@@ -36,8 +36,6 @@ public class ChatService {
     private final UserProfileRepository userProfileRepository;
     private final S3Uploader s3Uploader;
     private final SimpMessagingTemplate messagingTemplate;
-    private final UserRepository userRepository;
-    private final StudyRepository studyRepository;
 
     /**
      * 공통: 메시지 저장 + DTO 생성
