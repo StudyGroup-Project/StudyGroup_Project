@@ -1,5 +1,6 @@
 package com.study.focus.chat.config;
 
+import com.study.focus.common.util.UrlUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -24,6 +25,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-stomp")  // 클라이언트에서 접속할 endpoint
+                .setAllowedOrigins(
+                        UrlUtil.FRONTEND_BASE_URL,
+                        "http://3.39.81.234:8080"
+                )
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
     }
