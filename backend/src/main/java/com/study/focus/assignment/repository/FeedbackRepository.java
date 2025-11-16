@@ -1,6 +1,7 @@
 package com.study.focus.assignment.repository;
 
 import com.study.focus.assignment.domain.Feedback;
+import com.study.focus.assignment.domain.Submission;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -11,4 +12,6 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
     boolean existsBySubmissionIdAndReviewerId(Long submissionId, Long id);
 
     List<Feedback> findAllBySubmissionIdOrderByCreatedAtDescIdDesc(Long submissionId);
+
+    void deleteAllBySubmission(Submission sumbission);
 }

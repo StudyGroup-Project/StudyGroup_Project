@@ -42,12 +42,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
+
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class StudyService {
     private final StudyRepository studyRepository;
     private final StudyProfileRepository studyProfileRepository;
@@ -123,6 +126,7 @@ public class StudyService {
                 .orElseThrow(()-> new BusinessException(CommonErrorCode.INVALID_REQUEST));
         User leader = leadermember.getUser();
 
+
         //그룹장 프로필 조회
         UserProfile leaderProfile = userProfileRepository.findByUser(leader)
                 .orElseThrow(() -> new BusinessException(UserErrorCode.URL_FORBIDDEN));
@@ -136,38 +140,48 @@ public class StudyService {
 
         // 지원서 조회 ,없으면 null
         Application application = applicationRepository.findByApplicantIdAndStudyId(userId, studyId).orElse(null);
-        String applicationStatus = (application != null) ? application.getStatus().name() : null;
+        String applicationStatus = (application != null) ? application.getStatus().name() : "NONE";
+
+        // 현재 로그인한 사용자가 그룹장인지 확인
+        boolean leaderCheck = leader.getId().equals(userId);
+
+        boolean isMember = studyMemberRepository.existsByStudyIdAndUserIdAndStatus(studyId, userId, StudyMemberStatus.JOINED);
+
 
         // 추방정보확인
         boolean isBanned = studyMemberRepository.existsByStudyIdAndUserIdAndStatus(studyId, userId, StudyMemberStatus.BANNED);
 
         // 지원 가능 여부 ( 프론트에서 확인하기 위함.)
-        boolean canApply = !isBanned && study.getRecruitStatus() == RecruitStatus.OPEN
-                && (applicationStatus == null || "REJECTED".equals(applicationStatus));
+        boolean canApply = !isBanned
+                && study.getRecruitStatus() == RecruitStatus.OPEN
+                && !isMember
+                && ("NONE".equals(applicationStatus)|| "REJECTED".equals(applicationStatus));
 
         // 방장의 신뢰 점수
         int trustScore = (int) leader.getTrustScore();
 
-        return new GetStudyProfileResponse(
-                study.getId(),
-                profile.getTitle(),
-                profile.getStudy().getMaxMemberCount(),
-                memberCount,
-                profile.getBio(),
-                profile.getDescription(),
-                profile.getCategory(),
-                profile.getAddress().getProvince(),
-                profile.getAddress().getDistrict(),
-                study.getRecruitStatus(),
-                trustScore,
-                applicationStatus,
-                canApply,
-                new GetStudyProfileResponse.LeaderProfile(
-                        leader.getId(),
-                        nickname,
-                        profileImageUrl
-                )
-        );
+        return GetStudyProfileResponse.builder()
+                .id(study.getId())
+                .title(profile.getTitle())
+                .maxMemberCount(profile.getStudy().getMaxMemberCount())
+                .memberCount(memberCount)
+                .bio(profile.getBio())
+                .description(profile.getDescription())
+                .category(profile.getCategory())
+                .province(profile.getAddress().getProvince())
+                .district(profile.getAddress().getDistrict())
+                .recruitStatus(study.getRecruitStatus())
+                .trustScore(trustScore)
+                .applicationStatus(applicationStatus)
+                .canApply(canApply)
+                .leaderCheck(leaderCheck)
+                .leader(GetStudyProfileResponse.LeaderProfile.builder()
+                        .id(leader.getId())
+                        .nickname(nickname)
+                        .profileImageUrl(profileImageUrl)
+                        .build())
+                .build();
+
     }
 
     // 그룹 프로필 정보 수정하기
