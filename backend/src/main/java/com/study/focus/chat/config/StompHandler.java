@@ -21,18 +21,36 @@ public class StompHandler implements ChannelInterceptor {
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
 
-        // CONNECT 또는 SEND 시 토큰 유효성 검사
-        if (StompCommand.CONNECT.equals(accessor.getCommand()) ||
-                StompCommand.SEND.equals(accessor.getCommand())) {
+        // 1) command가 없는 경우 (handshake 단계) → 무조건 통과
+        if (accessor.getCommand() == null) {
+            return message;
+        }
+
+        // 2) CONNECT 프레임일 때만 JWT 검사
+        if (StompCommand.CONNECT.equals(accessor.getCommand())) {
 
             String jwtToken = accessor.getFirstNativeHeader("Authorization");
+
             if (jwtToken != null && jwtToken.startsWith("Bearer ")) {
                 jwtToken = jwtToken.substring(7);
             }
 
             if (jwtToken == null || !tokenProvider.validateToken(jwtToken)) {
-                log.warn("Invalid JWT Token: {}", jwtToken);
-                throw new IllegalArgumentException("Invalid JWT Token");
+                throw new IllegalArgumentException("Invalid or missing JWT Token in CONNECT");
+            }
+        }
+
+        // 3) SEND 프레임일 때도 JWT 검사 (CONNECT 검증 통과한 뒤에만 도달)
+        if (StompCommand.SEND.equals(accessor.getCommand())) {
+
+            String jwtToken = accessor.getFirstNativeHeader("Authorization");
+
+            if (jwtToken != null && jwtToken.startsWith("Bearer ")) {
+                jwtToken = jwtToken.substring(7);
+            }
+
+            if (jwtToken == null || !tokenProvider.validateToken(jwtToken)) {
+                throw new IllegalArgumentException("Invalid JWT Token in SEND");
             }
         }
 
