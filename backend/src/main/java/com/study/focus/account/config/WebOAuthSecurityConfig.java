@@ -6,6 +6,7 @@ import com.study.focus.account.config.oauth.OAuth2SuccessHandler;
 import com.study.focus.account.config.oauth.OAuth2UserCustomService;
 import com.study.focus.account.repository.UserProfileRepository;
 import com.study.focus.account.service.AccountService;
+import com.study.focus.common.util.UrlUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,6 +45,7 @@ public class WebOAuthSecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of(
+                UrlUtil.FRONT_BEFO_URL,
                 "http://localhost:5173",
                 "http://localhost:5174",
                 "https://study-group-project-frontend.vercel.app"
