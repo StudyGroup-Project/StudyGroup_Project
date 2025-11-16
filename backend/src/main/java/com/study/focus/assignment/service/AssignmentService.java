@@ -99,7 +99,7 @@ public class AssignmentService {
         Assignment assignment = assignmentRepository.findById(assignmentId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
         List<SubmissionListResponse> submissions = submissionRepository.findSubmissionList(assignmentId);
         List<File> files = fileRepository.findAllByAssignmentId(assignmentId);
-        List<AssignmentFileResponse> attachFiles = files.stream().map(a -> new AssignmentFileResponse(a.getFileKey())).toList();
+        List<AssignmentFileResponse> attachFiles = files.stream().map(a -> new AssignmentFileResponse(s3Uploader.getUrlFile(a.getFileKey()))).toList();
         List<GetMyProfileResponse> profileUrls = submissions.stream().map(a -> userService.getMyProfile(a.getSubmitterId())).toList();
 
         return new GetAssignmentDetailResponse(assignment.getId(),

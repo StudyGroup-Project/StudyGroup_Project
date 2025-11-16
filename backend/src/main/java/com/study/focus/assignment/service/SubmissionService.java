@@ -81,7 +81,7 @@ public class SubmissionService {
         Submission submission = submissionRepository.findByIdAndAssignmentId(submissionId,assignmentId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
         GetMyProfileResponse userProfile = userService.getMyProfile(submission.getSubmitter().getUser().getId());
         List<File> files = fileRepository.findAllBySubmissionId(submissionId);
-        List<AssignmentFileResponse> attachFiles = files.stream().map(a -> new AssignmentFileResponse(a.getFileKey())).toList();
+        List<AssignmentFileResponse> attachFiles = files.stream().map(a -> new AssignmentFileResponse(s3Uploader.getUrlFile(a.getFileKey()))).toList();
         return new GetSubmissionDetailResponse(
                 submissionId,
                 userProfile.getNickname(),
