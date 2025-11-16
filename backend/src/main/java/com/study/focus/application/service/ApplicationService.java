@@ -89,23 +89,25 @@ public class ApplicationService {
 
         List<Application> applications = applicationRepository.findByStudyId(studyId);
 
-        return applications.stream().map(app -> {
-            Long applicantId = app.getApplicant().getId();
-            UserProfile userProfile = userProfileRepository.findByUserId(applicantId)
-                    .orElseThrow(() -> new BusinessException(UserErrorCode.PROFILE_NOT_FOUND));
-            String nickname = userProfile.getNickname();
-            String profileImageUrl = userProfile.getProfileImage() != null
-                    ? s3Uploader.getUrlFile(userProfile.getProfileImage().getFileKey())
-                    : null;
-            return new GetApplicationsResponse(
-                    app.getId(),
-                    applicantId,
-                    nickname,
-                    profileImageUrl,
-                    app.getCreatedAt(),
-                    app.getStatus()
-            );
-        }).toList();
+        return applications.stream()
+                .filter(app -> app.getStatus() == ApplicationStatus.SUBMITTED)
+                .map(app -> {
+                    Long applicantId = app.getApplicant().getId();
+                    UserProfile userProfile = userProfileRepository.findByUserId(applicantId)
+                            .orElseThrow(() -> new BusinessException(UserErrorCode.PROFILE_NOT_FOUND));
+                    String nickname = userProfile.getNickname();
+                    String profileImageUrl = userProfile.getProfileImage() != null
+                            ? s3Uploader.getUrlFile(userProfile.getProfileImage().getFileKey())
+                            : null;
+                    return new GetApplicationsResponse(
+                            app.getId(),
+                            applicantId,
+                            nickname,
+                            profileImageUrl,
+                            app.getCreatedAt(), // DTO 필드명(createAt)과 실제 필드명(getCreatedAt)이 일치하는지 확인하세요!
+                            app.getStatus()
+                    );
+                }).toList();
 
     }
 
