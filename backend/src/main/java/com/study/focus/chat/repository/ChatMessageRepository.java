@@ -45,4 +45,5 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
                                          Long cursorId,
                                          Pageable pageable);
 
+
 }
