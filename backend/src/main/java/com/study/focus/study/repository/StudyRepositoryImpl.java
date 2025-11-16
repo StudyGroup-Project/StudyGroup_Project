@@ -71,7 +71,10 @@ public class StudyRepositoryImpl implements StudyRepositoryCustom {
                         study.id,
                         profile.title,
                         study.maxMemberCount,
+
+                        // JOINED 멤버만 카운트
                         member.id.countDistinct().intValue(),
+
                         bookmark.id.countDistinct(),
                         profile.bio,
                         profile.category,
@@ -84,7 +87,13 @@ public class StudyRepositoryImpl implements StudyRepositoryCustom {
                 ))
                 .from(study)
                 .join(profile).on(profile.study.eq(study))
-                .leftJoin(member).on(member.study.eq(study))
+
+                // 여기에서 JOINED 멤버만 조인
+                .leftJoin(member).on(
+                        member.study.eq(study)
+                                .and(member.status.eq(StudyMemberStatus.JOINED))
+                )
+
                 .leftJoin(bookmark).on(bookmark.study.eq(study))
                 .join(leaderMember).on(leaderMember.study.eq(study)
                         .and(leaderMember.role.eq(StudyRole.LEADER)))
