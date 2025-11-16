@@ -112,6 +112,23 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
+    // 유저 아이디 반환
+    @GetMapping("/me")
+    public ResponseEntity<AuthMeResponse> getMe(HttpServletRequest request) {
+        // Authorization: Bearer xxx.yyy.zzz
+        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            // 토큰 없으면 401 주거나, 커스텀 예외 던져도 됨
+            return ResponseEntity.status(401).build();
+        }
+
+        String token = authHeader.substring(7);
+
+        Long userId = tokenProvider.getUserIdFromToken(token);
+
+        return ResponseEntity.ok(new AuthMeResponse(userId));
+    }
+
     private void addRefreshTokenToCookie(HttpServletRequest request, HttpServletResponse response, String refreshToken) {
         int cookieMaxAge = (int) REFRESH_TOKEN_DURATION.toSeconds();
         CookieUtil.deleteCookie(request, response, REFRESH_TOKEN_COOKIE_NAME);
