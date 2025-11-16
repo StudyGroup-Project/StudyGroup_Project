@@ -1,5 +1,6 @@
 package com.study.focus.chat.domain;
 
+import com.study.focus.account.domain.User;
 import com.study.focus.common.domain.BaseCreatedEntity;
 import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
@@ -28,4 +29,7 @@ public class ChatMessage extends BaseCreatedEntity {
     @Lob
     @Column(nullable = false)
     private String content;
+
+    public static ChatMessage create(Study study, User user, String content) {
+    }
 }
