@@ -71,9 +71,11 @@ public class AuthController {
         Long userId = tokenProvider.getUserIdFromToken(accessToken);
         boolean profileExists = userProfileRepository.findByUserId(userId).isPresent();
 
+        String frontendUrl = UrlUtil.detectFrontendBaseUrl(httpRequest);
+
         // 프론트가 이동할 redirect URL 생성
         String redirectUrl = UrlUtil.createRedirectUrl(
-                UrlUtil.FRONTEND_BASE_URL,
+                frontendUrl,
                 UrlUtil.HOME_PATH,
                 UrlUtil.PROFILE_SETUP_PATH,
                 accessToken,

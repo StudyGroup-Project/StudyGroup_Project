@@ -10,6 +10,7 @@ import com.study.focus.common.exception.UserErrorCode;
 import com.study.focus.common.util.CookieUtil;
 import com.study.focus.common.util.UrlUtil;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -52,10 +53,14 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         Long userId = tokenProvider.getUserIdFromToken(accessToken);
 
+        String origin = CookieUtil.getCookie(request, "OAUTH_ORIGIN")
+                .map(Cookie::getValue)
+                .orElse(UrlUtil.FRONT_BEFO_URL);
+
         boolean profileExists = userProfileRepository.findByUserId(userId).isPresent();
 
         String targetUrl = UrlUtil.createRedirectUrl(
-                UrlUtil.FRONTEND_BASE_URL,
+                origin,
                 UrlUtil.HOME_PATH,
                 UrlUtil.PROFILE_SETUP_PATH,
                 accessToken,
