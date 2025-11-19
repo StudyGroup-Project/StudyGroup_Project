@@ -564,6 +564,8 @@ class AssignmentIntegrationTest {
         fileRepository.save(com.study.focus.common.domain.File.ofAssignment(a, meta2));
 
         // when & then
+        when(s3Uploader.getUrlFile("key-a")).thenReturn("key-a");
+        when(s3Uploader.getUrlFile("key-b")).thenReturn("key-b");
         mockMvc.perform(get("/api/studies/{studyId}/assignments/{assignmentId}", study1.getId(), a.getId())
                         .with(user(new CustomUserDetails(user1.getId()))))
                 .andExpect(status().isOk())
