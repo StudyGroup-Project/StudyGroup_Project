@@ -1,9 +1,12 @@
 package com.study.focus.chat.controller;
 
+import com.study.focus.account.dto.CustomUserDetails;
+import com.study.focus.chat.dto.ChatMessageRequest;
 import com.study.focus.chat.dto.ChatMessageResponse;
 import com.study.focus.chat.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,5 +29,23 @@ public class ChatRestController { // 히스토리 조회용
                                                                  @RequestParam(defaultValue = "50") int limit) {
         List<ChatMessageResponse> messages = chatService.getRecentMessages(studyId, lastMessageId, limit);
         return ResponseEntity.ok(messages);
+    }
+
+    /**
+     * 새로운 메시지 전송 (HTTP 기반 채팅 전송)
+     * POST /api/studies/{studyId}/chatMessages
+     */
+    @PostMapping
+    public ResponseEntity<ChatMessageResponse> sendMessage(
+            @PathVariable Long studyId,
+            @RequestBody ChatMessageRequest request,
+            @AuthenticationPrincipal CustomUserDetails user // 네 프로젝트 Principal 타입으로 변경
+    ) {
+        Long userId = user.getUserId(); // 실제 필드/메서드명에 맞게 수정
+
+        ChatMessageResponse response =
+                chatService.sendMessageHttp(studyId, userId, request.getContent());
+
+        return ResponseEntity.ok(response);
     }
 }

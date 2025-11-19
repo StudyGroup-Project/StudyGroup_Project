@@ -1,17 +1,21 @@
 package com.study.focus.chat.service;
 
+import com.study.focus.account.domain.User;
 import com.study.focus.account.domain.UserProfile;
 import com.study.focus.account.repository.UserProfileRepository;
+import com.study.focus.account.repository.UserRepository;
 import com.study.focus.chat.domain.ChatMessage;
 import com.study.focus.chat.dto.ChatMessageResponse;
 import com.study.focus.chat.repository.ChatMessageRepository;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.StudyErrorCode;
 import com.study.focus.common.exception.UserErrorCode;
+import com.study.focus.study.domain.Study;
 import com.study.focus.study.domain.StudyMember;
 import com.study.focus.study.domain.StudyMemberStatus;
 import com.study.focus.study.repository.StudyMemberRepository;
 import com.study.focus.common.util.S3Uploader;
+import com.study.focus.study.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -34,10 +38,10 @@ public class ChatService {
     private final SimpMessagingTemplate messagingTemplate;
 
     /**
-     * 메시지 전송 (저장 + DTO 반환)
+     * 공통: 메시지 저장 + DTO 생성
      */
     @Transactional
-    public void handleMessage(Long studyId, Long userId, String content) {
+    public ChatMessageResponse createMessageAndBuildResponse(Long studyId, Long userId, String content) {
         // 1. 멤버 확인
         log.info("study id: {}, user id: {}", studyId, userId);
         StudyMember member = studyMemberRepository
@@ -60,7 +64,7 @@ public class ChatService {
                 ? s3Uploader.getUrlFile(profile.getProfileImage().getFileKey())
                 : null;
 
-        // 4. 응답 DTO
+        // 4. 응답 DTO 생성
         ChatMessageResponse response = ChatMessageResponse.builder()
                 .id(message.getId())
                 .userId(userId)
@@ -70,10 +74,28 @@ public class ChatService {
                 .createdAt(message.getCreatedAt())
                 .build();
 
-        log.info("브로드캐스트 전송: {}", response);
+        return response;
+    }
 
-        // 5. 브로드캐스트
+    /**
+     * WebSocket용 기존 로직 (원래 handleMessage)
+     */
+    @Transactional
+    public void handleMessage(Long studyId, Long userId, String content) {
+        ChatMessageResponse response = createMessageAndBuildResponse(studyId, userId, content);
+
+        log.info("브로드캐스트 전송: {}", response);
         messagingTemplate.convertAndSend("/sub/studies/" + studyId, response);
+    }
+
+    /**
+     * HTTP 전송용: 저장만 하고 DTO 반환 (브로드캐스트 X)
+     */
+    @Transactional
+    public ChatMessageResponse sendMessageHttp(Long studyId, Long userId, String content) {
+        ChatMessageResponse response = createMessageAndBuildResponse(studyId, userId, content);
+        log.info("HTTP 채팅 전송 완료: {}", response);
+        return response;
     }
 
     /**
