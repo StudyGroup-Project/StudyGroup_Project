@@ -615,6 +615,8 @@ class AssignmentUnitTest {
         File f2 = mock(File.class);
         when(f1.getFileKey()).thenReturn("key-a");
         when(f2.getFileKey()).thenReturn("key-b");
+        when(s3Uploader.getUrlFile("key-a")).thenReturn("key-a");
+        when(s3Uploader.getUrlFile("key-b")).thenReturn("key-b");
 
         List<SubmissionListResponse> submissions = List.of(mock(SubmissionListResponse.class));
 

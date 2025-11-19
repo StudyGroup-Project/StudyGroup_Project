@@ -2,6 +2,7 @@ package com.study.focus.assignment.service;
 
 import com.study.focus.account.dto.GetMyProfileResponse;
 import com.study.focus.account.service.UserService;
+import com.study.focus.announcement.dto.AnnouncementFiles;
 import com.study.focus.assignment.domain.Assignment;
 import com.study.focus.assignment.domain.Submission;
 import com.study.focus.assignment.dto.*;
@@ -99,7 +100,14 @@ public class AssignmentService {
         Assignment assignment = assignmentRepository.findById(assignmentId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
         List<SubmissionListResponse> submissions = submissionRepository.findSubmissionList(assignmentId);
         List<File> files = fileRepository.findAllByAssignmentId(assignmentId);
-        List<AssignmentFileResponse> attachFiles = files.stream().map(a -> new AssignmentFileResponse(s3Uploader.getUrlFile(a.getFileKey()))).toList();
+        List<AssignmentFileResponse> attachFiles = files.stream().map(f -> {
+            String fileUrl = s3Uploader.getUrlFile(f.getFileKey());
+            return AssignmentFileResponse.builder()
+                    .fileId(f.getId())
+                    .fileName(f.getFileName())
+                    .url(fileUrl)
+                    .build();
+        }).toList();
         List<GetMyProfileResponse> profileUrls = submissions.stream().map(a -> userService.getMyProfile(a.getSubmitterId())).toList();
 
         return new GetAssignmentDetailResponse(assignment.getId(),
