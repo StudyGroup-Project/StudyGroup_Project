@@ -1,5 +1,6 @@
 package com.study.focus.common.util;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.util.UriComponentsBuilder;
 
 public class UrlUtil {
@@ -14,30 +15,48 @@ public class UrlUtil {
     public static final String HOME_PATH = "/home"; // OAuth와 일반 로그인 모두 이 경로를 사용
     public static final String PROFILE_SETUP_PATH = "/profile"; // OAuth와 일반 로그인 모두 이 경로를 사용
 
-    /**
-     * 프로필 존재 여부에 따라 AccessToken을 포함한 최종 리다이렉트 URL을 생성합니다.
-     * (로직은 변경 없음)
-     */
+    // ==========================================================
+    // 1) 요청 Origin 기반으로 "현재 프론트 URL" 자동 감지
+    // ==========================================================
+    public static String detectFrontendBaseUrl(HttpServletRequest request) {
+
+        // 1) Origin 우선
+        String origin = request.getHeader("Origin");
+        if (origin != null && !origin.isBlank()) {
+            return origin;
+        }
+
+        // 2) Origin 없으면 Referer 활용 (뒤에 path 제거)
+        String referer = request.getHeader("Referer");
+        if (referer != null && !referer.isBlank()) {
+            try {
+                // Referer 예: http://localhost:5173/login
+                // → Base URL: http://localhost:5173
+                return referer.split("/")[0] + "//" + referer.split("/")[2];
+            } catch (Exception ignored) {}
+        }
+
+        // 3) fallback (배포 기본값)
+        return FRONT_BEFO_URL;
+    }
+
+    // ==========================================================
+    // 2) AccessToken 기반 최종 redirect URL 생성
+    // ==========================================================
     public static String createRedirectUrl(
             String baseUrl,
             String homePath,
             String profileSetupPath,
             String accessToken,
             String refreshToken,
-            boolean profileExists) {
+            boolean profileExists
+    ) {
 
-        String path;
-
-        if (profileExists) {
-            path = homePath;
-        } else {
-            path = profileSetupPath;
-        }
+        String path = profileExists ? homePath : profileSetupPath;
 
         return UriComponentsBuilder.fromHttpUrl(baseUrl + path)
                 .queryParam("accessToken", accessToken)
                 .queryParam("refreshToken", refreshToken)
-                .build()
                 .toUriString();
     }
 }

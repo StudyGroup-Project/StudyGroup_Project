@@ -19,6 +19,7 @@ import com.study.focus.common.domain.Address;
 import com.study.focus.common.dto.StudyDto;
 import com.study.focus.common.exception.BusinessException;
 import com.study.focus.common.exception.CommonErrorCode;
+import com.study.focus.common.exception.StudyErrorCode;
 import com.study.focus.common.exception.UserErrorCode;
 import com.study.focus.common.repository.FileRepository;
 import com.study.focus.common.service.FileService;
@@ -218,10 +219,17 @@ public class StudyService {
 
     //스터디 메인 데이터 조회하기
     @Transactional(readOnly = true)
-    public StudyHomeResponse getStudyHome(Long studyId) {
-
+    public StudyHomeResponse getStudyHome(Long studyId, Long userId) {
         StudyProfile studyProfile = studyProfileRepository.findByStudyId(studyId)
                 .orElseThrow(()-> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
+
+        StudyMember member = studyMemberRepository.findByStudyIdAndUserId(studyId, userId)
+                .orElseThrow(()-> new BusinessException(StudyErrorCode.MEMBER_NOT_FOUND));
+
+        if (member.getStatus() == StudyMemberStatus.BANNED)
+            throw new BusinessException(StudyErrorCode.BANNED_MEMBER);
+        if (member.getStatus() == StudyMemberStatus.LEFT)
+            throw new BusinessException(StudyErrorCode.LEFT_MEMBER);
 
         return new StudyHomeResponse(studyProfile.getTitle());
     }
