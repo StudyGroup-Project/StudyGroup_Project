@@ -287,6 +287,8 @@ class SubmissionUnitTest {
         com.study.focus.common.domain.File f2 = Mockito.mock(com.study.focus.common.domain.File.class);
         given(f1.getFileKey()).willReturn("k1");
         given(f2.getFileKey()).willReturn("k2");
+        when(s3Uploader.getUrlFile("k1")).thenReturn("k1");
+        when(s3Uploader.getUrlFile("k2")).thenReturn("k2");
         given(fileRepository.findAllBySubmissionId(submissionId)).willReturn(List.of(f1, f2));
 
         // when

@@ -330,6 +330,8 @@ class SubmissionIntegrationTest {
                 )
         );
 
+        when(s3Uploader.getUrlFile("k1")).thenReturn("k1");
+        when(s3Uploader.getUrlFile("k2")).thenReturn("k2");
         mockMvc.perform(
                         get("/api/studies/{studyId}/assignments/{assignmentId}/submissions/{submissionId}",
                                 study.getId(), openAssignment.getId(), submission.getId())
