@@ -10,6 +10,7 @@ import com.study.focus.common.util.UrlUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -50,8 +51,8 @@ public class WebOAuthSecurityConfig {
                 "http://localhost:5174",
                 "https://study-group-project-frontend.vercel.app"
         ));
-
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedOriginPatterns(List.of("*"));  // ★ 추가해도 문제 없음 (fallback)
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
@@ -94,6 +95,9 @@ public class WebOAuthSecurityConfig {
                  *  WebSocket 업그레이드 요청 허용
                  * ---------------------------------------------------- */
                 .authorizeHttpRequests(auth -> auth
+                        // ★ preflight OPTIONS 요청을 허용해야 CORS 문제 해결됨
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         .requestMatchers("/ws-stomp/**").permitAll()  // ★ WebSocket 필수
                         .requestMatchers("/api/auth/login", "/api/auth/register",
                                 "/api/auth/token", "/api/auth/logout",
