@@ -48,7 +48,7 @@ public class S3Uploader
             "jpg", "jpeg", "png", "gif", "bmp", "tiff", "heic",
             "ppt", "pptx",
             "xls", "xlsx", "csv",
-            "hwp","txt"
+            "hwp","txt","pdf"
     );
 
     /*
