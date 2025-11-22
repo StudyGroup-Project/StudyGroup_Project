@@ -36,7 +36,7 @@ public class NotificationService {
         groupService.memberValidation(studyId,userId);
         Study study = studyRepository.findById(studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_REQUEST));
         List<Notification> notifications = notificationRepository.findAllByStudyOrderByCreatedAtDescIdDesc(study);
-        return notifications.stream().map(a -> new GetNotificationsListResponse(a.getId(),a.getTitle())).toList();
+        return notifications.stream().map(a -> new GetNotificationsListResponse(a.getId(),a.getTitle(),a.getAudienceType())).toList();
     }
 
     // 알림 상세 데이터 가져오기
