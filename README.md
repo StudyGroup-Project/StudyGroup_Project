@@ -120,7 +120,7 @@ src
 ---
 
 ##  🗺️ 프로젝트 아키텍처
-<img width="1176" height="1044" alt="스크린샷 2025-09-14 161957" src="https://github.com/user-attachments/assets/fac6178b-0e16-4980-aeb9-2d0765610285" />
+<img width="1024" height="1536" alt="focus 시스템 다이어그램" src="https://github.com/user-attachments/assets/fe4fd80d-6e74-4d48-bc78-98aba22770b0" />
 
 
 ---
