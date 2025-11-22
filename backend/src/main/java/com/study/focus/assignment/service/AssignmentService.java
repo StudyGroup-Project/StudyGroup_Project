@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -63,6 +64,13 @@ public class AssignmentService {
         StudyMember creator = groupService.memberValidation(studyId, creatorId);
         groupService.isLeader(creator);
         if (!dto.getDueAt().isAfter(dto.getStartAt())) throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
+
+        LocalDate today = LocalDate.now();
+
+        if (dto.getStartAt().toLocalDate().isBefore(today)) throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
+
+        if (dto.getDueAt().toLocalDate().isBefore(today)) throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
+
 
         Assignment assignment = Assignment.builder()
                 .creator(creator)
@@ -129,6 +137,13 @@ public class AssignmentService {
         groupService.isLeader(creator);
         Assignment assignment = assignmentRepository.findByIdAndStudyId(assignmentId, studyId).orElseThrow(() -> new BusinessException(CommonErrorCode.INVALID_PARAMETER));
         if (!dto.getDueAt().isAfter(dto.getStartAt())) throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
+
+        LocalDate today = LocalDate.now();
+
+        if (dto.getStartAt().toLocalDate().isBefore(today)) throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
+
+        if (dto.getDueAt().toLocalDate().isBefore(today)) throw new BusinessException(CommonErrorCode.INVALID_REQUEST);
+
 
         assignment.update(dto.getTitle(), dto.getDescription(), dto.getStartAt(), dto.getDueAt());
 

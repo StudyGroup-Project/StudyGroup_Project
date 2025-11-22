@@ -24,11 +24,11 @@ public class UpdateAssignmentRequest {
     @NotBlank
     String description;
 
-    @NotNull @FutureOrPresent
+    @NotNull
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     LocalDateTime startAt;
 
-    @NotNull @FutureOrPresent
+    @NotNull
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     LocalDateTime dueAt;
 
