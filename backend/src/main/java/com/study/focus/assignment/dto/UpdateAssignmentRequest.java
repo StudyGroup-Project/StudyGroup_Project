@@ -1,5 +1,6 @@
 package com.study.focus.assignment.dto;
 
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -23,11 +24,11 @@ public class UpdateAssignmentRequest {
     @NotBlank
     String description;
 
-    @NotNull
+    @NotNull @FutureOrPresent
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     LocalDateTime startAt;
 
-    @NotNull
+    @NotNull @FutureOrPresent
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     LocalDateTime dueAt;
 

@@ -1,5 +1,6 @@
 package com.study.focus.assignment.dto;
 
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -23,11 +24,11 @@ public class CreateAssignmentRequest {
 
     List<MultipartFile> files;
 
-    @NotNull
+    @NotNull @FutureOrPresent
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     LocalDateTime startAt;
 
-    @NotNull
+    @NotNull @FutureOrPresent
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     LocalDateTime dueAt;
 }
