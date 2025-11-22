@@ -55,8 +55,10 @@ public class StudyController {
 
     //스터디 메인 데이터 조회하기
     @GetMapping("/{studyId}/home")
-    public ResponseEntity<StudyHomeResponse> getStudyHome(@PathVariable Long studyId) {
-        StudyHomeResponse response = studyService.getStudyHome(studyId);
+    public ResponseEntity<StudyHomeResponse> getStudyHome(@PathVariable Long studyId,
+                                                          @AuthenticationPrincipal CustomUserDetails user) {
+        Long userId = user.getUserId();
+        StudyHomeResponse response = studyService.getStudyHome(studyId, userId);
         return ResponseEntity.ok(response);
     }
 

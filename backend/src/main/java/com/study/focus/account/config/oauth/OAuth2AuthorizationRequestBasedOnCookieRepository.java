@@ -26,8 +26,9 @@ public class OAuth2AuthorizationRequestBasedOnCookieRepository implements Author
     }
 
     @Override
-    public void saveAuthorizationRequest(OAuth2AuthorizationRequest
-                                                 authorizationRequest, HttpServletRequest request, HttpServletResponse response) {
+    public void saveAuthorizationRequest(OAuth2AuthorizationRequest authorizationRequest,
+                                         HttpServletRequest request,
+                                         HttpServletResponse response) {
 
         if (authorizationRequest == null) {
             removeAuthorizationRequestCookies(request, response);
@@ -35,6 +36,16 @@ public class OAuth2AuthorizationRequestBasedOnCookieRepository implements Author
         }
         CookieUtil.addCookie(response, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME,
                 CookieUtil.serialize(authorizationRequest), COOKIE_EXPIRE_SECONDS);
+
+        String origin = request.getParameter("origin");
+
+        if (origin == null || origin.isBlank()) {
+            origin = request.getHeader("Origin");               // 옵션: fetch/XHR일 때 대비
+        }
+
+        if (origin != null && !origin.isBlank()) {
+            CookieUtil.addCookie(response, "OAUTH_ORIGIN", origin, COOKIE_EXPIRE_SECONDS);
+        }
     }
 
     public void removeAuthorizationRequestCookies(HttpServletRequest request,

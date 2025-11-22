@@ -35,7 +35,6 @@ services:
       - db-data:/var/lib/mysql
     restart: always
 
-
   localstack:
     image: localstack/localstack:latest
     container_name: my-localstack
