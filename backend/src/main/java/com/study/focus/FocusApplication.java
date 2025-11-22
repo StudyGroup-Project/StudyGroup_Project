@@ -21,7 +21,4 @@ public class FocusApplication {
 	public void setUp(){
 		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
 	}
-
-
-
 }
